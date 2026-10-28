@@ -1,0 +1,26 @@
+# Despliegue Cloud con HTTPS/SSL automático en Render.com
+services:
+  - type: web
+    name: pichangabook-arequipa-api
+    runtime: node
+    rootDir: backend-nestjs
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pichangabook-db
+          property: connectionString
+      - key: DATABASE_SSL
+        value: 'true'
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: pichangabook-db
+    plan: basic-256mb
+    databaseName: pichangabook
+    user: pichanga

@@ -1,0 +1,54 @@
+# =============================================================================
+#  PichangaBook Arequipa · Docker Compose (PostgreSQL 16 + NestJS API + Nginx SSL)
+#  Formación de Empresas de Base Tecnológica I · UCSP
+#  Autores: Rodrigo Sierra · Samuel Iman
+# =============================================================================
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pichangabook-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pichanga
+      POSTGRES_PASSWORD: pichanga_secret_2026
+      POSTGRES_DB: pichangabook
+      TZ: America/Lima
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend-nestjs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend-nestjs/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pichanga -d pichangabook']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend-nestjs:
+    build:
+      context: ./backend-nestjs
+      dockerfile: Dockerfile
+    container_name: pichangabook-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      PUBLIC_URL: http://localhost:3000
+      DATABASE_URL: postgres://pichanga:pichanga_secret_2026@postgres:5432/pichangabook
+      DATABASE_SSL: 'false'
+      DB_AUTO_MIGRATE: 'true'
+      AUTH_PROVIDER: DEMO
+      JWT_SECRET: pichangabook-ucsp-2026-secret
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./web-admin-tailwind:/app/../web-admin-tailwind:ro
+      - ./mobile-flutter:/app/../mobile-flutter:ro
+
+volumes:
+  pgdata:

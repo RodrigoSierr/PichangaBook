@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PichangaBook Arequipa · App Móvil (Espejo Interactivo Flutter)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      background: radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.14), transparent 55%), #050a14;
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .phone-shell {
+      width: 100%;
+      max-width: 430px;
+      height: 860px;
+      border-radius: 42px;
+      border: 8px solid #1e293b;
+      box-shadow: 0 25px 70px -15px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(16, 185, 129, 0.25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #0b1323;
+    }
+    #aqpMap { height: 225px; width: 100%; border-radius: 16px; z-index: 1; }
+    .leaflet-container { background: #0f172a; }
+    .slot-pulse { animation: pulseEmerald 1.3s ease-out; }
+    @keyframes pulseEmerald {
+      0% { transform: scale(1.05); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.85); }
+      100% { transform: scale(1); box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col lg:flex-row items-center justify-center gap-6 p-3 sm:p-6">
+
+  <!-- Panel lateral informativo (visible en pantallas grandes durante la exposición) -->
+  <aside class="hidden xl:flex flex-col justify-between w-80 bg-slate-900/80 border border-slate-800 rounded-3xl p-5 space-y-4">
+    <div class="space-y-2">
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">FLUTTER MIRROR</span>
+        <span class="text-xs text-slate-400">28 oct 2026</span>
+      </div>
+      <h1 class="text-lg font-extrabold text-white">PichangaBook Arequipa</h1>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        Espejo interactivo de la app móvil en <b>Flutter (Dart)</b> conectado en tiempo real al backend <b>NestJS + PostgreSQL + Socket.io</b>.
+      </p>
+    </div>
+
+    <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 space-y-2 text-xs">
+      <div class="font-bold text-emerald-400">Guía rápida de demostración:</div>
+      <ol class="list-decimal list-inside space-y-1.5 text-slate-300 text-[11px]">
+        <li>Filtra complejos por distrito (<b>Cayma, Yanahuara, Cerro Colorado</b>).</li>
+        <li>En <b>Reservar</b>, observa cómo un bloqueo en Recepción actualiza la parrilla al instante.</li>
+        <li>En <b>Split 4/6</b>, cobra por WhatsApp o simula el pago #5 y #6 con Yape/Culqi.</li>
+        <li>En <b>Suplentes</b>, reproduce los clips de 15-30s y abre el chat con número enmascarado.</li>
+      </ol>
+    </div>
+
+    <div class="space-y-2">
+      <a id="sideAdminLink" href="/admin/" target="_blank" class="block w-full text-center py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 border border-slate-700 transition">
+        🖥 Abrir Panel Web del Dueño
+      </a>
+      <button onclick="openOtpModal()" class="w-full py-2 px-4 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-xs font-bold text-emerald-300 border border-emerald-500/30 transition">
+        🔐 Probar Registro OTP SMS Antifraude
+      </button>
+    </div>
+  </aside>
+
+  <!-- Dispositivo Móvil (App Jugador / Organizador) -->
+  <div class="phone-shell relative">
+
+    <!-- Status bar superior del teléfono -->
+    <div class="bg-slate-950 px-5 pt-2.5 pb-2 flex items-center justify-between border-b border-slate-800/80">
+      <div class="flex items-center gap-2">
+        <span class="font-extrabold text-sm tracking-tight text-white">Pichanga<span class="text-emerald-400">Book</span></span>
+        <span class="text-[10px] mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">AQP</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="mobileWsBadge" class="inline-flex items-center gap-1 text-[10px] mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span> LIVE
+        </span>
+        <button onclick="openOtpModal()" id="userChipBtn" class="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+          Diego S. (Org.)
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenido desplazable por pestaña -->
+    <div class="flex-1 overflow-y-auto px-4 py-3 space-y-4">
+
+      <!-- =================================================================== -->
+      <!-- TAB 1: MAPA INTERACTIVO Y GEOLOCALIZACIÓN (AREQUIPA)                -->
+      <!-- =================================================================== -->
+      <section id="tab-map" class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-extrabold text-white">Complejos Verificados en Arequipa</h2>
+            <p class="text-[11px] text-slate-400">Pines GPS verificados con RUC activo · A 1.4 km de ti</p>
+          </div>
+          <span class="text-[10px] mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Google Maps SDK</span>
+        </div>
+
+        <!-- Chips de distritos clave de Arequipa -->
+        <div id="districtChips" class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs"></div>
+
+        <!-- Mapa interactivo de Arequipa -->
+        <div id="aqpMap" class="border border-slate-800 shadow-inner"></div>
+
+        <!-- Lista de complejos filtrados -->
+        <div id="complexList" class="space-y-2.5"></div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 2: DISPONIBILIDAD EN TIEMPO REAL Y DETALLE DE CANCHAS           -->
+      <!-- =================================================================== -->
+      <section id="tab-courts" class="hidden space-y-3.5">
+        <!-- Cabecera con foto del complejo seleccionado -->
+        <div class="relative rounded-2xl overflow-hidden border border-slate-800 h-36 bg-slate-900">
+          <img id="detailPhoto" src="/media/court-1.jpg" alt="Cancha" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+          <div class="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
+            <div>
+              <span class="text-[10px] mono uppercase px-2 py-0.5 rounded bg-emerald-500 text-slate-950 font-bold">✓ RUC Verificado</span>
+              <h2 id="detailName" class="text-base font-extrabold text-white mt-1">Complejo Deportivo El Misti</h2>
+              <p id="detailAddress" class="text-[11px] text-slate-300">Av. Ejército 1020, Cayma</p>
+            </div>
+            <div class="text-right bg-slate-950/80 px-2.5 py-1 rounded-xl border border-slate-800">
+              <span id="detailRating" class="text-xs font-extrabold text-amber-400">★ 4.7</span>
+              <span id="detailReviewsCount" class="block text-[10px] text-slate-400">3 reseñas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de cancha dentro del complejo -->
+        <div>
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">Selecciona Cancha</label>
+          <div id="courtPills" class="grid grid-cols-3 gap-1.5"></div>
+        </div>
+
+        <!-- Parrilla horaria en vivo -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-xs font-extrabold text-white">Parrilla Horaria en Tiempo Real</h3>
+              <p class="text-[10px] text-slate-400">Sincronizada con Recepción vía WebSockets</p>
+            </div>
+            <span id="mobileGridDate" class="text-[10px] mono px-2 py-0.5 rounded bg-slate-800 text-emerald-300"></span>
+          </div>
+
+          <div id="mobileSlotsGrid" class="grid grid-cols-3 gap-2"></div>
+        </div>
+
+        <!-- Reseñas verificadas de la comunidad -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-3 space-y-2">
+          <h3 class="text-xs font-bold text-white">Reseñas de la Comunidad Arequipeña</h3>
+          <div id="reviewsList" class="space-y-1.5"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 3: SISTEMA HÍBRIDO DE PAGOS Y SPLIT PAYMENT (4 DE 6)            -->
+      <!-- =================================================================== -->
+      <section id="tab-split" class="hidden space-y-3.5">
+        <div class="bg-gradient-to-br from-sky-950/80 via-slate-900 to-emerald-950/60 border border-sky-500/40 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] mono uppercase px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Split Payment · Culqi / Yape</span>
+            <span id="mSplitBadge" class="text-[10px] mono font-bold text-emerald-300">TOKEN: pk4de6demo</span>
+          </div>
+
+          <div>
+            <h2 id="mSplitCourt" class="text-base font-extrabold text-white">Cancha 1 · Fútbol 6 (El Misti)</h2>
+            <p id="mSplitMeta" class="text-xs text-slate-300">Hoy · 20:00 hrs · Organiza: Diego Salas (+51 9•• ••• 333)</p>
+          </div>
+
+          <!-- Contador visual en vivo: "Cupos pagados: 4 de 6" -->
+          <div class="bg-slate-950/85 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+              <span id="mSplitLabel" class="text-sm font-extrabold text-white">Cupos pagados: 4 de 6</span>
+              <span id="mSplitMoney" class="text-xs mono font-bold text-emerald-400">S/ 60.00 / S/ 90.00</span>
+            </div>
+
+            <!-- Barra segmentada de 6 bloques -->
+            <div id="mSplitSegments" class="grid grid-cols-6 gap-1.5 pt-1"></div>
+
+            <p id="mSplitHint" class="text-[11px] text-slate-400 pt-1">
+              Faltan <b>2 jugadores</b> por abonar su cuota de <b>S/ 15.00</b> para confirmar automáticamente el turno.
+            </p>
+          </div>
+
+          <!-- Botón de Link de Cobro Fraccionado para WhatsApp -->
+          <div class="grid grid-cols-2 gap-2">
+            <a id="mWhatsappBtn" href="#" target="_blank"
+              class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition">
+              <span>📲 Enviar a WhatsApp</span>
+            </a>
+            <button onclick="copySplitLink()" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition">
+              🔗 Copiar Link de Cobro
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulario para abonar un cupo en vivo (Yape / Plin / Tarjeta) -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2.5">
+          <h3 class="text-xs font-extrabold text-white">Pagar mi cupo ahora (S/ 15.00)</h3>
+          <div class="grid grid-cols-3 gap-1.5 text-xs">
+            <button type="button" onclick="selectPayMethod('YAPE')" id="payBtnYAPE" class="py-2 rounded-xl font-bold bg-purple-600 text-white border border-purple-400">💜 Yape</button>
+            <button type="button" onclick="selectPayMethod('PLIN')" id="payBtnPLIN" class="py-2 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700">💙 Plin</button>
+            <button type="button" onclick="selectPayMethod('CARD')" id="payBtnCARD" class="py-2 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700">💳 Tarjeta</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <input id="payerNameInput" type="text" value="Rodrigo S. (Jugador 5)" placeholder="Tu nombre"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+            <button onclick="payOneSlotFromMobile()" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs whitespace-nowrap shadow-md">
+              Abonar S/ 15
+            </button>
+          </div>
+        </div>
+
+        <!-- Lista de pagos confirmados por Culqi -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-3.5 space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white">Pagos Verificados (Webhook Culqi)</h3>
+            <span class="text-[10px] mono text-slate-400">HMAC-SHA256</span>
+          </div>
+          <div id="mSplitSharesList" class="space-y-1.5"></div>
+        </div>
+      </section>
+
+      <!-- =================================================================== -->
+      <!-- TAB 4: BOLSA DE SUPLENTES VERIFICADOS (CLIPS 15-30s + CHAT PROXY)   -->
+      <!-- =================================================================== -->
+      <section id="tab-subs" class="hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-extrabold text-white">Bolsa de Suplentes Verificados</h2>
+            <p class="text-[11px] text-slate-400">Clips técnicos de 15-30s · Teléfono protegido antifraude</p>
+          </div>
+          <span class="text-[10px] mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Core Pivote</span>
+        </div>
+
+        <!-- Filtro por posición -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <button onclick="loadSubstitutes('ALL')" id="pos_ALL" class="px-2.5 py-1 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs">Todos</button>
+          <button onclick="loadSubstitutes('ARQUERO')" id="pos_ARQUERO" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs">🧤 Arquero</button>
+          <button onclick="loadSubstitutes('DEFENSA')" id="pos_DEFENSA" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs">🛡 Defensa</button>
+          <button onclick="loadSubstitutes('MEDIOCAMPO')" id="pos_MEDIOCAMPO" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs">🎯 Mediocampo</button>
+          <button onclick="loadSubstitutes('DELANTERO')" id="pos_DELANTERO" class="px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs">⚡ Delantero</button>
+        </div>
+
+        <!-- Tarjetas de suplentes con minirreproductor de video de 15-30s -->
+        <div id="substitutesList" class="space-y-3"></div>
+      </section>
+
+    </div>
+
+    <!-- Barra de navegación inferior (4 pestañas) -->
+    <nav class="bg-slate-950 border-t border-slate-800 px-2 py-2 grid grid-cols-4 gap-1">
+      <button onclick="switchTab('map')" id="nav-map" class="flex flex-col items-center py-1 rounded-xl text-emerald-400 bg-emerald-500/10 font-bold text-[11px]">
+        <span>🗺️</span>
+        <span>Mapa AQP</span>
+      </button>
+      <button onclick="switchTab('courts')" id="nav-courts" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-white font-semibold text-[11px]">
+        <span>⚽</span>
+        <span>Reservar</span>
+      </button>
+      <button onclick="switchTab('split')" id="nav-split" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-white font-semibold text-[11px] relative">
+        <span>💸</span>
+        <span>Split 4/6</span>
+      </button>
+      <button onclick="switchTab('subs')" id="nav-subs" class="flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-white font-semibold text-[11px]">
+        <span>🎬</span>
+        <span>Suplentes</span>
+      </button>
+    </nav>
+
+    <!-- Modal interno: Reservar un turno libre (Seña directa vs Split Payment) -->
+    <div id="bookSlotModal" class="absolute inset-0 z-40 hidden items-end justify-center bg-slate-950/80 backdrop-blur-sm">
+      <div class="bg-slate-900 border-t border-slate-700 rounded-t-3xl w-full p-5 space-y-3.5 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] mono uppercase text-emerald-400">Reserva con Garantía ACID</span>
+            <h3 id="bookModalTitle" class="text-base font-extrabold text-white">Reservar Cancha 1 · 18:00</h3>
+          </div>
+          <button onclick="closeBookModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+
+        <p class="text-xs text-slate-300">
+          Elige la modalidad de pago híbrido: cubre la seña ahora o genera un link de <b>Split Payment</b> para dividir entre tu equipo por WhatsApp.
+        </p>
+
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="submitMobileBooking('FULL_DEPOSIT')" class="p-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-left transition">
+            <div class="text-xs font-extrabold">⚡ Pagar Seña (50%)</div>
+            <div class="text-[10px] opacity-90 mt-0.5">Confirmación inmediata vía Yape / Culqi</div>
+          </button>
+          <button onclick="submitMobileBooking('SPLIT')" class="p-3 rounded-2xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-left transition">
+            <div class="text-xs font-extrabold">📲 Split Payment (6 cupos)</div>
+            <div class="text-[10px] opacity-90 mt-0.5">Genera link de cobro para WhatsApp</div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal interno: Chat / VoIP con Enmascaramiento Telefónico Antifraude -->
+    <div id="relayModal" class="absolute inset-0 z-40 hidden items-end justify-center bg-slate-950/85 backdrop-blur-sm">
+      <div class="bg-slate-900 border-t border-slate-700 rounded-t-3xl w-full p-5 space-y-3 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] mono uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">🔒 Contacto Enmascarado Antifraude</span>
+            <h3 id="relaySubName" class="text-sm font-extrabold text-white mt-1">Renzo Valdivia (Arquero)</h3>
+            <p id="relayProxyInfo" class="text-[11px] mono text-amber-300">Central VoIP: +51 (054) 64X-XXX · Real: +51 9•• ••• 101</p>
+          </div>
+          <button onclick="closeRelayModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+
+        <div id="relayMessagesBox" class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-44 overflow-y-auto space-y-2 text-xs"></div>
+
+        <form onsubmit="sendRelayChat(event)" class="flex items-center gap-2">
+          <input id="relayInput" type="text" placeholder="Escribe aquí (si pones un celular se oculta 🔒)..."
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+          <button type="submit" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">Enviar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal interno: Registro Diferenciado + Autenticación OTP SMS -->
+    <div id="otpModal" class="absolute inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+      <div class="bg-slate-900 border border-slate-700 rounded-3xl w-full p-5 space-y-3 shadow-2xl">
+        <div class="flex items-center justify-between">
+          <div>
+            <span class="text-[10px] mono uppercase text-emerald-400">Firebase / Supabase Auth</span>
+            <h3 class="text-sm font-extrabold text-white">Verificación por SMS (OTP)</h3>
+          </div>
+          <button onclick="closeOtpModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        </div>
+
+        <p class="text-[11px] text-slate-300">
+          Previene cuentas falsas y trolls mediante código de un solo uso por SMS y registro diferenciado (`ORGANIZER` vs `OWNER`).
+        </p>
+
+        <div class="space-y-2">
+          <div class="grid grid-cols-2 gap-1.5 text-xs">
+            <button type="button" onclick="setOtpRole('ORGANIZER')" id="roleBtnOrg" class="py-1.5 rounded-xl font-bold bg-emerald-500 text-slate-950">⚽ Rol: Organizador</button>
+            <button type="button" onclick="setOtpRole('OWNER')" id="roleBtnOwner" class="py-1.5 rounded-xl font-bold bg-slate-800 text-slate-300">🏟 Rol: Dueño</button>
+          </div>
+          <input id="otpName" type="text" value="Rodrigo Sierra" placeholder="Nombre completo"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white" />
+          <div class="flex items-center gap-2">
+            <input id="otpPhone" type="text" value="+51958222333" placeholder="+51 9XX XXX XXX"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs mono text-white" />
+            <button type="button" onclick="requestSmsOtp()" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-xs whitespace-nowrap border border-slate-700">
+              Enviar SMS
+            </button>
+          </div>
+          <div id="otpDevBanner" class="hidden text-[11px] mono bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 rounded-xl px-3 py-1.5"></div>
+          <div class="flex items-center gap-2">
+            <input id="otpCode" type="text" maxlength="6" placeholder="Código de 6 dígitos"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs mono text-white" />
+            <button type="button" onclick="verifySmsOtp()" class="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs whitespace-nowrap">
+              Validar OTP
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast dentro del móvil -->
+    <div id="mobileToast" class="pointer-events-none absolute top-14 left-4 right-4 z-50 space-y-1.5"></div>
+  </div>
+
+  <script>
+    const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+    document.getElementById('sideAdminLink').href = `${API_BASE}/admin/`;
+
+    let mapInstance = null;
+    let mapMarkers = [];
+    let selectedDistrict = 'ALL';
+    let complexes = [];
+    let currentComplex = null;
+    let currentCourt = null;
+    let currentGridDate = null;
+    let pendingSlotHour = null;
+    let activeSplitToken = new URLSearchParams(window.location.search).get('split') || 'pk4de6demo';
+    let selectedPayMethod = 'YAPE';
+    let activeRelayId = null;
+    let selectedOtpRole = 'ORGANIZER';
+    let lastFlashedSlot = null;
+
+    function notifyMobile(title, subtitle, tone = 'emerald') {
+      const box = document.getElementById('mobileToast');
+      const el = document.createElement('div');
+      const cls =
+        tone === 'amber'
+          ? 'bg-amber-950/95 border-amber-400/50 text-amber-200'
+          : tone === 'sky'
+          ? 'bg-sky-950/95 border-sky-400/50 text-sky-200'
+          : 'bg-emerald-950/95 border-emerald-400/50 text-emerald-200';
+      el.className = `border rounded-2xl px-3.5 py-2.5 shadow-xl backdrop-blur-md ${cls}`;
+      el.innerHTML = `<div class="text-xs font-extrabold">${title}</div><div class="text-[10px] opacity-90">${subtitle}</div>`;
+      box.prepend(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    function switchTab(tab) {
+      ['map', 'courts', 'split', 'subs'].forEach((t) => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        const nav = document.getElementById(`nav-${t}`);
+        if (t === tab) {
+          nav.className = 'flex flex-col items-center py-1 rounded-xl text-emerald-400 bg-emerald-500/10 font-bold text-[11px]';
+        } else {
+          nav.className = 'flex flex-col items-center py-1 rounded-xl text-slate-400 hover:text-white font-semibold text-[11px]';
+        }
+      });
+      if (tab === 'map' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
+      if (tab === 'courts' && currentComplex) loadComplexDetail(currentComplex.id);
+      if (tab === 'split') loadMobileSplit();
+      if (tab === 'subs') loadSubstitutes('ALL');
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 1: Mapa de Arequipa y filtro por distritos
+    // -------------------------------------------------------------------------
+    async function initMapAndDistricts() {
+      mapInstance = L.map('aqpMap', { zoomControl: false }).setView([-16.388, -71.545], 12);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap',
+      }).addTo(mapInstance);
+
+      const dRes = await fetch(`${API_BASE}/api/districts`);
+      const districts = await dRes.json();
+      const keyDistricts = [{ code: 'ALL', name: 'Todos AQP' }, ...districts.filter((d) => d.isKeyZone)];
+
+      const chips = document.getElementById('districtChips');
+      chips.innerHTML = keyDistricts
+        .map(
+          (d) =>
+            `<button onclick="filterByDistrict('${d.code}')" id="dchip_${d.code}"
+              class="px-3 py-1 rounded-xl whitespace-nowrap font-bold text-xs ${
+                d.code === 'ALL' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+              }">${d.name}</button>`,
+        )
+        .join('');
+
+      await filterByDistrict('ALL');
+    }
+
+    async function filterByDistrict(code) {
+      selectedDistrict = code;
+      document.querySelectorAll('[id^="dchip_"]').forEach((btn) => {
+        const active = btn.id === `dchip_${code}`;
+        btn.className = `px-3 py-1 rounded-xl whitespace-nowrap font-bold text-xs ${
+          active ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-300'
+        }`;
+      });
+
+      const res = await fetch(`${API_BASE}/api/complexes?district=${code}&lat=-16.3989&lng=-71.5350`);
+      complexes = await res.json();
+      if (!currentComplex && complexes.length) {
+        currentComplex = complexes.find((x) => x.id === '00000000-0000-4000-b000-00000000c001') || complexes[0];
+      }
+
+      // Actualizar pines en el mapa
+      mapMarkers.forEach((m) => m.remove());
+      mapMarkers = [];
+      complexes.forEach((c) => {
+        const icon = L.divIcon({
+          className: '',
+          iconSize: null,
+          html: `<div style="display:inline-block;background:#10b981;color:#052e16;font-weight:800;font-size:10px;padding:3px 8px;border-radius:999px;border:2px solid #fff;box-shadow:0 4px 12px rgba(16,185,129,0.6);white-space:nowrap;transform:translate(-50%,-50%);">⚽ S/ ${(c.minPriceCents / 100).toFixed(0)}</div>`,
+        });
+        const marker = L.marker([c.lat, c.lng], { icon })
+          .addTo(mapInstance)
+          .bindPopup(`<b>${c.name}</b><br/>${c.districtName} · ★ ${c.rating}`);
+        marker.on('click', () => openComplexFromMap(c.id));
+        mapMarkers.push(marker);
+      });
+      if (complexes.length) {
+        mapInstance.setView([complexes[0].lat, complexes[0].lng], code === 'ALL' ? 12 : 14);
+      }
+
+      // Renderizar tarjetas
+      const list = document.getElementById('complexList');
+      list.innerHTML = complexes
+        .map(
+          (c) => `
+          <div onclick="openComplexFromMap('${c.id}')" class="cursor-pointer bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 rounded-2xl p-3 flex items-center gap-3 transition">
+            <img src="${API_BASE}${c.photos?.[0] || '/media/court-1.jpg'}" class="w-16 h-16 rounded-xl object-cover border border-slate-700" />
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] mono font-bold text-emerald-400">${c.districtName} · ${c.distanceKm ?? 1.8} km</span>
+                <span class="text-xs font-bold text-amber-400">★ ${c.rating}</span>
+              </div>
+              <h3 class="text-xs font-extrabold text-white truncate mt-0.5">${c.name}</h3>
+              <p class="text-[11px] text-slate-400 truncate">${c.address}</p>
+              <div class="flex items-center justify-between mt-1">
+                <span class="text-[11px] font-bold text-emerald-300">Desde S/ ${(c.minPriceCents / 100).toFixed(0)}/h</span>
+                <span class="text-[10px] font-semibold text-sky-300">Ver parrilla →</span>
+              </div>
+            </div>
+          </div>`,
+        )
+        .join('');
+    }
+
+    async function openComplexFromMap(complexId) {
+      await loadComplexDetail(complexId);
+      switchTab('courts');
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 2: Detalle de Cancha y Parrilla en Tiempo Real
+    // -------------------------------------------------------------------------
+    async function loadComplexDetail(complexId) {
+      const res = await fetch(`${API_BASE}/api/complexes/${complexId}`);
+      const detail = await res.json();
+      currentComplex = detail;
+
+      document.getElementById('detailPhoto').src = `${API_BASE}${detail.photos?.[0] || '/media/court-1.jpg'}`;
+      document.getElementById('detailName').textContent = detail.name;
+      document.getElementById('detailAddress').textContent = `${detail.address} (${detail.districtName})`;
+      document.getElementById('detailRating').textContent = `★ ${detail.rating}`;
+      document.getElementById('detailReviewsCount').textContent = `${detail.reviewsCount} reseñas`;
+
+      if (!currentCourt || currentCourt.complexId !== detail.id) {
+        currentCourt = detail.courts[0];
+      }
+
+      const pills = document.getElementById('courtPills');
+      pills.innerHTML = detail.courts
+        .map(
+          (c) => `
+          <button onclick="selectCourt('${c.id}')"
+            class="py-2 px-2 rounded-xl text-[11px] font-bold border transition truncate ${
+              currentCourt?.id === c.id
+                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                : 'bg-slate-900 text-slate-300 border-slate-800'
+            }">${c.name}</button>`,
+        )
+        .join('');
+
+      document.getElementById('reviewsList').innerHTML = (detail.reviews || [])
+        .map(
+          (r) => `
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 text-[11px]">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200">${r.author}</span>
+              <span class="text-amber-400 font-bold">${'★'.repeat(r.rating)}</span>
+            </div>
+            <p class="text-slate-400 mt-0.5">${r.comment}</p>
+          </div>`,
+        )
+        .join('');
+
+      if (currentCourt) await loadCourtAvailability(currentCourt.id);
+    }
+
+    async function selectCourt(courtId) {
+      currentCourt = currentComplex.courts.find((c) => c.id === courtId);
+      await loadComplexDetail(currentComplex.id);
+    }
+
+    async function loadCourtAvailability(courtId) {
+      const res = await fetch(`${API_BASE}/api/courts/${courtId}/availability`);
+      const data = await res.json();
+      currentGridDate = data.date;
+      document.getElementById('mobileGridDate').textContent = data.date;
+
+      const primeSlots = data.slots.filter((s) => s.hour >= 16);
+      const grid = document.getElementById('mobileSlotsGrid');
+      grid.innerHTML = primeSlots
+        .map((s) => {
+          const flash = lastFlashedSlot === `${courtId}:${s.hour}` ? 'slot-pulse' : '';
+          const soles = `S/ ${(s.priceCents / 100).toFixed(0)}`;
+          if (s.status === 'FREE') {
+            return `
+              <button onclick="openBookModal(${s.hour}, ${s.priceCents})"
+                class="${flash} rounded-xl p-2.5 bg-emerald-950/35 hover:bg-emerald-500/25 border border-emerald-500/40 text-left transition">
+                <div class="flex items-center justify-between">
+                  <span class="mono font-bold text-xs text-white">${s.label}</span>
+                  <span class="mono text-[10px] text-emerald-300">${soles}</span>
+                </div>
+                <div class="text-[10px] font-bold text-emerald-400 mt-1.5">● Disponible</div>
+              </button>`;
+          }
+          if (s.status === 'HELD' && s.split) {
+            return `
+              <button onclick="switchTab('split')"
+                class="${flash} rounded-xl p-2.5 bg-sky-950/45 border border-sky-500/45 text-left">
+                <div class="flex items-center justify-between">
+                  <span class="mono font-bold text-xs text-white">${s.label}</span>
+                  <span class="mono text-[10px] text-sky-300">${s.split.paid}/${s.split.total}</span>
+                </div>
+                <div class="text-[10px] font-bold text-sky-300 mt-1.5">⚡ Split en curso</div>
+              </button>`;
+          }
+          const isReception = s.status === 'BLOCKED';
+          return `
+            <div class="${flash} rounded-xl p-2.5 ${
+              isReception ? 'bg-amber-950/35 border-amber-500/40' : 'bg-slate-950/70 border-slate-800'
+            } border opacity-85">
+              <div class="flex items-center justify-between">
+                <span class="mono font-bold text-xs text-slate-300">${s.label}</span>
+                <span class="mono text-[9px] px-1 rounded ${
+                  isReception ? 'bg-amber-500/20 text-amber-300' : 'bg-purple-500/20 text-purple-300'
+                }">${isReception ? 'RECEP.' : 'APP'}</span>
+              </div>
+              <div class="text-[10px] font-semibold ${
+                isReception ? 'text-amber-300' : 'text-slate-400'
+              } mt-1.5">🔒 Ocupado</div>
+            </div>`;
+        })
+        .join('');
+    }
+
+    function openBookModal(hour, priceCents) {
+      pendingSlotHour = hour;
+      document.getElementById('bookModalTitle').textContent =
+        `${currentCourt.name} · ${String(hour).padStart(2, '0')}:00 (S/ ${(priceCents / 100).toFixed(0)})`;
+      const m = document.getElementById('bookSlotModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeBookModal() {
+      const m = document.getElementById('bookSlotModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    async function submitMobileBooking(paymentMode) {
+      closeBookModal();
+      const res = await fetch(`${API_BASE}/api/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courtId: currentCourt.id,
+          date: currentGridDate,
+          hour: pendingSlotHour,
+          paymentMode,
+          totalSlots: 6,
+          method: 'YAPE',
+          payerName: 'Diego Salas (Organizador)',
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notifyMobile('Turno no disponible (409)', data.message || 'Fue bloqueado en recepción', 'amber');
+        await loadCourtAvailability(currentCourt.id);
+        return;
+      }
+      if (paymentMode === 'SPLIT' && data.split?.shareToken) {
+        activeSplitToken = data.split.shareToken;
+        notifyMobile('Split Payment creado (1 de 6)', 'Comparte el link por WhatsApp con tu equipo', 'sky');
+        switchTab('split');
+      } else {
+        notifyMobile('¡Reserva Confirmada!', 'El panel de recepción fue actualizado en vivo.', 'emerald');
+        await loadCourtAvailability(currentCourt.id);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 3: Split Payment ("Cupos pagados: 4 de 6")
+    // -------------------------------------------------------------------------
+    async function loadMobileSplit() {
+      const res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}`);
+      if (!res.ok) return;
+      const sp = await res.json();
+
+      document.getElementById('mSplitBadge').textContent = `TOKEN: ${sp.shareToken}`;
+      document.getElementById('mSplitCourt').textContent = `${sp.courtName} (${sp.complexName})`;
+      document.getElementById('mSplitMeta').textContent =
+        `${sp.date} · ${sp.hourLabel} hrs · Organiza: ${sp.organizerName} (${sp.organizerPhoneMasked})`;
+      document.getElementById('mSplitLabel').textContent = `Cupos pagados: ${sp.paidSlots} de ${sp.totalSlots}`;
+      document.getElementById('mSplitMoney').textContent =
+        `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
+      document.getElementById('nav-split').innerHTML = `<span>💸</span><span>Split ${sp.paidSlots}/${sp.totalSlots}</span>`;
+
+      const segs = [];
+      for (let i = 1; i <= sp.totalSlots; i++) {
+        const paid = i <= sp.paidSlots;
+        segs.push(
+          `<div class="h-3 rounded-full ${
+            paid ? 'bg-gradient-to-r from-emerald-400 to-sky-400 shadow-sm shadow-emerald-500/40' : 'bg-slate-800'
+          }"></div>`,
+        );
+      }
+      document.getElementById('mSplitSegments').innerHTML = segs.join('');
+
+      document.getElementById('mSplitHint').innerHTML =
+        sp.remainingSlots === 0
+          ? `<span class="text-emerald-400 font-bold">✓ ¡6 de 6 cupos completados! Reserva CONFIRMADA automáticamente.</span>`
+          : `Faltan <b>${sp.remainingSlots} jugador(es)</b> por abonar su cuota de <b>S/ ${(sp.amountPerSlotCents / 100).toFixed(2)}</b>.`;
+
+      document.getElementById('mWhatsappBtn').href = sp.whatsappUrl;
+
+      document.getElementById('mSplitSharesList').innerHTML = (sp.shares || [])
+        .map(
+          (sh, idx) => `
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between text-xs">
+            <div>
+              <span class="font-bold text-white">#${idx + 1} ${sh.payerName}</span>
+              <span class="block text-[10px] mono text-slate-400">Cargo Culqi: ${sh.providerChargeId}</span>
+            </div>
+            <span class="mono text-xs font-bold text-emerald-400">${sh.method} · S/ ${(sh.amountCents / 100).toFixed(2)}</span>
+          </div>`,
+        )
+        .join('');
+    }
+
+    function selectPayMethod(m) {
+      selectedPayMethod = m;
+      ['YAPE', 'PLIN', 'CARD'].forEach((k) => {
+        const btn = document.getElementById(`payBtn${k}`);
+        btn.className =
+          k === m
+            ? 'py-2 rounded-xl font-bold bg-emerald-500 text-slate-950 border border-emerald-300'
+            : 'py-2 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700';
+      });
+    }
+
+    async function payOneSlotFromMobile() {
+      const payerName = document.getElementById('payerNameInput').value.trim() || 'Samuel I. (UCSP)';
+      const res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payerName, method: selectedPayMethod }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notifyMobile('Split completado', data.message || 'Todos los cupos ya fueron pagados', 'sky');
+        return;
+      }
+      document.getElementById('payerNameInput').value = 'Samuel I. (Jugador 6)';
+      await loadMobileSplit();
+    }
+
+    function copySplitLink() {
+      const url = `${API_BASE}/mobile/?split=${activeSplitToken}`;
+      navigator.clipboard?.writeText(url);
+      notifyMobile('Link copiado al portapapeles', url, 'sky');
+    }
+
+    // -------------------------------------------------------------------------
+    // TAB 4: Bolsa de Suplentes Verificados (Video 15-30s + Chat Proxy)
+    // -------------------------------------------------------------------------
+    async function loadSubstitutes(position = 'ALL') {
+      ['ALL', 'ARQUERO', 'DEFENSA', 'MEDIOCAMPO', 'DELANTERO'].forEach((p) => {
+        const btn = document.getElementById(`pos_${p}`);
+        if (btn) {
+          btn.className =
+            p === position
+              ? 'px-2.5 py-1 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs'
+              : 'px-2.5 py-1 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs';
+        }
+      });
+
+      const res = await fetch(`${API_BASE}/api/substitutes?position=${position}`);
+      const subs = await res.json();
+
+      document.getElementById('substitutesList').innerHTML = subs
+        .map(
+          (s) => `
+          <div class="bg-slate-900/95 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+            <!-- Minirreproductor de video de 15 a 30 segundos -->
+            <div class="relative bg-slate-950 h-44">
+              <video src="${API_BASE}${s.clipUrl}" poster="${API_BASE}${s.clipPosterUrl}"
+                controls preload="metadata" playsinline
+                class="w-full h-full object-cover"></video>
+              <span class="absolute top-2 left-2 text-[10px] mono font-bold px-2 py-0.5 rounded-full bg-slate-950/85 text-emerald-300 border border-emerald-500/40">
+                🎬 Clip verificado · ${s.clipDurationS}s
+              </span>
+              <span class="absolute top-2 right-2 text-[10px] mono font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950">
+                ${s.position}
+              </span>
+            </div>
+
+            <div class="p-3 space-y-2">
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="text-xs font-extrabold text-white">${s.fullName}</h3>
+                    ${
+                      s.isVerified
+                        ? '<span class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">✓ Verificado</span>'
+                        : ''
+                    }
+                  </div>
+                  <p class="text-[11px] text-slate-400">${s.districtName || 'Arequipa'} · Tel: <span class="mono text-slate-300">${s.phoneMasked}</span></p>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-extrabold text-emerald-400 mono">${s.punctualityScore}%</span>
+                  <span class="block text-[9px] uppercase text-slate-400">Puntualidad (${s.matchesPlayed} PJ)</span>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-300">${s.bio || ''}</p>
+
+              <button onclick="inviteSubstitute('${s.id}')"
+                class="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+                ⚡ Convocar Ahora (Chat / VoIP Enmascarado)
+              </button>
+            </div>
+          </div>`,
+        )
+        .join('');
+    }
+
+    async function inviteSubstitute(subId) {
+      const res = await fetch(`${API_BASE}/api/substitutes/${subId}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json();
+      activeRelayId = data.relay.id;
+      document.getElementById('relaySubName').textContent =
+        `${data.substitute.fullName} (${data.substitute.position})`;
+      document.getElementById('relayProxyInfo').textContent =
+        `Central VoIP: ${data.relay.proxyNumber} · Celular real oculto (${data.substitute.phoneMasked})`;
+      renderRelayMessages(data.messages);
+
+      const m = document.getElementById('relayModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function renderRelayMessages(messages) {
+      const box = document.getElementById('relayMessagesBox');
+      box.innerHTML = (messages || [])
+        .map(
+          (m) => `
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-2">
+            <div class="flex items-center justify-between text-[10px] text-emerald-400 font-bold">
+              <span>${m.senderName || 'Organizador'}</span>
+              ${m.wasRedacted ? '<span class="text-amber-300">🔒 Teléfono redactado por seguridad</span>' : ''}
+            </div>
+            <p class="text-slate-200 mt-0.5">${m.body}</p>
+          </div>`,
+        )
+        .join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendRelayChat(e) {
+      e.preventDefault();
+      const input = document.getElementById('relayInput');
+      const text = input.value.trim();
+      if (!text || !activeRelayId) return;
+      input.value = '';
+      await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`);
+      const d = await r.json();
+      renderRelayMessages(d.messages);
+    }
+
+    function closeRelayModal() {
+      const m = document.getElementById('relayModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    // -------------------------------------------------------------------------
+    // Modal OTP SMS Antifraude
+    // -------------------------------------------------------------------------
+    function openOtpModal() {
+      const m = document.getElementById('otpModal');
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+    function closeOtpModal() {
+      const m = document.getElementById('otpModal');
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+    function setOtpRole(role) {
+      selectedOtpRole = role;
+      document.getElementById('roleBtnOrg').className =
+        role === 'ORGANIZER'
+          ? 'py-1.5 rounded-xl font-bold bg-emerald-500 text-slate-950'
+          : 'py-1.5 rounded-xl font-bold bg-slate-800 text-slate-300';
+      document.getElementById('roleBtnOwner').className =
+        role === 'OWNER'
+          ? 'py-1.5 rounded-xl font-bold bg-emerald-500 text-slate-950'
+          : 'py-1.5 rounded-xl font-bold bg-slate-800 text-slate-300';
+    }
+    async function requestSmsOtp() {
+      const phone = document.getElementById('otpPhone').value.trim();
+      const res = await fetch(`${API_BASE}/api/auth/otp/request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (data.devCode) {
+        const b = document.getElementById('otpDevBanner');
+        b.classList.remove('hidden');
+        b.textContent = `[SMS DEMO] Tu código OTP es: ${data.devCode}`;
+        document.getElementById('otpCode').value = data.devCode;
+      }
+    }
+    async function verifySmsOtp() {
+      const phone = document.getElementById('otpPhone').value.trim();
+      const code = document.getElementById('otpCode').value.trim();
+      const fullName = document.getElementById('otpName').value.trim();
+      const res = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code, fullName, role: selectedOtpRole }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        document.getElementById('userChipBtn').textContent =
+          `${data.user.fullName.split(' ')[0]} (${data.user.role === 'OWNER' ? 'Dueño' : 'Org.'})`;
+        closeOtpModal();
+        notifyMobile(
+          `Autenticado (${data.user.role})`,
+          `Teléfono protegido: ${data.user.phoneMasked}`,
+          'emerald',
+        );
+      } else {
+        notifyMobile('Error OTP', data.message || 'Código inválido', 'amber');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // Conexión Socket.io en tiempo real
+    // -------------------------------------------------------------------------
+    const socket = io(API_BASE, { query: { complexId: '00000000-0000-4000-b000-00000000c001' } });
+
+    socket.on('slot:updated', (payload) => {
+      lastFlashedSlot = `${payload.courtId}:${payload.hour}`;
+      notifyMobile(
+        payload.status === 'BLOCKED'
+          ? `🔒 Turno ${payload.label} bloqueado en Recepción`
+          : payload.status === 'FREE'
+          ? `🔓 Turno ${payload.label} liberado`
+          : `⚽ Turno ${payload.label} actualizado`,
+        `${payload.courtName} · Sincronización instantánea Socket.io`,
+        payload.status === 'BLOCKED' ? 'amber' : 'emerald',
+      );
+      if (currentCourt && currentCourt.id === payload.courtId) {
+        loadCourtAvailability(currentCourt.id);
+      }
+    });
+
+    socket.on('split:updated', (payload) => {
+      notifyMobile(
+        `💸 ${payload.progressLabel}`,
+        `Pagó ${payload.lastPayer?.name || ''} (${payload.lastPayer?.method || 'YAPE'})`,
+        'sky',
+      );
+      loadMobileSplit();
+      if (currentCourt) loadCourtAvailability(currentCourt.id);
+    });
+
+    socket.on('demo:reset', () => {
+      if (currentCourt) loadCourtAvailability(currentCourt.id);
+      loadMobileSplit();
+    });
+
+    initMapAndDistricts().then(async () => {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['map', 'courts', 'split', 'subs'].includes(tab)) {
+        if (tab === 'courts' && currentComplex) {
+          await loadComplexDetail(currentComplex.id);
+        }
+        switchTab(tab);
+      }
+      if (params.get('modal') === 'otp') {
+        await requestSmsOtp();
+        openOtpModal();
+      } else if (params.get('modal') === 'relay') {
+        switchTab('subs');
+        await loadSubstitutes('ALL');
+        await inviteSubstitute('00000000-0000-4000-9000-000000000501');
+        if (activeRelayId) {
+          await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: 'Confirmo llegada 19:45. Mi cel es 958222333 por si acaso.' }),
+          });
+          const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`);
+          const d = await r.json();
+          renderRelayMessages(d.messages);
+        }
+      }
+    });
+    loadMobileSplit();
+  </script>
+</body>
+</html>

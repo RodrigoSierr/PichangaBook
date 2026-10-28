@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PichangaBook Arequipa · Panel Web Recepción y Dueños</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            pitch: {
+              50: '#ecfdf5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              900: '#064e3b',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      background-color: #070d19;
+      background-image:
+        radial-gradient(at 15% 10%, rgba(16, 185, 129, 0.10) 0px, transparent 45%),
+        radial-gradient(at 85% 90%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+    }
+    .slot-flash {
+      animation: flashPulse 1.3s ease-out;
+    }
+    @keyframes flashPulse {
+      0% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
+      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-950">
+
+  <!-- Barra superior omnicanal -->
+  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img id="brandLogo" src="/media/logo.png" onerror="this.style.display='none'" alt="Logo" class="w-10 h-10 rounded-xl border border-emerald-500/40 shadow-lg shadow-emerald-500/10" />
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold tracking-tight text-lg text-white">PichangaBook <span class="text-emerald-400">Arequipa</span></span>
+            <span class="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Panel Dueños · Omnicanal</span>
+          </div>
+          <p class="text-xs text-slate-400">Sincronización en tiempo real App Móvil ↔ Recepción · Prevención ACID de Doble Booking</p>
+        </div>
+      </div>
+
+      <!-- Selector de sede + Estado WebSocket + Acciones rápidas -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5">
+          <span class="text-xs text-slate-400">Sede:</span>
+          <select id="complexSelector" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer">
+            <option value="00000000-0000-4000-b000-00000000c001">Complejo Deportivo El Misti (Cayma)</option>
+            <option value="00000000-0000-4000-b000-00000000c006">El Misti · Sede Sachaca (RUC Pendiente)</option>
+          </select>
+        </div>
+
+        <div id="wsBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-xs font-mono text-emerald-300">
+          <span id="wsDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span id="wsText">SOCKET.IO EN VIVO</span>
+        </div>
+
+        <button onclick="openQuickBlockModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Bloqueo Rápido (Venta en Recepción)
+        </button>
+
+        <a id="openMobileLink" href="/mobile/" target="_blank" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
+          <span>📱 Abrir App Móvil Espejo</span>
+        </a>
+
+        <button onclick="resetDemoData()" title="Restaurar datos semilla para repetir demostración" class="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs transition">
+          ↺ Reset Demo
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+
+    <!-- Banda de Identidad del Complejo + Validación Documental RUC / Licencia Municipal -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <!-- Tarjeta del complejo y KPIs -->
+      <div class="lg:col-span-8 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between gap-4">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              <h1 id="complexName" class="text-xl sm:text-2xl font-extrabold text-white">Complejo Deportivo El Misti</h1>
+              <span id="verificationBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                ✓ RUC VERIFICADO SUNAT
+              </span>
+            </div>
+            <p id="complexMeta" class="text-xs sm:text-sm text-slate-400 mt-1">
+              RUC <span class="font-mono text-slate-200">20601458722</span> · INVERSIONES DEPORTIVAS EL MISTI S.A.C. · Av. Ejército 1020, Cayma
+            </p>
+          </div>
+          <div class="text-right">
+            <span class="text-[11px] uppercase tracking-wider text-slate-400 block">Administrador en turno</span>
+            <span id="ownerName" class="text-sm font-bold text-white">Carlos Huamán</span>
+            <span id="ownerPhone" class="block text-xs font-mono text-emerald-400">+51 9•• ••• 222 (Protegido)</span>
+          </div>
+        </div>
+
+        <!-- 5 KPIs -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-800/80">
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-[11px] text-slate-400 block">Confirmadas (App)</span>
+            <span id="kpiConfirmed" class="text-2xl font-extrabold text-emerald-400 font-mono">0</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-[11px] text-slate-400 block">Bloqueos Recepción</span>
+            <span id="kpiBlocked" class="text-2xl font-extrabold text-amber-400 font-mono">0</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-[11px] text-slate-400 block">Split Payment Activos</span>
+            <span id="kpiSplits" class="text-2xl font-extrabold text-sky-400 font-mono">0</span>
+          </div>
+          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
+            <span class="text-[11px] text-slate-400 block">Ocupación Hoy</span>
+            <span id="kpiOccupancy" class="text-2xl font-extrabold text-white font-mono">0%</span>
+          </div>
+          <div class="col-span-2 sm:col-span-1 bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
+            <span class="text-[11px] text-emerald-300 block">Recaudación Día</span>
+            <span id="kpiRevenue" class="text-2xl font-extrabold text-emerald-300 font-mono">S/ 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta Antifraude: Validación Documental de Complejo (RUC / Licencia Municipal) -->
+      <div class="lg:col-span-4 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between gap-3">
+        <div>
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Seguridad Antifraude · Dueños</span>
+            <span class="text-[11px] font-mono text-slate-400">Módulo 11 SUNAT</span>
+          </div>
+          <h2 class="text-sm font-bold text-white mt-1">Validación Documental (RUC / Licencia)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">
+            Solo los complejos con ficha RUC o licencia municipal verificada aparecen como pines activos en el mapa de Arequipa.
+          </p>
+        </div>
+
+        <!-- Validador rápido de RUC + Subida de documento -->
+        <div class="space-y-2.5 bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+          <div class="flex items-center gap-2">
+            <input id="rucCheckInput" type="text" maxlength="11" value="20601458722" placeholder="Ingresa RUC (11 dígitos)"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:border-emerald-500 focus:outline-none" />
+            <button onclick="checkRucValidity()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700 whitespace-nowrap">
+              Validar RUC
+            </button>
+          </div>
+          <div id="rucCheckOutput" class="text-[11px] font-mono text-emerald-400">
+            ✓ RUC 20601458722 válido (PERSONA_JURIDICA · dígito verificador OK)
+          </div>
+
+          <form id="docUploadForm" onsubmit="uploadVerificationDoc(event)" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
+            <input id="docFileInput" type="file" accept=".pdf,image/*" class="text-[11px] text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30" />
+            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs whitespace-nowrap transition">
+              Subir RUC / Licencia
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección Central: Parrilla Horaria en Tiempo Real + Bitácora Omnicanal -->
+    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Parrilla Horaria de las Canchas (8 columnas) -->
+      <div class="lg:col-span-8 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+              <span>Agenda Horaria en Tiempo Real</span>
+              <span id="currentDateBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-emerald-300 border border-slate-700"></span>
+            </h2>
+            <p class="text-xs text-slate-400">
+              Haz clic en cualquier turno <span class="text-emerald-400 font-semibold">LIBRE</span> para ejecutar un <b>Bloqueo Rápido en Recepción</b> o en un turno <span class="text-amber-400 font-semibold">BLOQUEADO</span> para liberarlo.
+            </p>
+          </div>
+
+          <!-- Leyenda de estados -->
+          <div class="flex flex-wrap items-center gap-2 text-[11px]">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Libre
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/30">
+              <span class="w-2 h-2 rounded-full bg-sky-400"></span> Split Payment (En curso)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30">
+              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Confirmado App
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Bloqueado Recepción/Tel.
+            </span>
+          </div>
+        </div>
+
+        <!-- Selector de filtro de horario -->
+        <div class="flex items-center justify-between gap-2 bg-slate-950/60 border border-slate-800/80 rounded-xl px-3.5 py-2">
+          <div class="flex items-center gap-2 text-xs text-slate-300">
+            <span>Franja visible:</span>
+            <button onclick="setHourFilter('PRIME')" id="btnFilterPrime" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Horario Estelar (16:00 - 23:00)</button>
+            <button onclick="setHourFilter('ALL')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs">Todo el día (07:00 - 23:00)</button>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 hidden sm:inline">Tarifa nocturna LED desde 18:00</span>
+        </div>
+
+        <!-- Contenedor dinámico de canchas -->
+        <div id="courtsContainer" class="space-y-5"></div>
+      </div>
+
+      <!-- Columna derecha: Monitor de Split Payment (4 de 6) + Bitácora Omnicanal en vivo -->
+      <div class="lg:col-span-4 space-y-5">
+
+        <!-- Tarjeta destacada: Seguimiento en vivo de Split Payment -->
+        <div class="bg-slate-900/75 border border-sky-500/30 rounded-2xl p-5 space-y-3 shadow-lg shadow-sky-500/5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Split Payment · En Vivo</span>
+            <span id="splitStatusBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">HELD · 20:00</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Cancha 1 · Fútbol 6 (Organiza: Diego Salas)</h3>
+            <p class="text-xs text-slate-400">Cobro dividido por WhatsApp · Culqi / Yape / Plin</p>
+          </div>
+
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span id="splitProgressText" class="font-extrabold text-white">Cupos pagados: 4 de 6</span>
+              <span id="splitAmountText" class="font-mono text-sky-300">S/ 60.00 / S/ 90.00</span>
+            </div>
+            <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
+              <div id="splitProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-500" style="width: 66.6%"></div>
+            </div>
+            <div id="splitPayersList" class="pt-1 space-y-1 text-[11px] text-slate-300 max-h-28 overflow-y-auto"></div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="simulateSplitPaymentFromAdmin()" class="w-full py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-md shadow-sky-500/10">
+              + Simular Pago Yape de Jugador (S/ 15.00)
+            </button>
+          </div>
+        </div>
+
+        <!-- Bitácora Omnicanal en Tiempo Real -->
+        <div class="bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-bold text-white">Bitácora Omnicanal en Tiempo Real</h3>
+              <p class="text-xs text-slate-400">Eventos instantáneos WebSockets (`slot:updated`, `split:updated`)</p>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-400">LIVE</span>
+          </div>
+          <div id="eventsFeed" class="space-y-2 max-h-[380px] overflow-y-auto pr-1"></div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Bloqueo Rápido en Recepción (Venta Presencial o Telefónica) -->
+  <div id="quickBlockModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[11px] font-mono uppercase text-amber-400">Prevención de Doble Booking</span>
+          <h3 class="text-lg font-extrabold text-white">Bloqueo Rápido en Recepción</h3>
+        </div>
+        <button onclick="closeQuickBlockModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <p class="text-xs text-slate-300">
+        Al bloquear este turno por venta en ventanilla o llamada telefónica, la parrilla de la <b>App Móvil</b> se actualizará en menos de 50 ms vía Socket.io impidiendo reservas duplicadas.
+      </p>
+
+      <form onsubmit="submitQuickBlock(event)" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-300 block mb-1">Cancha</label>
+          <select id="modalCourtId" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"></select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">Hora del Turno</label>
+            <select id="modalHour" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white"></select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-300 block mb-1">Canal de Venta</label>
+            <select id="modalChannel" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="RECEPTION">Recepción (Efectivo/POS)</option>
+              <option value="PHONE">Llamada Telefónica</option>
+              <option value="WHATSAPP">WhatsApp Directo</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-300 block mb-1">Cliente / Grupo Deportivo</label>
+          <input id="modalCustomerName" type="text" required value="Sr. Paredes (Pago en ventanilla)"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-300 block mb-1">Observación (opcional)</label>
+          <input id="modalNotes" type="text" placeholder="Ej. Canceló S/ 90 en efectivo, requiere chalecos"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeQuickBlockModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20">
+            🔒 Bloquear Turno Ahora
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast de notificaciones en tiempo real -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm"></div>
+
+  <script>
+    const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
+    const DEFAULT_SPLIT_TOKEN = 'pk4de6demo';
+
+    let currentComplexId = '00000000-0000-4000-b000-00000000c001';
+    let currentDate = null;
+    let hourFilter = 'PRIME'; // 'PRIME' (16..22) | 'ALL'
+    let dashboardData = null;
+    let lastChangedKey = null;
+    let socket = null;
+
+    document.getElementById('openMobileLink').href = `${API_BASE}/mobile/`;
+    document.getElementById('brandLogo').src = `${API_BASE}/media/logo.png`;
+
+    function showToast(title, detail, tone = 'emerald') {
+      const colors = {
+        emerald: 'border-emerald-500/50 bg-emerald-950/90 text-emerald-200',
+        amber: 'border-amber-500/50 bg-amber-950/90 text-amber-200',
+        sky: 'border-sky-500/50 bg-sky-950/90 text-sky-200',
+        rose: 'border-rose-500/50 bg-rose-950/90 text-rose-200',
+      };
+      const el = document.createElement('div');
+      el.className = `border rounded-xl px-4 py-3 shadow-2xl backdrop-blur-md transition-all ${colors[tone] || colors.emerald}`;
+      el.innerHTML = `<div class="text-xs font-extrabold">${title}</div><div class="text-[11px] opacity-90 mt-0.5">${detail}</div>`;
+      document.getElementById('toastContainer').prepend(el);
+      setTimeout(() => el.remove(), 4500);
+    }
+
+    async function loadDashboard() {
+      const url = `${API_BASE}/api/owner/complexes/${currentComplexId}/dashboard${currentDate ? `?date=${currentDate}` : ''}`;
+      const res = await fetch(url);
+      dashboardData = await res.json();
+      currentDate = dashboardData.date;
+      renderDashboard();
+      await loadSplitMonitor();
+    }
+
+    function renderDashboard() {
+      if (!dashboardData) return;
+      const { complex, courts, kpis, events, date } = dashboardData;
+
+      document.getElementById('complexName').textContent = complex.name;
+      document.getElementById('currentDateBadge').textContent = `HOY · ${date}`;
+      document.getElementById('ownerName').textContent = complex.ownerName;
+      document.getElementById('ownerPhone').textContent = `${complex.ownerPhoneMasked} (Enmascarado)`;
+      document.getElementById('rucCheckInput').value = complex.ruc;
+      document.getElementById('complexMeta').innerHTML =
+        `RUC <span class="font-mono text-slate-200">${complex.ruc}</span> · ${complex.businessName || ''} · ${complex.address}, ${complex.districtName}`;
+
+      // Badge de estado de verificación documental (RUC/Licencia)
+      const vBadge = document.getElementById('verificationBadge');
+      if (complex.verificationStatus === 'VERIFIED') {
+        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
+        vBadge.textContent = '✓ RUC VERIFICADO SUNAT';
+      } else if (complex.verificationStatus === 'IN_REVIEW') {
+        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 animate-pulse';
+        vBadge.textContent = '⏳ DOCUMENTO EN REVISIÓN...';
+      } else {
+        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        vBadge.textContent = '⚠ PENDIENTE SUBIR RUC / LICENCIA';
+      }
+
+      // KPIs
+      document.getElementById('kpiConfirmed').textContent = kpis.confirmedCount;
+      document.getElementById('kpiBlocked').textContent = kpis.receptionBlockedCount;
+      document.getElementById('kpiSplits').textContent = kpis.activeSplitsCount;
+      document.getElementById('kpiOccupancy').textContent = `${kpis.occupancyPercent}%`;
+      document.getElementById('kpiRevenue').textContent = `S/ ${(kpis.revenueCents / 100).toFixed(0)}`;
+
+      // Parrilla horaria por cancha
+      const container = document.getElementById('courtsContainer');
+      container.innerHTML = courts
+        .map((court) => {
+          const slots = court.slots.filter((s) => (hourFilter === 'PRIME' ? s.hour >= 16 : true));
+          const cards = slots
+            .map((slot) => {
+              const key = `${court.id}:${slot.hour}`;
+              const flash = lastChangedKey === key ? 'slot-flash' : '';
+              const price = `S/ ${(slot.priceCents / 100).toFixed(0)}`;
+
+              if (slot.status === 'FREE') {
+                return `
+                  <button onclick="quickBlockSlot('${court.id}', '${court.name}', ${slot.hour})"
+                    class="${flash} group text-left rounded-xl p-2.5 bg-emerald-950/25 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400 transition flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between w-full">
+                      <span class="font-mono font-bold text-xs text-white">${slot.label}</span>
+                      <span class="text-[10px] font-mono text-emerald-300">${price}</span>
+                    </div>
+                    <div class="mt-2">
+                      <span class="text-[11px] font-bold text-emerald-400 group-hover:hidden">● LIBRE</span>
+                      <span class="text-[11px] font-bold text-amber-300 hidden group-hover:inline">🔒 Bloquear</span>
+                    </div>
+                  </button>`;
+              }
+
+              if (slot.status === 'HELD' && slot.split) {
+                const pct = Math.round((slot.split.paid / slot.split.total) * 100);
+                return `
+                  <div class="${flash} rounded-xl p-2.5 bg-sky-950/40 border border-sky-500/40 flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono font-bold text-xs text-white">${slot.label}</span>
+                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">SPLIT ${slot.split.paid}/${slot.split.total}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden my-1">
+                      <div class="h-full bg-sky-400" style="width:${pct}%"></div>
+                    </div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-300">
+                      <span class="truncate">${slot.organizerName || 'App Móvil'}</span>
+                      <button onclick="releaseSlot('${slot.bookingId}')" class="text-rose-300 hover:underline">Liberar</button>
+                    </div>
+                  </div>`;
+              }
+
+              if (slot.status === 'CONFIRMED') {
+                return `
+                  <div class="${flash} rounded-xl p-2.5 bg-purple-950/35 border border-purple-500/40 flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono font-bold text-xs text-white">${slot.label}</span>
+                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">APP</span>
+                    </div>
+                    <div class="text-[11px] font-semibold text-purple-200 truncate mt-1">${slot.organizerName || 'Reserva App'}</div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>Pagado</span>
+                      <button onclick="releaseSlot('${slot.bookingId}')" class="text-rose-300 hover:underline">Liberar</button>
+                    </div>
+                  </div>`;
+              }
+
+              if (slot.status === 'BLOCKED') {
+                return `
+                  <div class="${flash} rounded-xl p-2.5 bg-amber-950/35 border border-amber-500/40 flex flex-col justify-between min-h-[82px]">
+                    <div class="flex items-center justify-between">
+                      <span class="font-mono font-bold text-xs text-white">${slot.label}</span>
+                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">${slot.channel || 'RECEP.'}</span>
+                    </div>
+                    <div class="text-[11px] font-semibold text-amber-200 truncate mt-1" title="${slot.customerName || 'Recepción'}">${slot.customerName || 'Venta Recepción'}</div>
+                    <div class="flex items-center justify-between text-[10px] text-slate-400">
+                      <span>🔒 Bloqueado</span>
+                      <button onclick="releaseSlot('${slot.bookingId}')" class="text-amber-300 hover:text-white font-semibold underline">Liberar</button>
+                    </div>
+                  </div>`;
+              }
+
+              return `
+                <div class="rounded-xl p-2.5 bg-slate-950/40 border border-slate-800/60 opacity-50 flex flex-col justify-between min-h-[82px]">
+                  <span class="font-mono text-xs text-slate-500">${slot.label}</span>
+                  <span class="text-[10px] text-slate-600">Cerrado</span>
+                </div>`;
+            })
+            .join('');
+
+          return `
+            <div class="bg-slate-950/60 border border-slate-800/90 rounded-2xl p-4 space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 class="text-sm font-extrabold text-white">${court.name}</h3>
+                  <span class="text-xs text-slate-400">Fútbol ${court.playersPerSide} vs ${court.playersPerSide} · Grass Sintético Pro · Día S/ ${(court.priceCents / 100).toFixed(0)} / Noche S/ ${(court.pricePeakCents / 100).toFixed(0)}</span>
+                </div>
+                <button onclick="openQuickBlockModal('${court.id}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
+                  + Bloquear turno en ${court.name.split('·')[0]}
+                </button>
+              </div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-2.5">${cards}</div>
+            </div>`;
+        })
+        .join('');
+
+      // Poblar opciones del modal
+      const courtSel = document.getElementById('modalCourtId');
+      courtSel.innerHTML = courts.map((c) => `<option value="${c.id}">${c.name}</option>`).join('');
+      populateModalHours();
+
+      // Bitácora de eventos
+      renderEventsFeed(events);
+    }
+
+    function renderEventsFeed(events) {
+      const feed = document.getElementById('eventsFeed');
+      if (!events || !events.length) {
+        feed.innerHTML = `<div class="text-xs text-slate-500">Sin eventos recientes.</div>`;
+        return;
+      }
+      feed.innerHTML = events
+        .map((ev) => {
+          const p = ev.payload || {};
+          const badgeColor =
+            ev.eventType === 'BLOCKED'
+              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              : ev.eventType === 'CONFIRMED'
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              : ev.eventType === 'RELEASED'
+              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+              : 'bg-sky-500/20 text-sky-300 border-sky-500/30';
+          const hourTxt = p.hour !== undefined ? `${String(p.hour).padStart(2, '0')}:00` : '';
+          return `
+            <div class="bg-slate-950/75 border border-slate-800/80 rounded-xl p-2.5 text-xs flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border ${badgeColor}">${ev.eventType}</span>
+                  <span class="text-[10px] font-mono text-slate-400">${ev.channel}</span>
+                  <span class="font-semibold text-white">${p.court || ''} ${hourTxt}</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">
+                  ${p.customerName ? `Cliente: ${p.customerName}` : p.paid ? `Split Payment: ${p.paid}/${p.total} cupos pagados` : 'Sincronizado vía Socket.io'}
+                </p>
+              </div>
+              <span class="text-[10px] font-mono text-slate-500 whitespace-nowrap">${new Date(ev.createdAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>`;
+        })
+        .join('');
+    }
+
+    async function loadSplitMonitor() {
+      try {
+        const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}`);
+        if (!res.ok) return;
+        const sp = await res.json();
+        renderSplitMonitor(sp);
+      } catch {}
+    }
+
+    function renderSplitMonitor(sp) {
+      const pct = Math.min(100, Math.round((sp.paidSlots / sp.totalSlots) * 100));
+      document.getElementById('splitProgressText').textContent = `Cupos pagados: ${sp.paidSlots} de ${sp.totalSlots}`;
+      document.getElementById('splitAmountText').textContent = `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
+      document.getElementById('splitProgressBar').style.width = `${pct}%`;
+      document.getElementById('splitStatusBadge').textContent =
+        sp.status === 'COMPLETED' ? '✓ CONFIRMADO 6/6' : `HELD · ${sp.hourLabel || '20:00'}`;
+
+      if (sp.shares) {
+        document.getElementById('splitPayersList').innerHTML = sp.shares
+          .map(
+            (sh) =>
+              `<div class="flex items-center justify-between bg-slate-900/90 px-2.5 py-1 rounded-lg">
+                <span>✓ ${sh.payerName}</span>
+                <span class="font-mono text-[10px] text-emerald-300">${sh.method} · S/ ${(sh.amountCents / 100).toFixed(2)}</span>
+              </div>`,
+          )
+          .join('');
+      }
+    }
+
+    async function simulateSplitPaymentFromAdmin() {
+      const names = ['Rodrigo S. (UCSP)', 'Samuel I. (UCSP)', 'Álvaro M.', 'Gonzalo P.'];
+      const payerName = names[Math.floor(Math.random() * names.length)];
+      const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payerName, method: 'YAPE' }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast('Split ya completado', data.message || 'Todos los cupos fueron cubiertos', 'sky');
+        return;
+      }
+      renderSplitMonitor(data);
+    }
+
+    function setHourFilter(mode) {
+      hourFilter = mode;
+      document.getElementById('btnFilterPrime').className =
+        mode === 'PRIME'
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs'
+          : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs';
+      document.getElementById('btnFilterAll').className =
+        mode === 'ALL'
+          ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs'
+          : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs';
+      renderDashboard();
+    }
+
+    function populateModalHours() {
+      if (!dashboardData) return;
+      const courtId = document.getElementById('modalCourtId').value;
+      const court = dashboardData.courts.find((c) => c.id === courtId) || dashboardData.courts[0];
+      if (!court) return;
+      const freeSlots = court.slots.filter((s) => s.status === 'FREE');
+      const sel = document.getElementById('modalHour');
+      sel.innerHTML = (freeSlots.length ? freeSlots : court.slots)
+        .map((s) => `<option value="${s.hour}">${s.label} — S/ ${(s.priceCents / 100).toFixed(0)} (${s.status})</option>`)
+        .join('');
+    }
+
+    document.getElementById('modalCourtId').addEventListener('change', populateModalHours);
+
+    function openQuickBlockModal(courtId, hour) {
+      const modal = document.getElementById('quickBlockModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      if (courtId) document.getElementById('modalCourtId').value = courtId;
+      populateModalHours();
+      if (hour !== undefined) document.getElementById('modalHour').value = String(hour);
+    }
+
+    function closeQuickBlockModal() {
+      const modal = document.getElementById('quickBlockModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function quickBlockSlot(courtId, _courtName, hour) {
+      openQuickBlockModal(courtId, hour);
+    }
+
+    async function submitQuickBlock(e) {
+      e.preventDefault();
+      const payload = {
+        courtId: document.getElementById('modalCourtId').value,
+        date: currentDate,
+        hour: Number(document.getElementById('modalHour').value),
+        channel: document.getElementById('modalChannel').value,
+        customerName: document.getElementById('modalCustomerName').value,
+        notes: document.getElementById('modalNotes').value,
+      };
+      closeQuickBlockModal();
+
+      const res = await fetch(`${API_BASE}/api/bookings/reception-block`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast('Conflicto 409 · Doble Booking Evitado', data.message || 'El turno ya fue tomado.', 'rose');
+        return;
+      }
+      lastChangedKey = `${payload.courtId}:${payload.hour}`;
+      await loadDashboard();
+    }
+
+    async function releaseSlot(bookingId) {
+      if (!bookingId) return;
+      await fetch(`${API_BASE}/api/bookings/${bookingId}/release`, { method: 'POST' });
+      await loadDashboard();
+    }
+
+    async function checkRucValidity() {
+      const ruc = document.getElementById('rucCheckInput').value.trim();
+      const res = await fetch(`${API_BASE}/api/ruc/${encodeURIComponent(ruc)}/validate`);
+      const data = await res.json();
+      const out = document.getElementById('rucCheckOutput');
+      if (data.valid) {
+        out.className = 'text-[11px] font-mono text-emerald-400';
+        out.textContent = `✓ RUC ${data.ruc} válido (${data.type} · dígito verificador SUNAT OK)`;
+      } else {
+        out.className = 'text-[11px] font-mono text-rose-400';
+        out.textContent = `✕ RUC ${data.ruc} inválido (dígito verificador módulo 11 no coincide)`;
+      }
+    }
+
+    async function uploadVerificationDoc(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('docFileInput');
+      let file = fileInput.files[0];
+      if (!file) {
+        // Si el usuario hace clic directo en la demo sin elegir archivo del disco,
+        // generamos un PDF demostrativo válido de Ficha RUC SUNAT en memoria.
+        const blob = new Blob(['%PDF-1.4 Ficha RUC SUNAT Demo PichangaBook Arequipa'], { type: 'application/pdf' });
+        file = new File([blob], 'ficha-ruc-sunat.pdf', { type: 'application/pdf' });
+      }
+      const fd = new FormData();
+      fd.append('document', file);
+      const res = await fetch(`${API_BASE}/api/complexes/${currentComplexId}/verification-document`, {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast('Documento recibido', 'Estado: EN REVISIÓN. El backoffice validará el RUC en ~8 segundos.', 'sky');
+        await loadDashboard();
+      } else {
+        showToast('Error al subir documento', data.message || 'Verifica el formato', 'rose');
+      }
+    }
+
+    async function resetDemoData() {
+      await fetch(`${API_BASE}/api/demo/reset`, { method: 'POST' });
+      showToast('Demo reiniciada', 'Datos semilla restaurados en PostgreSQL.', 'emerald');
+      await loadDashboard();
+    }
+
+    document.getElementById('complexSelector').addEventListener('change', (e) => {
+      currentComplexId = e.target.value;
+      if (socket) socket.emit('complex:join', { complexId: currentComplexId });
+      loadDashboard();
+    });
+
+    // Conexión WebSocket en tiempo real (Socket.io)
+    function connectSocket() {
+      socket = io(API_BASE, { query: { complexId: currentComplexId } });
+
+      socket.on('connect', () => {
+        document.getElementById('wsText').textContent = 'SOCKET.IO EN VIVO';
+        document.getElementById('wsDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping';
+        socket.emit('complex:join', { complexId: currentComplexId });
+        socket.emit('split:join', { token: DEFAULT_SPLIT_TOKEN });
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('wsText').textContent = 'RECONECTANDO...';
+        document.getElementById('wsDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+      });
+
+      socket.on('slot:updated', (payload) => {
+        lastChangedKey = `${payload.courtId}:${payload.hour}`;
+        const label =
+          payload.status === 'BLOCKED'
+            ? `🔒 Bloqueado en Recepción: ${payload.courtName} (${payload.label})`
+            : payload.status === 'FREE'
+            ? `🔓 Turno liberado: ${payload.courtName} (${payload.label})`
+            : `⚽ Reserva App sincronizada: ${payload.courtName} (${payload.label})`;
+        showToast(label, `Canal: ${payload.channel || 'OMNICANAL'} · Sincronizado en tiempo real`, payload.status === 'BLOCKED' ? 'amber' : 'emerald');
+        loadDashboard();
+      });
+
+      socket.on('split:updated', (payload) => {
+        showToast(
+          `💸 ${payload.progressLabel}`,
+          `Último pago: ${payload.lastPayer?.name || ''} vía ${payload.lastPayer?.method || 'YAPE'}`,
+          'sky',
+        );
+        loadDashboard();
+      });
+
+      socket.on('complex:verification', (payload) => {
+        showToast(
+          `🏛 Estado RUC: ${payload.verificationStatus}`,
+          payload.verificationNotes || 'Actualización documental en vivo',
+          'emerald',
+        );
+        loadDashboard();
+      });
+
+      socket.on('demo:reset', () => {
+        loadDashboard();
+      });
+    }
+
+    loadDashboard().then(() => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('modal') === 'block') {
+        openQuickBlockModal();
+      }
+    });
+    connectSocket();
+  </script>
+</body>
+</html>
