@@ -1,0 +1,224 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{array}
+\usepackage{listings}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{parskip}
+
+\captionsetup[figure]{font=small,labelfont=bf,labelsep=colon}
+\captionsetup[table]{font=small,labelfont=bf,labelsep=colon}
+
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  frame=single,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
+}
+
+\title{\textbf{Avance de Proyecto: PichangaBook Arequipa}\\
+\large Desarrollo de Frontend y Base de Datos\\
+\normalsize Formación de Empresas de Base Tecnológica I\\
+Universidad Católica San Pablo}
+\author{Rodrigo Sierra \and Samuel Iman}
+\date{28 de octubre de 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción}
+
+En este informe presentamos el avance del Producto Mínimo Viable (MVP) de \textbf{PichangaBook Arequipa}, una plataforma pensada para organizar partidos de fútbol en canchas sintéticas de Arequipa evitando reservas duplicadas, facilitando el pago dividido entre amigos y permitiendo convocar suplentes cuando falta un jugador a última hora. Para esta entrega nos enfocamos en dos partes principales del sistema: el modelo relacional de la base de datos en PostgreSQL y la implementación de las interfaces gráficas (el panel web para los dueños de complejos deportivos y las pantallas de la aplicación móvil para jugadores y organizadores).
+
+\section{Diseño de la Base de Datos}
+
+Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Diseñamos el esquema en el archivo \texttt{schema.sql} buscando cubrir los datos de los usuarios, los complejos deportivos por distrito en Arequipa, la disponibilidad horaria de las canchas, los pagos divididos y los perfiles de los suplentes.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|l|p{11cm}|}
+\hline
+\textbf{Tabla} & \textbf{Descripción y campos principales} \\
+\hline
+\texttt{users} & Registra a los usuarios indicando su rol (\texttt{ORGANIZER} o \texttt{OWNER}), nombre completo, teléfono en formato E.164, una columna generada \texttt{phone\_masked} que oculta los dígitos centrales del celular y el estado de verificación por SMS (\texttt{otp\_verified}). \\
+\hline
+\texttt{complexes} & Guarda los datos de cada complejo deportivo: propietario (\texttt{owner\_id}), nombre comercial, número de RUC de 11 dígitos, distrito en Arequipa (Cayma, Yanahuara, Cerro Colorado, etc.), dirección, coordenadas GPS (\texttt{latitude}, \texttt{longitude}) y estado de validación documental (\texttt{verification\_status}). \\
+\hline
+\texttt{courts} & Contiene las canchas pertenecientes a cada complejo (\texttt{complex\_id}), nombre de la cancha, formato de juego (Fútbol 6, Fútbol 7 o Fútbol 8), tipo de césped sintético y precio por hora diurno (\texttt{base\_price\_day}) y nocturno (\texttt{base\_price\_night}). \\
+\hline
+\texttt{bookings} & Almacena las reservas y bloqueos de horarios por cancha (\texttt{court\_id}), fecha y hora de inicio y fin (\texttt{start\_time}, \texttt{end\_time}), modalidad de pago (\texttt{FULL}, \texttt{SPLIT} o \texttt{CASH\_RECEPTION}), estado del turno (\texttt{HELD}, \texttt{CONFIRMED}, \texttt{BLOCKED\_RECEPTION}) y una restricción \texttt{EXCLUDE USING gist} que impide registrar dos reservas en el mismo horario. \\
+\hline
+\texttt{split\_payments} & Controla el pago dividido asociado a una reserva (\texttt{booking\_id}), el código para compartir por WhatsApp (\texttt{split\_code}), el monto por jugador (\texttt{amount\_per\_slot}), el total de cupos (\texttt{total\_slots}) y la cantidad de cupos ya pagados (\texttt{paid\_slots}). \\
+\hline
+\texttt{payment\_shares} & Detalla cada pago individual realizado dentro de un pago dividido (\texttt{split\_payment\_id}), guardando el nombre del jugador, el método elegido (\texttt{YAPE}, \texttt{PLIN} o \texttt{CARD}) y el estado del abono. \\
+\hline
+\texttt{substitute\_profiles} & Guarda la información de la bolsa de suplentes: posición en cancha (\texttt{ARQUERO}, \texttt{DEFENSA}, \texttt{MEDIOCAMPO}, \texttt{DELANTERO}), puntaje de puntualidad (\texttt{punctuality\_score}), partidos jugados y la URL del video corto (\texttt{video\_clip\_url}) con una restricción \texttt{CHECK} de entre 15 y 30 segundos. \\
+\hline
+\end{tabular}
+\caption{Tablas principales definidas en el esquema PostgreSQL (\texttt{schema.sql}).}
+\end{table}
+
+\newpage
+\section{Interfaces del Frontend}
+
+\subsection{Panel web para dueños de complejos deportivos}
+
+\noindent
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/01-admin-dashboard.png}
+  \captionof{figure}{Panel web de administración para dueños de complejos.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  El panel web para los administradores de canchas se desarrolló con \textbf{HTML5}, \textbf{CSS3} y \textbf{Tailwind CSS} dentro de la carpeta \texttt{/web-admin-tailwind}.
+
+  En la parte superior muestra los datos del complejo deportivo seleccionado, el estado de verificación del RUC y el resumen de reservas del día. En la parte inferior se encuentra la parrilla horaria de cada cancha diferenciando con colores los turnos libres, los pagados por la aplicación, los que están en pago dividido y los bloqueados en recepción.
+
+  Para construir esta vista se utilizan los datos almacenados en las tablas \texttt{complexes}, \texttt{courts}, \texttt{bookings} y \texttt{split\_payments}.
+\end{minipage}
+
+\vspace{0.8cm}
+
+\subsection{Bloqueo rápido de turnos en recepción}
+
+\noindent
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  Dentro del mismo panel web implementamos una ventana modal en HTML y Tailwind CSS para que el recepcionista pueda registrar rápidamente una venta presencial en ventanilla o una reserva hecha por llamada telefónica.
+
+  El formulario permite seleccionar la cancha, el horario disponible, el canal de venta (efectivo/POS o teléfono) y el nombre del cliente. Al guardar el bloqueo, el turno pasa al estado \texttt{BLOCKED\_RECEPTION} dentro de la tabla \texttt{bookings} de la base de datos para que ningún jugador pueda reservar esa misma hora desde el celular.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/02-admin-quick-block.png}
+  \captionof{figure}{Ventana modal de bloqueo rápido en recepción.}
+\end{minipage}
+
+\newpage
+
+\subsection{Mapa de complejos y filtros por distritos de Arequipa}
+
+\noindent
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/03-mobile-map.png}
+  \captionof{figure}{Pantalla móvil del mapa de complejos en Arequipa.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  La aplicación móvil para jugadores y organizadores se estructuró en \textbf{Flutter (Dart)} dentro de \texttt{/mobile-flutter/lib}, acompañada de un prototipo interactivo en HTML y CSS (\texttt{demo-app-mobile.html}) para mostrar las vistas en el navegador.
+
+  La primera pantalla (\texttt{arequipa\_map\_screen.dart}) muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
+
+  Debajo del mapa se listan las tarjetas de cada local mostrando su foto, dirección, calificación y distancia, leyendo los registros verificados de la tabla \texttt{complexes} y los precios base de la tabla \texttt{courts}.
+\end{minipage}
+
+\vspace{0.6cm}
+
+\subsection{Detalle de cancha y parrilla de disponibilidad}
+
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  Al entrar a un complejo deportivo se abre la pantalla de detalle (\texttt{court\_detail\_screen.dart}). En la parte superior se muestra la foto de la cancha, su dirección en Arequipa y pestañas para cambiar entre las canchas del local (por ejemplo, Cancha 1 de Fútbol 6, Cancha 2 de Fútbol 6 o Cancha 3 de Fútbol 8).
+
+  En el centro diseñamos la parrilla horaria donde el jugador ve qué horas están disponibles y cuáles ya están ocupadas o en proceso de pago dividido. En la parte inferior se muestran las reseñas dejadas por otros jugadores. Esta vista se alimenta directamente de las tablas \texttt{courts}, \texttt{bookings} y \texttt{court\_reviews}.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/04-mobile-courts.png}
+  \captionof{figure}{Vista móvil de horarios por cancha y reseñas.}
+\end{minipage}
+
+\newpage
+
+\subsection{Pantalla de pagos divididos (Split Payment)}
+
+\noindent
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/05-mobile-split.png}
+  \captionof{figure}{Vista de progreso de pago dividido entre jugadores.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  La pestaña de pagos divididos (\texttt{split\_payment\_screen.dart}) fue diseñada para que el organizador no tenga que pagar toda la cancha por su cuenta.
+
+  La interfaz muestra el progreso de los pagos con una barra visual y un contador claro (\emph{``Cupos pagados: 4 de 6''} junto al monto recaudado S/ 60.00 de S/ 90.00), además de los botones para compartir el enlace de cobro por WhatsApp.
+
+  Más abajo incluye los botones de método de pago (Yape, Plin o tarjeta) para abonar la cuota individual de S/ 15.00 y la lista de compañeros que ya pagaron. Toda esta información corresponde a las tablas \texttt{split\_payments} y \texttt{payment\_shares}.
+\end{minipage}
+
+\vspace{0.6cm}
+
+\subsection{Bolsa de suplentes verificados con clips de video}
+
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  La vista de la bolsa de suplentes (\texttt{substitutes\_pool\_screen.dart}) permite buscar jugadores disponibles cuando a un equipo le falta un integrante poco antes del partido.
+
+  En la parte superior colocamos filtros por posición (\texttt{Arquero}, \texttt{Defensa}, \texttt{Mediocampo} y \texttt{Delantero}). Cada tarjeta muestra un reproductor de video con un clip corto de 15 a 30 segundos donde se ve cómo juega el suplente, junto con su nombre, distrito, porcentaje de puntualidad, cantidad de partidos jugados y el botón para convocarlo.
+
+  Los datos mostrados en estas tarjetas se obtienen de la unión entre las tablas \texttt{substitute\_profiles} y \texttt{users}.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/06-mobile-substitutes.png}
+  \captionof{figure}{Bolsa de suplentes con filtros por posición y video.}
+\end{minipage}
+
+\newpage
+
+\subsection{Registro con código SMS y contacto con número oculto}
+
+\noindent
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=9.6cm,keepaspectratio]{screenshots/07-mobile-otp-auth.png}
+  \captionof{figure}{Ventana de registro por roles y validación por código SMS.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  Para la parte de seguridad en el frontend móvil implementamos dos ventanas modales:
+
+  La primera (Figura 7) corresponde al formulario de registro y verificación por SMS (OTP), donde el usuario selecciona si ingresa como \texttt{Organizador} o como \texttt{Dueño}, escribe su nombre y valida su número de celular con un código de 6 dígitos que se registra en las tablas \texttt{otp\_challenges} y \texttt{users}.
+
+  La segunda ventana (Figura 8) se abre al convocar a un suplente. Muestra un chat interno donde el número real del jugador nunca aparece completo, mostrándose únicamente la columna generada \texttt{phone\_masked} (por ejemplo, \texttt{+51 9•• ••• 101}) y los mensajes guardados en las tablas \texttt{contact\_relays} y \texttt{relay\_messages}.
+\end{minipage}
+
+\vspace{0.5cm}
+
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  \vspace{0pt}
+  \subsection*{Conclusiones del avance}
+  En este avance completamos la estructura de la base de datos en PostgreSQL (\texttt{schema.sql} y datos de prueba en \texttt{seed.sql}) abarcando todas las tablas necesarias para usuarios, complejos de Arequipa, canchas, reservas, pagos divididos y perfiles de suplentes.
+
+  Asimismo, terminamos el diseño e implementación de todas las pantallas comprometidas en el frontend: tanto el panel web administrativo en HTML y Tailwind CSS para los dueños de canchas como las vistas móviles en Flutter y su prototipo ejecutable para los jugadores y organizadores.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.44\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[height=9.6cm,keepaspectratio]{screenshots/08-mobile-masked-chat.png}
+  \captionof{figure}{Chat interno con número telefónico enmascarado.}
+\end{minipage}
+
+\end{document}
