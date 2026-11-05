@@ -3,72 +3,138 @@
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-tabla]{babel}
 \usepackage{lmodern}
-\usepackage[margin=2.2cm]{geometry}
+\usepackage[margin=2.0cm]{geometry}
 \usepackage{graphicx}
 \usepackage{array}
-\usepackage{listings}
 \usepackage{caption}
 \usepackage{float}
 \usepackage{parskip}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning}
 
 \captionsetup[figure]{font=small,labelfont=bf,labelsep=colon}
 \captionsetup[table]{font=small,labelfont=bf,labelsep=colon}
 
-\lstset{
-  basicstyle=\ttfamily\footnotesize,
-  frame=single,
-  breaklines=true,
-  columns=fullflexible,
-  keepspaces=true,
-  showstringspaces=false
-}
-
-\title{\textbf{Avance de Proyecto: PichangaBook Arequipa}\\
-\large Desarrollo de Frontend y Base de Datos\\
-\normalsize Formación de Empresas de Base Tecnológica I\\
-Universidad Católica San Pablo}
+\title{\textbf{Envío de Evidencias MVP: PichangaBook Arequipa}\\
+\large Avance de Backend, Frontend, Diagramas y Planificación\\
+\normalsize Formación de Empresas de Base Tecnológica I --- Universidad Católica San Pablo}
 \author{Rodrigo Sierra \and Samuel Iman}
-\date{28 de octubre de 2026}
+\date{5 de noviembre de 2026}
 
 \begin{document}
 
 \maketitle
 
-\section{Introducción}
+\section{Resumen del Avance del MVP}
 
-En este informe presentamos el avance del Producto Mínimo Viable (MVP) de \textbf{PichangaBook Arequipa}, una plataforma pensada para organizar partidos de fútbol en canchas sintéticas de Arequipa evitando reservas duplicadas, facilitando el pago dividido entre amigos y permitiendo convocar suplentes cuando falta un jugador a última hora. Para esta entrega nos enfocamos en dos partes principales del sistema: el modelo relacional de la base de datos en PostgreSQL y la implementación de las interfaces gráficas (el panel web para los dueños de complejos deportivos y las pantallas de la aplicación móvil para jugadores y organizadores).
+En este documento presentamos las evidencias de avance del Producto Mínimo Viable (MVP) de \textbf{PichangaBook Arequipa} (repositorio \texttt{github.com/RodrigoSierr/PichangaBook}). El proyecto resuelve tres problemas al alquilar canchas sintéticas en Arequipa: las reservas duplicadas entre recepción y WhatsApp, la dificultad de cobrar la cuota a cada amigo del partido y la falta de suplentes de último minuto. Hasta la fecha hemos implementado el esquema de base de datos en \textbf{PostgreSQL}, el servidor backend en \textbf{NestJS con Socket.io} y las interfaces de usuario en \textbf{HTML5/Tailwind CSS} (panel web de dueños) y \textbf{Flutter/Dart} (aplicación móvil para jugadores).
 
-\section{Diseño de la Base de Datos}
+\section{Diagramas del Sistema}
 
-Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Diseñamos el esquema en el archivo \texttt{schema.sql} buscando cubrir los datos de los usuarios, los complejos deportivos por distrito en Arequipa, la disponibilidad horaria de las canchas, los pagos divididos y los perfiles de los suplentes.
+\subsection{Diagrama de Arquitectura Backend--Frontend}
 
-\begin{table}[H]
+El siguiente diagrama muestra cómo se comunican el panel web de recepción y la aplicación móvil con los módulos del backend en NestJS y la base de datos PostgreSQL mediante peticiones REST y eventos en tiempo real por WebSockets:
+
+\begin{figure}[H]
 \centering
-\small
-\begin{tabular}{|l|p{11cm}|}
-\hline
-\textbf{Tabla} & \textbf{Descripción y campos principales} \\
-\hline
-\texttt{users} & Registra a los usuarios indicando su rol (\texttt{ORGANIZER} o \texttt{OWNER}), nombre completo, teléfono en formato E.164, una columna generada \texttt{phone\_masked} que oculta los dígitos centrales del celular y el estado de verificación por SMS (\texttt{otp\_verified}). \\
-\hline
-\texttt{complexes} & Guarda los datos de cada complejo deportivo: propietario (\texttt{owner\_id}), nombre comercial, número de RUC de 11 dígitos, distrito en Arequipa (Cayma, Yanahuara, Cerro Colorado, etc.), dirección, coordenadas GPS (\texttt{latitude}, \texttt{longitude}) y estado de validación documental (\texttt{verification\_status}). \\
-\hline
-\texttt{courts} & Contiene las canchas pertenecientes a cada complejo (\texttt{complex\_id}), nombre de la cancha, formato de juego (Fútbol 6, Fútbol 7 o Fútbol 8), tipo de césped sintético y precio por hora diurno (\texttt{base\_price\_day}) y nocturno (\texttt{base\_price\_night}). \\
-\hline
-\texttt{bookings} & Almacena las reservas y bloqueos de horarios por cancha (\texttt{court\_id}), fecha y hora de inicio y fin (\texttt{start\_time}, \texttt{end\_time}), modalidad de pago (\texttt{FULL}, \texttt{SPLIT} o \texttt{CASH\_RECEPTION}), estado del turno (\texttt{HELD}, \texttt{CONFIRMED}, \texttt{BLOCKED\_RECEPTION}) y una restricción \texttt{EXCLUDE USING gist} que impide registrar dos reservas en el mismo horario. \\
-\hline
-\texttt{split\_payments} & Controla el pago dividido asociado a una reserva (\texttt{booking\_id}), el código para compartir por WhatsApp (\texttt{split\_code}), el monto por jugador (\texttt{amount\_per\_slot}), el total de cupos (\texttt{total\_slots}) y la cantidad de cupos ya pagados (\texttt{paid\_slots}). \\
-\hline
-\texttt{payment\_shares} & Detalla cada pago individual realizado dentro de un pago dividido (\texttt{split\_payment\_id}), guardando el nombre del jugador, el método elegido (\texttt{YAPE}, \texttt{PLIN} o \texttt{CARD}) y el estado del abono. \\
-\hline
-\texttt{substitute\_profiles} & Guarda la información de la bolsa de suplentes: posición en cancha (\texttt{ARQUERO}, \texttt{DEFENSA}, \texttt{MEDIOCAMPO}, \texttt{DELANTERO}), puntaje de puntualidad (\texttt{punctuality\_score}), partidos jugados y la URL del video corto (\texttt{video\_clip\_url}) con una restricción \texttt{CHECK} de entre 15 y 30 segundos. \\
-\hline
-\end{tabular}
-\caption{Tablas principales definidas en el esquema PostgreSQL (\texttt{schema.sql}).}
-\end{table}
+\footnotesize
+\begin{tikzpicture}[
+  box/.style={rectangle, draw=black, thick, minimum width=4.2cm, minimum height=1.6cm, align=center},
+  bigbox/.style={rectangle, draw=black, thick, minimum width=5.2cm, minimum height=3.8cm, align=center}
+]
+  \node[box] (mobile) at (0,1.2) {\textbf{Frontend Móvil (Jugadores)}\\Flutter (Dart) + Prototipo Web\\Mapa, Reservas, Split, Suplentes};
+  \node[box] (web) at (0,-1.2) {\textbf{Frontend Web (Dueños)}\\HTML5 + CSS3 + Tailwind CSS\\Agenda, Bloqueo Recepción, RUC};
+  \node[bigbox] (backend) at (5.5,0) {\textbf{Backend NestJS (TypeScript)}\\\rule{4.6cm}{0.4pt}\\AuthModule (OTP SMS y Relay)\\ComplexesModule (Filtro AQP y RUC)\\BookingsModule (Reservas y Split)\\SubstitutesModule (Bolsa y Clips)\\\textbf{BookingsGateway (Socket.io)}};
+  \node[box] (db) at (11,1.2) {\textbf{Base de Datos PostgreSQL}\\Esquema ACID (\texttt{schema.sql})\\Constraint GiST anti-doble turno};
+  \node[box] (ext) at (11,-1.2) {\textbf{Servicios Integrados}\\Mapas (Google Maps / Leaflet)\\Culqi / Yape $\cdot$ Clips MP4};
+
+  \draw[<->, thick] (mobile.east) -- node[above, sloped] {HTTP REST} (backend.160);
+  \draw[<->, thick] (web.east) -- node[below, sloped] {Socket.io (WS)} (backend.200);
+  \draw[<->, thick] (backend.20) -- (db.west);
+  \draw[<->, dashed, thick] (backend.340) -- (ext.west);
+\end{tikzpicture}
+\caption{Diagrama de arquitectura general entre el Frontend (Web/Móvil), el Backend NestJS y PostgreSQL.}
+\end{figure}
+
+\subsection{Diagrama Entidad-Relación de la Base de Datos}
+
+El modelo relacional implementado en \texttt{backend-nestjs/schema.sql} se compone de las entidades \texttt{users}, \texttt{complexes}, \texttt{courts}, \texttt{bookings}, \texttt{split\_payments}, \texttt{payment\_shares} y \texttt{substitute\_profiles}, garantizando mediante llaves foráneas e índices GiST la integridad de cada reserva.
 
 \newpage
-\section{Interfaces del Frontend}
+\section{Evidencias de Código (Backend, Base de Datos y Frontend)}
+
+\subsection{Esquema en PostgreSQL y restricción anti-doble reserva (\texttt{schema.sql})}
+
+\noindent
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/09-code-schema-sql.png}
+  \captionof{figure}{Código SQL de la tabla \texttt{bookings} y su restricción GiST en \texttt{backend-nestjs/schema.sql}.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  En la captura se observa el archivo \texttt{backend-nestjs/schema.sql} con la definición de la tabla \texttt{bookings} y la tabla de auditoría \texttt{booking\_events}.
+
+  Cada reserva guarda la cancha (\texttt{court\_id}), el canal de origen (\texttt{APP}, \texttt{RECEPTION} o \texttt{PHONE}), el estado del turno y el rango horario (\texttt{starts\_at} y \texttt{ends\_at}). En las líneas 140 a 143 programamos la restricción \texttt{CONSTRAINT bookings\_no\_overlap EXCLUDE USING gist}, que impide a nivel de base de datos que dos reservas activas ocupen la misma cancha en el mismo horario.
+\end{minipage}
+
+\vspace{0.6cm}
+
+\subsection{Lógica de reservas y pagos divididos en NestJS (\texttt{bookings.service.ts})}
+
+\noindent
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  El servicio \texttt{BookingsService} (en \texttt{src/bookings/bookings.service.ts}) gestiona la creación de reservas, el bloqueo rápido desde recepción y el avance de los pagos divididos.
+
+  Como muestra la captura del código en las líneas 94 a 126, cuando un organizador elige la modalidad \texttt{SPLIT}, el backend abre una transacción SQL, inserta el registro en \texttt{split\_payments} calculando el monto individual por jugador (\texttt{amount\_per\_slot\_cents}), registra el primer abono en \texttt{payment\_shares} y guarda el evento en \texttt{booking\_events} para notificar al panel del dueño.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/10-code-backend-service.png}
+  \captionof{figure}{Transacción de reserva y creación de pago dividido en \texttt{bookings.service.ts}.}
+\end{minipage}
+
+\newpage
+
+\subsection{Gateway de sincronización en tiempo real con Socket.io (\texttt{bookings.gateway.ts})}
+
+\noindent
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/11-code-backend-gateway.png}
+  \captionof{figure}{Implementación de \texttt{BookingsGateway} con Socket.io en NestJS.}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  Para que los bloqueos hechos en recepción y los abonos del pago dividido se reflejen sin recargar la página, implementamos la clase \texttt{BookingsGateway} en \texttt{src/bookings/bookings.gateway.ts} usando \texttt{@nestjs/websockets} y \textbf{Socket.io}.
+
+  En las líneas 46 a 65 se aprecia cómo el gateway escucha el bus interno de eventos (\texttt{RealtimeBus}) y emite las actualizaciones (\texttt{slot:updated} y \texttt{split:updated}) hacia la sala del complejo deportivo (\texttt{complex:<id>}) cada vez que cambia un turno.
+\end{minipage}
+
+\vspace{0.6cm}
+
+\subsection{Código del Frontend móvil en Flutter (\texttt{arequipa\_map\_screen.dart})}
+
+\noindent
+\begin{minipage}[t]{0.42\textwidth}
+  \vspace{0pt}
+  En la carpeta \texttt{/mobile-flutter/lib} estructuramos las vistas móviles en \textbf{Dart / Flutter} conectadas al backend mediante el servicio \texttt{RealtimeApiService}.
+
+  La captura muestra el archivo \texttt{arequipa\_map\_screen.dart}, donde definimos el widget con estado \texttt{ArequipaMapScreen}, la posición inicial de la cámara sobre las coordenadas de Arequipa (\texttt{LatLng(-16.3880, -71.5430)}) y la lista de distritos (Cayma, Yanahuara, Cerro Colorado, J.L. Bustamante y Sachaca) que filtra las canchas consultando la API del backend.
+\end{minipage}\hfill
+\begin{minipage}[t]{0.54\textwidth}
+  \vspace{0pt}
+  \centering
+  \includegraphics[width=\textwidth]{screenshots/12-code-frontend-flutter.png}
+  \captionof{figure}{Código en Flutter (Dart) de la pantalla del mapa de Arequipa.}
+\end{minipage}
+
+\newpage
+\section{Evidencias Visuales del Frontend Conectado al Backend}
 
 \subsection{Panel web para dueños de complejos deportivos}
 
@@ -77,33 +143,31 @@ Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Dise�
   \vspace{0pt}
   \centering
   \includegraphics[width=\textwidth]{screenshots/01-admin-dashboard.png}
-  \captionof{figure}{Panel web de administración para dueños de complejos.}
+  \captionof{figure}{Panel web de administración para dueños de complejos corriendo en el navegador.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.42\textwidth}
   \vspace{0pt}
-  El panel web para los administradores de canchas se desarrolló con \textbf{HTML5}, \textbf{CSS3} y \textbf{Tailwind CSS} dentro de la carpeta \texttt{/web-admin-tailwind}.
+  El panel web (\texttt{/web-admin-tailwind/index.html}) fue maquetado con \textbf{HTML5} y \textbf{Tailwind CSS}. Al abrirse se conecta al backend NestJS mediante \texttt{GET /api/complexes} y al canal de Socket.io.
 
-  En la parte superior muestra los datos del complejo deportivo seleccionado, el estado de verificación del RUC y el resumen de reservas del día. En la parte inferior se encuentra la parrilla horaria de cada cancha diferenciando con colores los turnos libres, los pagados por la aplicación, los que están en pago dividido y los bloqueados en recepción.
-
-  Para construir esta vista se utilizan los datos almacenados en las tablas \texttt{complexes}, \texttt{courts}, \texttt{bookings} y \texttt{split\_payments}.
+  Muestra los indicadores del complejo deportivo, el validador de RUC con el algoritmo módulo 11 de SUNAT, la parrilla horaria en vivo de cada cancha y el monitor lateral de pagos divididos junto con la bitácora de eventos recibidos por WebSockets.
 \end{minipage}
 
-\vspace{0.8cm}
+\vspace{0.6cm}
 
 \subsection{Bloqueo rápido de turnos en recepción}
 
 \noindent
 \begin{minipage}[t]{0.42\textwidth}
   \vspace{0pt}
-  Dentro del mismo panel web implementamos una ventana modal en HTML y Tailwind CSS para que el recepcionista pueda registrar rápidamente una venta presencial en ventanilla o una reserva hecha por llamada telefónica.
+  Cuando un cliente paga en efectivo en la boletería o reserva por teléfono, el encargado abre este modal en el panel web, elige la cancha, la hora y el nombre del grupo, y pulsa \emph{``Bloquear Turno Ahora''}.
 
-  El formulario permite seleccionar la cancha, el horario disponible, el canal de venta (efectivo/POS o teléfono) y el nombre del cliente. Al guardar el bloqueo, el turno pasa al estado \texttt{BLOCKED\_RECEPTION} dentro de la tabla \texttt{bookings} de la base de datos para que ningún jugador pueda reservar esa misma hora desde el celular.
+  La interfaz envía una petición \texttt{POST /api/bookings/reception-block} al backend NestJS, el cual guarda el turno con estado \texttt{BLOCKED} en PostgreSQL y emite el evento por Socket.io para que en la aplicación móvil aparezca ocupado al instante.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.54\textwidth}
   \vspace{0pt}
   \centering
   \includegraphics[width=\textwidth]{screenshots/02-admin-quick-block.png}
-  \captionof{figure}{Ventana modal de bloqueo rápido en recepción.}
+  \captionof{figure}{Modal de bloqueo rápido en recepción para ventas presenciales o telefónicas.}
 \end{minipage}
 
 \newpage
@@ -114,34 +178,32 @@ Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Dise�
 \begin{minipage}[t]{0.44\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/03-mobile-map.png}
-  \captionof{figure}{Pantalla móvil del mapa de complejos en Arequipa.}
+  \includegraphics[height=9.8cm,keepaspectratio]{screenshots/03-mobile-map.png}
+  \captionof{figure}{Vista móvil del mapa de Arequipa y complejos filtrados por distrito.}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.52\textwidth}
   \vspace{0pt}
-  La aplicación móvil para jugadores y organizadores se estructuró en \textbf{Flutter (Dart)} dentro de \texttt{/mobile-flutter/lib}, acompañada de un prototipo interactivo en HTML y CSS (\texttt{demo-app-mobile.html}) para mostrar las vistas en el navegador.
+  La pantalla principal de la app móvil muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
 
-  La primera pantalla (\texttt{arequipa\_map\_screen.dart}) muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
-
-  Debajo del mapa se listan las tarjetas de cada local mostrando su foto, dirección, calificación y distancia, leyendo los registros verificados de la tabla \texttt{complexes} y los precios base de la tabla \texttt{courts}.
+  Al seleccionar un distrito, el frontend consulta \texttt{GET /api/complexes?district=...} en el backend NestJS, el cual devuelve únicamente los complejos con RUC verificado en PostgreSQL ordenados por cercanía en kilómetros usando la fórmula de Haversine.
 \end{minipage}
 
 \vspace{0.6cm}
 
-\subsection{Detalle de cancha y parrilla de disponibilidad}
+\subsection{Detalle de cancha y parrilla de disponibilidad en vivo}
 
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   \vspace{0pt}
-  Al entrar a un complejo deportivo se abre la pantalla de detalle (\texttt{court\_detail\_screen.dart}). En la parte superior se muestra la foto de la cancha, su dirección en Arequipa y pestañas para cambiar entre las canchas del local (por ejemplo, Cancha 1 de Fútbol 6, Cancha 2 de Fútbol 6 o Cancha 3 de Fútbol 8).
+  Al elegir un complejo se muestra su fotografía, calificación, pestañas para cambiar entre sus canchas (Cancha 1 Fútbol 6, Cancha 2 Fútbol 6, Cancha 3 Fútbol 8) y las reseñas escritas por otros jugadores.
 
-  En el centro diseñamos la parrilla horaria donde el jugador ve qué horas están disponibles y cuáles ya están ocupadas o en proceso de pago dividido. En la parte inferior se muestran las reseñas dejadas por otros jugadores. Esta vista se alimenta directamente de las tablas \texttt{courts}, \texttt{bookings} y \texttt{court\_reviews}.
+  La parrilla horaria consulta los turnos del día en el backend y se mantiene suscrita por WebSockets: muestra en verde los turnos disponibles, en morado los pagados por app, en azul los que están recolectando pagos divididos (\texttt{4/6}) y en ámbar los bloqueados en recepción.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.44\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/04-mobile-courts.png}
-  \captionof{figure}{Vista móvil de horarios por cancha y reseñas.}
+  \includegraphics[height=9.8cm,keepaspectratio]{screenshots/04-mobile-courts.png}
+  \captionof{figure}{Parrilla horaria sincronizada y reseñas del complejo deportivo.}
 \end{minipage}
 
 \newpage
@@ -152,16 +214,14 @@ Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Dise�
 \begin{minipage}[t]{0.44\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/05-mobile-split.png}
-  \captionof{figure}{Vista de progreso de pago dividido entre jugadores.}
+  \includegraphics[height=9.8cm,keepaspectratio]{screenshots/05-mobile-split.png}
+  \captionof{figure}{Contador de progreso de pago dividido (4 de 6 cupos pagados).}
 \end{minipage}\hfill
 \begin{minipage}[t]{0.52\textwidth}
   \vspace{0pt}
-  La pestaña de pagos divididos (\texttt{split\_payment\_screen.dart}) fue diseñada para que el organizador no tenga que pagar toda la cancha por su cuenta.
+  En esta vista el organizador genera un link de cobro fraccionado para compartirlo con su grupo por WhatsApp y sigue en vivo cuántos compañeros ya abonaron su parte (por ejemplo, \emph{``Cupos pagados: 4 de 6 --- S/ 60.00 / S/ 90.00''}).
 
-  La interfaz muestra el progreso de los pagos con una barra visual y un contador claro (\emph{``Cupos pagados: 4 de 6''} junto al monto recaudado S/ 60.00 de S/ 90.00), además de los botones para compartir el enlace de cobro por WhatsApp.
-
-  Más abajo incluye los botones de método de pago (Yape, Plin o tarjeta) para abonar la cuota individual de S/ 15.00 y la lista de compañeros que ya pagaron. Toda esta información corresponde a las tablas \texttt{split\_payments} y \texttt{payment\_shares}.
+  Cada vez que un jugador abona su cuota de S/ 15.00 eligiendo Yape, Plin o tarjeta, el frontend invoca \texttt{POST /api/bookings/split/:token/pay} en el backend NestJS. Al completarse el sexto cupo, la reserva pasa automáticamente de \texttt{HELD} a \texttt{CONFIRMED}.
 \end{minipage}
 
 \vspace{0.6cm}
@@ -171,54 +231,61 @@ Para almacenar la información del sistema utilizamos \textbf{PostgreSQL}. Dise�
 \noindent
 \begin{minipage}[t]{0.52\textwidth}
   \vspace{0pt}
-  La vista de la bolsa de suplentes (\texttt{substitutes\_pool\_screen.dart}) permite buscar jugadores disponibles cuando a un equipo le falta un integrante poco antes del partido.
+  La pestaña de bolsa de suplentes permite convocar jugadores de emergencia filtrando por posición en la cancha (\texttt{Arquero}, \texttt{Defensa}, \texttt{Mediocampo} y \texttt{Delantero}) mediante el endpoint \texttt{GET /api/substitutes}.
 
-  En la parte superior colocamos filtros por posición (\texttt{Arquero}, \texttt{Defensa}, \texttt{Mediocampo} y \texttt{Delantero}). Cada tarjeta muestra un reproductor de video con un clip corto de 15 a 30 segundos donde se ve cómo juega el suplente, junto con su nombre, distrito, porcentaje de puntualidad, cantidad de partidos jugados y el botón para convocarlo.
-
-  Los datos mostrados en estas tarjetas se obtienen de la unión entre las tablas \texttt{substitute\_profiles} y \texttt{users}.
+  Cada tarjeta incluye un reproductor de video con un clip corto de 15 a 30 segundos para comprobar el nivel técnico del jugador antes de invitarlo, además de mostrar su distrito, su porcentaje de puntualidad, partidos jugados y el botón de convocatoria segura.
 \end{minipage}\hfill
 \begin{minipage}[t]{0.44\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=10.2cm,keepaspectratio]{screenshots/06-mobile-substitutes.png}
-  \captionof{figure}{Bolsa de suplentes con filtros por posición y video.}
+  \includegraphics[height=9.8cm,keepaspectratio]{screenshots/06-mobile-substitutes.png}
+  \captionof{figure}{Tarjetas de suplentes verificados con reproductor de video de 15 a 30 s.}
 \end{minipage}
 
 \newpage
 
-\subsection{Registro con código SMS y contacto con número oculto}
+\subsection{Seguridad: Verificación por SMS (OTP) y chat con número oculto}
 
 \noindent
-\begin{minipage}[t]{0.44\textwidth}
+\begin{minipage}[t]{0.48\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=9.6cm,keepaspectratio]{screenshots/07-mobile-otp-auth.png}
-  \captionof{figure}{Ventana de registro por roles y validación por código SMS.}
+  \includegraphics[height=8.2cm,keepaspectratio]{screenshots/07-mobile-otp-auth.png}
+  \captionof{figure}{Registro por rol y validación por SMS (OTP).}
 \end{minipage}\hfill
-\begin{minipage}[t]{0.52\textwidth}
-  \vspace{0pt}
-  Para la parte de seguridad en el frontend móvil implementamos dos ventanas modales:
-
-  La primera (Figura 7) corresponde al formulario de registro y verificación por SMS (OTP), donde el usuario selecciona si ingresa como \texttt{Organizador} o como \texttt{Dueño}, escribe su nombre y valida su número de celular con un código de 6 dígitos que se registra en las tablas \texttt{otp\_challenges} y \texttt{users}.
-
-  La segunda ventana (Figura 8) se abre al convocar a un suplente. Muestra un chat interno donde el número real del jugador nunca aparece completo, mostrándose únicamente la columna generada \texttt{phone\_masked} (por ejemplo, \texttt{+51 9•• ••• 101}) y los mensajes guardados en las tablas \texttt{contact\_relays} y \texttt{relay\_messages}.
-\end{minipage}
-
-\vspace{0.5cm}
-
-\noindent
-\begin{minipage}[t]{0.52\textwidth}
-  \vspace{0pt}
-  \subsection*{Conclusiones del avance}
-  En este avance completamos la estructura de la base de datos en PostgreSQL (\texttt{schema.sql} y datos de prueba en \texttt{seed.sql}) abarcando todas las tablas necesarias para usuarios, complejos de Arequipa, canchas, reservas, pagos divididos y perfiles de suplentes.
-
-  Asimismo, terminamos el diseño e implementación de todas las pantallas comprometidas en el frontend: tanto el panel web administrativo en HTML y Tailwind CSS para los dueños de canchas como las vistas móviles en Flutter y su prototipo ejecutable para los jugadores y organizadores.
-\end{minipage}\hfill
-\begin{minipage}[t]{0.44\textwidth}
+\begin{minipage}[t]{0.48\textwidth}
   \vspace{0pt}
   \centering
-  \includegraphics[height=9.6cm,keepaspectratio]{screenshots/08-mobile-masked-chat.png}
-  \captionof{figure}{Chat interno con número telefónico enmascarado.}
+  \includegraphics[height=8.2cm,keepaspectratio]{screenshots/08-mobile-masked-chat.png}
+  \captionof{figure}{Chat interno con número celular enmascarado.}
 \end{minipage}
+
+\vspace{0.3cm}
+En el módulo de autenticación implementamos el registro diferenciado por rol (\texttt{Organizador} vs.\ \texttt{Dueño}) validado mediante un código temporal de 6 dígitos por SMS (\texttt{POST /api/auth/otp/send} y \texttt{/verify}) para evitar cuentas falsas. Además, al convocar a un suplente se abre un canal interno de contacto (Figura 14) donde el teléfono personal se muestra siempre enmascarado (\texttt{+51 9•• ••• 101}) y el backend oculta cualquier número celular escrito en los mensajes.
+
+\section{Avance para la Semana Siguiente (6 al 12 de noviembre de 2026)}
+
+Para la entrega de la próxima semana nos enfocaremos en reemplazar los adaptadores simulados por integraciones en modo de prueba real y cerrar los flujos pendientes entre el backend y la aplicación móvil:
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|p{3.2cm}|p{4.8cm}|p{7.2cm}|}
+\hline
+\textbf{Área} & \textbf{Tarea programada} & \textbf{Entregable / Evidencia para la próxima semana} \\
+\hline
+\textbf{Backend (Pagos)} & Integración con el entorno Sandbox real de Culqi / Yape. & Conexión de \texttt{CulqiService} con llaves de prueba reales para procesar abonos del Split Payment y recibir webhooks firmados. \\
+\hline
+\textbf{Backend y BD} & Liberación automática de reservas vencidas (Cron Job). & Tarea programada en NestJS que cambie a \texttt{EXPIRED} los turnos en estado \texttt{HELD} si no completan las 6 cuotas antes de \texttt{hold\_expires\_at}. \\
+\hline
+\textbf{Backend y Cloud} & Subida de clips cortos de suplentes a Cloudinary. & Endpoint para que un jugador suplente suba su propio video de 15 a 30 segundos validando duración y peso del archivo. \\
+\hline
+\textbf{Frontend Web} & Historial de ingresos y exportación de reportes para dueños. & Vista adicional en el panel web de administración con el resumen semanal de reservas por cancha y descarga en formato CSV. \\
+\hline
+\textbf{Frontend Móvil} & Compilación de APK en Flutter y pruebas en celulares Android. & Generación del archivo instalable APK conectado al backend desplegado en la nube (Render) y pruebas con usuarios locales. \\
+\hline
+\end{tabular}
+\caption{Cronograma de tareas y entregables comprometidos para la semana del 6 al 12 de noviembre de 2026.}
+\end{table}
 
 \end{document}

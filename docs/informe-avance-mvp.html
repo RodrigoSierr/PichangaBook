@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Avance de Proyecto: PichangaBook Arequipa</title>
+  <title>Envío de Evidencias MVP (5 noviembre 2026) — PichangaBook Arequipa</title>
   <style>
     @page {
       size: A4 portrait;
@@ -23,7 +23,7 @@
 
     body {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 10.4pt;
+      font-size: 10.3pt;
       line-height: 1.38;
       color: #000000;
       background-color: #ffffff;
@@ -33,7 +33,7 @@
     .maketitle {
       text-align: center;
       margin-top: 1mm;
-      margin-bottom: 5.5mm;
+      margin-bottom: 5mm;
     }
 
     .maketitle-title {
@@ -44,7 +44,7 @@
     }
 
     .maketitle-subtitle {
-      font-size: 11.5pt;
+      font-size: 11.4pt;
       line-height: 1.3;
       margin-bottom: 0.8mm;
     }
@@ -52,12 +52,12 @@
     .maketitle-course {
       font-size: 10pt;
       line-height: 1.3;
-      margin-bottom: 3mm;
+      margin-bottom: 2.8mm;
     }
 
     .maketitle-authors {
       font-size: 11pt;
-      margin-bottom: 2mm;
+      margin-bottom: 1.8mm;
     }
 
     .maketitle-authors span {
@@ -72,7 +72,7 @@
     /* Secciones estilo LaTeX \section y \subsection */
     h2.latex-section {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 13.2pt;
+      font-size: 13pt;
       font-weight: bold;
       color: #000000;
       margin-top: 4mm;
@@ -92,11 +92,11 @@
 
     h3.latex-subsection {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 11.4pt;
+      font-size: 11.2pt;
       font-weight: bold;
       color: #000000;
-      margin-top: 3mm;
-      margin-bottom: 2.2mm;
+      margin-top: 2.8mm;
+      margin-bottom: 2mm;
       page-break-after: avoid;
       break-after: avoid;
     }
@@ -114,13 +114,21 @@
 
     code, .ttt {
       font-family: "Latin Modern Mono", "LM Mono 10", "Liberation Mono", monospace;
-      font-size: 9.2pt;
+      font-size: 9.1pt;
       overflow-wrap: break-word;
+    }
+
+    /* Diagramas SVG estilo LaTeX */
+    .diagram-container {
+      margin: 2.5mm 0 4mm 0;
+      text-align: center;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     /* Tabla LaTeX con \hline */
     .table-container {
-      margin: 2.2mm 0 3mm 0;
+      margin: 2.5mm 0 3.5mm 0;
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -128,15 +136,15 @@
     table.latex-tabular {
       width: 100%;
       border-collapse: collapse;
-      font-size: 8.8pt;
-      line-height: 1.26;
+      font-size: 9.1pt;
+      line-height: 1.28;
       border: 0.25mm solid #000000;
     }
 
     table.latex-tabular th,
     table.latex-tabular td {
       border: 0.25mm solid #000000;
-      padding: 1.1mm 1.8mm;
+      padding: 1.4mm 2mm;
       vertical-align: top;
       text-align: left;
     }
@@ -148,28 +156,15 @@
     .latex-caption {
       font-size: 9pt;
       text-align: center;
-      margin-top: 1.6mm;
+      margin-top: 1.5mm;
       line-height: 1.28;
-    }
-
-    /* Bloque lstlisting frame=single */
-    pre.lstlisting {
-      font-family: "Latin Modern Mono", "LM Mono 10", "Liberation Mono", monospace;
-      font-size: 7.7pt;
-      line-height: 1.22;
-      border: 0.25mm solid #000000;
-      padding: 1.8mm 2.5mm;
-      margin: 1.8mm 0 0 0;
-      white-space: pre-wrap;
-      page-break-inside: avoid;
-      break-inside: avoid;
     }
 
     /* Minipages de dos columnas */
     .minipage-block {
       page-break-inside: avoid;
       break-inside: avoid;
-      margin-bottom: 5.5mm;
+      margin-bottom: 5mm;
     }
 
     table.minipage-row {
@@ -203,7 +198,7 @@
     }
 
     .fig-box img.full-mobile {
-      max-height: 95mm;
+      max-height: 94mm;
       width: auto;
       max-width: 100%;
       display: block;
@@ -211,7 +206,7 @@
     }
 
     .fig-box img.full-mobile-short {
-      max-height: 90mm;
+      max-height: 82mm;
       width: auto;
       max-width: 100%;
       display: block;
@@ -219,9 +214,9 @@
     }
 
     .mp-text p {
-      font-size: 10.1pt;
-      line-height: 1.4;
-      margin-bottom: 2.4mm;
+      font-size: 10pt;
+      line-height: 1.38;
+      margin-bottom: 2.2mm;
       text-align: left;
     }
 
@@ -237,273 +232,474 @@
 </head>
 <body>
 
-  <!-- PÁGINA 1: TÍTULO, INTRODUCCIÓN Y BASE DE DATOS -->
+  <!-- PÁGINA 1: TÍTULO, RESUMEN Y DIAGRAMAS (ARQUITECTURA + ENTIDAD-RELACIÓN) -->
   <div class="maketitle">
-    <div class="maketitle-title">Avance de Proyecto: PichangaBook Arequipa</div>
-    <div class="maketitle-subtitle">Desarrollo de Frontend y Base de Datos</div>
+    <div class="maketitle-title">Envío de Evidencias MVP: PichangaBook Arequipa</div>
+    <div class="maketitle-subtitle">Avance de Backend, Frontend, Diagramas y Planificación</div>
     <div class="maketitle-course">Formación de Empresas de Base Tecnológica I — Universidad Católica San Pablo</div>
     <div class="maketitle-authors">
       <span>Rodrigo Sierra</span>
       <span>Samuel Iman</span>
     </div>
-    <div class="maketitle-date">28 de octubre de 2026</div>
+    <div class="maketitle-date">5 de noviembre de 2026</div>
   </div>
 
-  <h2 class="latex-section top"><span class="sec-num">1</span>Introducción</h2>
+  <h2 class="latex-section top"><span class="sec-num">1</span>Resumen del Avance del MVP</h2>
   <p>
-    En este informe presentamos el avance del Producto Mínimo Viable (MVP) de <strong>PichangaBook Arequipa</strong>, una plataforma pensada para organizar partidos de fútbol en canchas sintéticas de Arequipa evitando reservas duplicadas, facilitando el pago dividido entre amigos y permitiendo convocar suplentes cuando falta un jugador a última hora. Para esta entrega nos enfocamos en dos partes principales del sistema: el modelo relacional de la base de datos en PostgreSQL y la implementación de las interfaces gráficas (el panel web para los dueños de complejos deportivos y las pantallas de la aplicación móvil para jugadores y organizadores).
+    En este documento presentamos las evidencias de avance del Producto Mínimo Viable (MVP) de <strong>PichangaBook Arequipa</strong> (repositorio <code>github.com/RodrigoSierr/PichangaBook</code>). El proyecto resuelve tres problemas al alquilar canchas sintéticas en Arequipa: las reservas duplicadas entre recepción y WhatsApp, la dificultad de cobrar la cuota a cada amigo del partido y la falta de suplentes de último minuto. Hasta la fecha hemos implementado el esquema de base de datos en <strong>PostgreSQL</strong>, el servidor backend en <strong>NestJS con Socket.io</strong> y las interfaces de usuario en <strong>HTML5/Tailwind CSS</strong> (panel web de dueños) y <strong>Flutter/Dart</strong> (aplicación móvil para jugadores).
   </p>
 
-  <h2 class="latex-section"><span class="sec-num">2</span>Diseño de la Base de Datos</h2>
+  <h2 class="latex-section"><span class="sec-num">2</span>Diagramas del Sistema</h2>
+
+  <h3 class="latex-subsection"><span class="subsec-num">2.1</span>Diagrama de Arquitectura Backend–Frontend</h3>
   <p>
-    Para almacenar la información del sistema utilizamos <strong>PostgreSQL</strong>. Diseñamos el esquema en el archivo <code>schema.sql</code> buscando cubrir los datos de los usuarios, los complejos deportivos por distrito en Arequipa, la disponibilidad horaria de las canchas, los pagos divididos y los perfiles de los suplentes.
+    El siguiente diagrama muestra cómo se comunican el panel web de recepción y la aplicación móvil con los módulos del backend en NestJS y la base de datos PostgreSQL mediante peticiones REST y eventos en tiempo real por WebSockets:
+  </p>
+
+  <div class="diagram-container">
+    <svg width="100%" height="145" viewBox="0 0 680 155" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Roman', serif;">
+      <!-- Clientes Frontend -->
+      <rect x="8" y="12" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="92" y="31" font-size="10" font-weight="bold" text-anchor="middle">Frontend Móvil (Jugadores)</text>
+      <text x="92" y="45" font-size="8.5" text-anchor="middle">Flutter (Dart) + Prototipo Web</text>
+      <text x="92" y="58" font-size="8" text-anchor="middle">Mapa, Reservas, Split, Suplentes</text>
+
+      <rect x="8" y="84" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="92" y="103" font-size="10" font-weight="bold" text-anchor="middle">Frontend Web (Dueños)</text>
+      <text x="92" y="117" font-size="8.5" text-anchor="middle">HTML5 + CSS3 + Tailwind CSS</text>
+      <text x="92" y="130" font-size="8" text-anchor="middle">Agenda, Bloqueo Recepción, RUC</text>
+
+      <!-- Conexiones -->
+      <line x1="176" y1="40" x2="252" y2="58" stroke="#000000" stroke-width="1"/>
+      <line x1="176" y1="112" x2="252" y2="94" stroke="#000000" stroke-width="1"/>
+      <text x="214" y="37" font-size="8" text-anchor="middle">HTTP REST</text>
+      <text x="214" y="122" font-size="8" text-anchor="middle">Socket.io (WS)</text>
+
+      <!-- Backend NestJS -->
+      <rect x="252" y="14" width="196" height="126" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+      <text x="350" y="33" font-size="10.5" font-weight="bold" text-anchor="middle">Backend NestJS (TypeScript)</text>
+      <line x1="264" y1="41" x2="436" y2="41" stroke="#000000" stroke-width="0.6"/>
+      <text x="350" y="56" font-size="8.5" text-anchor="middle">AuthModule (OTP SMS y Relay)</text>
+      <text x="350" y="71" font-size="8.5" text-anchor="middle">ComplexesModule (Filtro AQP y RUC)</text>
+      <text x="350" y="86" font-size="8.5" text-anchor="middle">BookingsModule (Reservas y Split)</text>
+      <text x="350" y="101" font-size="8.5" text-anchor="middle">SubstitutesModule (Bolsa y Clips)</text>
+      <text x="350" y="118" font-size="8.5" font-weight="bold" text-anchor="middle">BookingsGateway (Socket.io)</text>
+
+      <!-- Conexiones Backend -> BD -->
+      <line x1="448" y1="54" x2="504" y2="44" stroke="#000000" stroke-width="1"/>
+      <line x1="448" y1="102" x2="504" y2="112" stroke="#000000" stroke-width="1" stroke-dasharray="3,2"/>
+
+      <!-- Base de datos y Servicios -->
+      <rect x="504" y="12" width="168" height="58" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+      <text x="588" y="31" font-size="10" font-weight="bold" text-anchor="middle">Base de Datos PostgreSQL</text>
+      <text x="588" y="45" font-size="8.2" text-anchor="middle">Esquema ACID (schema.sql)</text>
+      <text x="588" y="58" font-size="8" text-anchor="middle">Constraint GiST anti-doble turno</text>
+
+      <rect x="504" y="84" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="588" y="103" font-size="9.5" font-weight="bold" text-anchor="middle">Servicios Integrados</text>
+      <text x="588" y="117" font-size="8" text-anchor="middle">Mapas (Google Maps / Leaflet)</text>
+      <text x="588" y="130" font-size="8" text-anchor="middle">Culqi / Yape · Clips de Video MP4</text>
+    </svg>
+    <div class="latex-caption"><strong>Figura 1:</strong> Diagrama de arquitectura general entre el Frontend (Web/Móvil), el Backend NestJS y PostgreSQL.</div>
+  </div>
+
+  <h3 class="latex-subsection"><span class="subsec-num">2.2</span>Diagrama Entidad-Relación de la Base de Datos</h3>
+  <p>
+    El modelo relacional implementado en <code>backend-nestjs/schema.sql</code> se compone de las siguientes entidades principales y sus relaciones de integridad referencial:
+  </p>
+
+  <div class="diagram-container">
+    <svg width="100%" height="182" viewBox="0 0 680 192" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Mono', monospace;">
+      <!-- users -->
+      <rect x="10" y="10" width="145" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="10" y="10" width="145" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="82" y="22" font-size="9" font-weight="bold" text-anchor="middle">users</text>
+      <text x="16" y="38" font-size="7.8">PK id (UUID)</text>
+      <text x="16" y="50" font-size="7.8">   role (OWNER|ORGANIZER)</text>
+      <text x="16" y="62" font-size="7.8">   phone_e164</text>
+      <text x="16" y="74" font-size="7.8">   phone_masked (GEN)</text>
+
+      <!-- complexes -->
+      <rect x="195" y="10" width="145" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="195" y="10" width="145" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="267" y="22" font-size="9" font-weight="bold" text-anchor="middle">complexes</text>
+      <text x="201" y="38" font-size="7.8">PK id (UUID)</text>
+      <text x="201" y="50" font-size="7.8">FK owner_id -&gt; users</text>
+      <text x="201" y="62" font-size="7.8">   ruc (CHAR 11), district</text>
+      <text x="201" y="74" font-size="7.8">   verification_status</text>
+
+      <!-- courts -->
+      <rect x="380" y="10" width="135" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="380" y="10" width="135" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="447" y="22" font-size="9" font-weight="bold" text-anchor="middle">courts</text>
+      <text x="386" y="38" font-size="7.8">PK id (UUID)</text>
+      <text x="386" y="50" font-size="7.8">FK complex_id</text>
+      <text x="386" y="62" font-size="7.8">   players_per_side</text>
+      <text x="386" y="74" font-size="7.8">   price_cents</text>
+
+      <!-- bookings -->
+      <rect x="545" y="10" width="128" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="545" y="10" width="128" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="609" y="22" font-size="9" font-weight="bold" text-anchor="middle">bookings</text>
+      <text x="551" y="38" font-size="7.8">PK id (UUID)</text>
+      <text x="551" y="50" font-size="7.8">FK court_id</text>
+      <text x="551" y="62" font-size="7.8">   starts_at, ends_at</text>
+      <text x="551" y="74" font-size="7.8">   status (GiST excl)</text>
+
+      <!-- substitute_profiles -->
+      <rect x="10" y="110" width="165" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="10" y="110" width="165" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="92" y="122" font-size="9" font-weight="bold" text-anchor="middle">substitute_profiles</text>
+      <text x="16" y="138" font-size="7.8">PK,FK user_id -&gt; users</text>
+      <text x="16" y="150" font-size="7.8">   position, punctuality</text>
+      <text x="16" y="162" font-size="7.8">   clip_url (15-30 seg)</text>
+
+      <!-- split_payments -->
+      <rect x="240" y="110" width="185" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="240" y="110" width="185" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="332" y="122" font-size="9" font-weight="bold" text-anchor="middle">split_payments</text>
+      <text x="246" y="138" font-size="7.8">PK id (UUID)</text>
+      <text x="246" y="150" font-size="7.8">FK booking_id -&gt; bookings</text>
+      <text x="246" y="162" font-size="7.8">   share_token, paid/total_slots</text>
+
+      <!-- payment_shares -->
+      <rect x="470" y="110" width="203" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="470" y="110" width="203" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
+      <text x="571" y="122" font-size="9" font-weight="bold" text-anchor="middle">payment_shares</text>
+      <text x="476" y="138" font-size="7.8">PK id (UUID)</text>
+      <text x="476" y="150" font-size="7.8">FK split_payment_id</text>
+      <text x="476" y="162" font-size="7.8">   payer_name, method, amount</text>
+
+      <!-- Líneas de relación -->
+      <line x1="155" y1="48" x2="195" y2="48" stroke="#000000" stroke-width="1"/>
+      <text x="175" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+
+      <line x1="340" y1="48" x2="380" y2="48" stroke="#000000" stroke-width="1"/>
+      <text x="360" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+
+      <line x1="515" y1="48" x2="545" y2="48" stroke="#000000" stroke-width="1"/>
+      <text x="530" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+
+      <line x1="82" y1="86" x2="82" y2="110" stroke="#000000" stroke-width="1"/>
+      <text x="93" y="101" font-size="7.5">1:1</text>
+
+      <line x1="600" y1="86" x2="350" y2="110" stroke="#000000" stroke-width="1"/>
+      <text x="485" y="96" font-size="7.5">1:1</text>
+
+      <line x1="425" y1="146" x2="470" y2="146" stroke="#000000" stroke-width="1"/>
+      <text x="447" y="142" font-size="7.5" text-anchor="middle">1:N</text>
+    </svg>
+    <div class="latex-caption"><strong>Figura 2:</strong> Diagrama Entidad-Relación de las tablas principales en PostgreSQL.</div>
+  </div>
+
+  <!-- PÁGINA 2: EVIDENCIAS DE CÓDIGO (BASE DE DATOS Y BACKEND NESTJS) -->
+  <div class="page-break"></div>
+
+  <h2 class="latex-section top"><span class="sec-num">3</span>Evidencias de Código (Backend, Base de Datos y Frontend)</h2>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">3.1</span>Esquema en PostgreSQL y restricción anti-doble reserva (<code>schema.sql</code>)</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-54 gap-right">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/09-code-schema-sql.png" alt="Código SQL de la tabla bookings en VS Code" />
+            <div class="latex-caption"><strong>Figura 3:</strong> Código SQL de la tabla <code>bookings</code> y su restricción GiST en <code>backend-nestjs/schema.sql</code>.</div>
+          </div>
+        </td>
+        <td class="mp-46 mp-text">
+          <p>
+            En la captura se observa el archivo <code>backend-nestjs/schema.sql</code> con la definición de la tabla <code>bookings</code> y la tabla de auditoría <code>booking_events</code>.
+          </p>
+          <p>
+            Cada reserva guarda la cancha (<code>court_id</code>), el canal de origen (<code>APP</code>, <code>RECEPTION</code> o <code>PHONE</code>), el estado del turno y el rango horario (<code>starts_at</code> y <code>ends_at</code>). En las líneas 140 a 143 programamos la restricción <code>CONSTRAINT bookings_no_overlap EXCLUDE USING gist</code>, que impide a nivel de base de datos que dos reservas activas ocupen la misma cancha en el mismo horario.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">3.2</span>Lógica de reservas y pagos divididos en NestJS (<code>bookings.service.ts</code>)</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-46 gap-right mp-text">
+          <p>
+            El servicio <code>BookingsService</code> (en <code>src/bookings/bookings.service.ts</code>) gestiona la creación de reservas, el bloqueo rápido desde recepción y el avance de los pagos divididos.
+          </p>
+          <p>
+            Como muestra la captura del código en las líneas 94 a 126, cuando un organizador elige la modalidad <code>SPLIT</code>, el backend abre una transacción SQL, inserta el registro en <code>split_payments</code> calculando el monto individual por jugador (<code>amount_per_slot_cents</code>), registra el primer abono en <code>payment_shares</code> y guarda el evento en <code>booking_events</code> para notificar al panel del dueño.
+          </p>
+        </td>
+        <td class="mp-54">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/10-code-backend-service.png" alt="Código TypeScript de BookingsService en NestJS" />
+            <div class="latex-caption"><strong>Figura 4:</strong> Transacción de reserva y creación de pago dividido en <code>bookings.service.ts</code>.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PÁGINA 3: EVIDENCIAS DE CÓDIGO (WEBSOCKETS Y FLUTTER) -->
+  <div class="page-break"></div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">3.3</span>Gateway de sincronización en tiempo real con Socket.io (<code>bookings.gateway.ts</code>)</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-54 gap-right">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/11-code-backend-gateway.png" alt="Código de BookingsGateway con Socket.io" />
+            <div class="latex-caption"><strong>Figura 5:</strong> Implementación de <code>BookingsGateway</code> con Socket.io en NestJS.</div>
+          </div>
+        </td>
+        <td class="mp-46 mp-text">
+          <p>
+            Para que los bloqueos hechos en recepción y los abonos del pago dividido se reflejen sin recargar la página, implementamos la clase <code>BookingsGateway</code> en <code>src/bookings/bookings.gateway.ts</code> usando <code>@nestjs/websockets</code> y <strong>Socket.io</strong>.
+          </p>
+          <p>
+            En las líneas 46 a 65 se aprecia cómo el gateway escucha el bus interno de eventos (<code>RealtimeBus</code>) y emite las actualizaciones (<code>slot:updated</code> y <code>split:updated</code>) hacia la sala del complejo deportivo (<code>complex:&lt;id&gt;</code>) cada vez que cambia un turno.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">3.4</span>Código del Frontend móvil en Flutter (<code>arequipa_map_screen.dart</code>)</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-46 gap-right mp-text">
+          <p>
+            En la carpeta <code>/mobile-flutter/lib</code> estructuramos las vistas móviles en <strong>Dart / Flutter</strong> conectadas al backend mediante el servicio <code>RealtimeApiService</code>.
+          </p>
+          <p>
+            La captura muestra el archivo <code>arequipa_map_screen.dart</code>, donde definimos el widget con estado <code>ArequipaMapScreen</code>, la posición inicial de la cámara sobre las coordenadas de Arequipa (<code>LatLng(-16.3880, -71.5430)</code>) y la lista de distritos (Cayma, Yanahuara, Cerro Colorado, J.L. Bustamante y Sachaca) que filtra las canchas consultando la API del backend.
+          </p>
+        </td>
+        <td class="mp-54">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/12-code-frontend-flutter.png" alt="Código en Flutter de ArequipaMapScreen" />
+            <div class="latex-caption"><strong>Figura 6:</strong> Código en Flutter (Dart) de la pantalla del mapa de Arequipa.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PÁGINA 4: INTERFACES DEL FRONTEND WEB (DUEÑOS DE COMPLEJOS) -->
+  <div class="page-break"></div>
+
+  <h2 class="latex-section top"><span class="sec-num">4</span>Evidencias Visuales del Frontend Conectado al Backend</h2>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.1</span>Panel web para dueños de complejos deportivos</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-54 gap-right">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/01-admin-dashboard.png" alt="Panel web para dueños de complejos" />
+            <div class="latex-caption"><strong>Figura 7:</strong> Panel web de administración para dueños de complejos corriendo en el navegador.</div>
+          </div>
+        </td>
+        <td class="mp-46 mp-text">
+          <p>
+            El panel web (<code>/web-admin-tailwind/index.html</code>) fue maquetado con <strong>HTML5</strong> y <strong>Tailwind CSS</strong>. Al abrirse se conecta al backend NestJS mediante <code>GET /api/complexes</code> y al canal de Socket.io.
+          </p>
+          <p>
+            Muestra los indicadores del complejo deportivo, el validador de RUC con el algoritmo módulo 11 de SUNAT, la parrilla horaria en vivo de cada cancha y el monitor lateral de pagos divididos junto con la bitácora de eventos recibidos por WebSockets.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.2</span>Bloqueo rápido de turnos en recepción</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-46 gap-right mp-text">
+          <p>
+            Cuando un cliente paga en efectivo en la boletería o reserva por teléfono, el encargado abre este modal en el panel web, elige la cancha, la hora y el nombre del grupo, y pulsa <em>“Bloquear Turno Ahora”</em>.
+          </p>
+          <p>
+            La interfaz envía una petición <code>POST /api/bookings/reception-block</code> al backend NestJS, el cual guarda el turno con estado <code>BLOCKED</code> en PostgreSQL y emite el evento por Socket.io para que en la aplicación móvil aparezca ocupado al instante.
+          </p>
+        </td>
+        <td class="mp-54">
+          <div class="fig-box">
+            <img class="full-web" src="screenshots/02-admin-quick-block.png" alt="Ventana modal de bloqueo rápido en recepción" />
+            <div class="latex-caption"><strong>Figura 8:</strong> Modal de bloqueo rápido en recepción para ventas presenciales o telefónicas.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PÁGINA 5: INTERFACES MÓVILES (MAPA Y PARRILLA HORARIA) -->
+  <div class="page-break"></div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.3</span>Mapa de complejos y filtros por distritos de Arequipa</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-45 gap-right">
+          <div class="fig-box">
+            <img class="full-mobile" src="screenshots/03-mobile-map.png" alt="Pantalla móvil del mapa de complejos en Arequipa" />
+            <div class="latex-caption"><strong>Figura 9:</strong> Vista móvil del mapa de Arequipa y complejos filtrados por distrito.</div>
+          </div>
+        </td>
+        <td class="mp-55 mp-text">
+          <p>
+            La pantalla principal de la app móvil muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
+          </p>
+          <p>
+            Al seleccionar un distrito, el frontend consulta <code>GET /api/complexes?district=...</code> en el backend NestJS, el cual devuelve únicamente los complejos con RUC verificado en PostgreSQL ordenados por cercanía en kilómetros usando la fórmula de Haversine.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.4</span>Detalle de cancha y parrilla de disponibilidad en vivo</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-55 gap-right mp-text">
+          <p>
+            Al elegir un complejo se muestra su fotografía, calificación, pestañas para cambiar entre sus canchas (Cancha 1 Fútbol 6, Cancha 2 Fútbol 6, Cancha 3 Fútbol 8) y las reseñas escritas por otros jugadores.
+          </p>
+          <p>
+            La parrilla horaria consulta los turnos del día en el backend y se mantiene suscrita por WebSockets: muestra en verde los turnos disponibles, en morado los pagados por app, en azul los que están recolectando pagos divididos (<code>4/6</code>) y en ámbar los bloqueados en recepción.
+          </p>
+        </td>
+        <td class="mp-45">
+          <div class="fig-box">
+            <img class="full-mobile" src="screenshots/04-mobile-courts.png" alt="Vista móvil de horarios por cancha y reseñas" />
+            <div class="latex-caption"><strong>Figura 10:</strong> Parrilla horaria sincronizada y reseñas del complejo deportivo.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PÁGINA 6: INTERFACES MÓVILES (SPLIT PAYMENT Y BOLSA DE SUPLENTES) -->
+  <div class="page-break"></div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.5</span>Pantalla de pagos divididos (Split Payment)</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-45 gap-right">
+          <div class="fig-box">
+            <img class="full-mobile" src="screenshots/05-mobile-split.png" alt="Vista de progreso de pago dividido" />
+            <div class="latex-caption"><strong>Figura 11:</strong> Contador de progreso de pago dividido (4 de 6 cupos pagados).</div>
+          </div>
+        </td>
+        <td class="mp-55 mp-text">
+          <p>
+            En esta vista el organizador genera un link de cobro fraccionado para compartirlo con su grupo por WhatsApp y sigue en vivo cuántos compañeros ya abonaron su parte (por ejemplo, <em>“Cupos pagados: 4 de 6 — S/ 60.00 / S/ 90.00”</em>).
+          </p>
+          <p>
+            Cada vez que un jugador abona su cuota de S/ 15.00 eligiendo Yape, Plin o tarjeta, el frontend invoca <code>POST /api/bookings/split/:token/pay</code> en el backend NestJS. Al completarse el sexto cupo, la reserva pasa automáticamente de <code>HELD</code> a <code>CONFIRMED</code>.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.6</span>Bolsa de suplentes verificados con clips de video</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-55 gap-right mp-text">
+          <p>
+            La pestaña de bolsa de suplentes permite convocar jugadores de emergencia filtrando por posición en la cancha (<code>Arquero</code>, <code>Defensa</code>, <code>Mediocampo</code> y <code>Delantero</code>) mediante el endpoint <code>GET /api/substitutes</code>.
+          </p>
+          <p>
+            Cada tarjeta incluye un reproductor de video con un clip corto de 15 a 30 segundos para comprobar el nivel técnico del jugador antes de invitarlo, además de mostrar su distrito, su porcentaje de puntualidad, partidos jugados y el botón de convocatoria segura.
+          </p>
+        </td>
+        <td class="mp-45">
+          <div class="fig-box">
+            <img class="full-mobile" src="screenshots/06-mobile-substitutes.png" alt="Bolsa de suplentes con filtros por posición y video" />
+            <div class="latex-caption"><strong>Figura 12:</strong> Tarjetas de suplentes verificados con reproductor de video de 15 a 30 s.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- PÁGINA 7: SEGURIDAD ANTIFRAUDE Y AVANCE PARA LA SEMANA SIGUIENTE -->
+  <div class="page-break"></div>
+
+  <div class="minipage-block">
+    <h3 class="latex-subsection"><span class="subsec-num">4.7</span>Seguridad: Verificación por SMS (OTP) y chat con número oculto</h3>
+    <table class="minipage-row">
+      <tr>
+        <td class="mp-45 gap-right">
+          <div class="fig-box">
+            <img class="full-mobile-short" src="screenshots/07-mobile-otp-auth.png" alt="Ventana de registro y validación por código SMS" />
+            <div class="latex-caption"><strong>Figura 13:</strong> Registro por rol y validación por SMS (OTP).</div>
+          </div>
+        </td>
+        <td class="mp-55">
+          <div class="fig-box">
+            <img class="full-mobile-short" src="screenshots/08-mobile-masked-chat.png" alt="Chat interno con número telefónico enmascarado" />
+            <div class="latex-caption"><strong>Figura 14:</strong> Chat interno con número celular enmascarado.</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+    <p style="margin-top: 2.5mm;">
+      En el módulo de autenticación implementamos el registro diferenciado por rol (<code>Organizador</code> vs. <code>Dueño</code>) validado mediante un código temporal de 6 dígitos por SMS (<code>POST /api/auth/otp/send</code> y <code>/verify</code>) para evitar cuentas falsas. Además, al convocar a un suplente se abre un canal interno de contacto (Figura 14) donde el teléfono personal se muestra siempre enmascarado (<code>+51 9•• ••• 101</code>) y el backend oculta cualquier número celular escrito en los mensajes.
+    </p>
+  </div>
+
+  <h2 class="latex-section"><span class="sec-num">5</span>Avance para la Semana Siguiente (6 al 12 de noviembre de 2026)</h2>
+  <p>
+    Para la entrega de la próxima semana nos enfocaremos en reemplazar los adaptadores simulados por integraciones en modo de prueba real y cerrar los flujos pendientes entre el backend y la aplicación móvil:
   </p>
 
   <div class="table-container">
     <table class="latex-tabular">
       <thead>
         <tr>
-          <th style="width: 23%;">Tabla</th>
-          <th style="width: 77%;">Descripción y campos principales</th>
+          <th style="width: 22%;">Área</th>
+          <th style="width: 34%;">Tarea programada</th>
+          <th style="width: 44%;">Entregable / Evidencia para la próxima semana</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>users</code></td>
-          <td>Registra a los usuarios indicando su rol (<code>ORGANIZER</code> o <code>OWNER</code>), nombre completo, teléfono en formato E.164, una columna generada <code>phone_masked</code> que oculta los dígitos centrales del celular y el estado de verificación por SMS (<code>otp_verified</code>).</td>
+          <td><strong>Backend (Pagos)</strong></td>
+          <td>Integración con el entorno Sandbox real de Culqi / Yape.</td>
+          <td>Conexión de <code>CulqiService</code> con llaves de prueba reales para procesar abonos del Split Payment y recibir webhooks firmados.</td>
         </tr>
         <tr>
-          <td><code>complexes</code></td>
-          <td>Guarda los datos de cada complejo deportivo: propietario (<code>owner_id</code>), nombre comercial, número de RUC de 11 dígitos, distrito en Arequipa (Cayma, Yanahuara, Cerro Colorado, etc.), dirección, coordenadas GPS (<code>latitude</code>, <code>longitude</code>) y estado de validación documental (<code>verification_status</code>).</td>
+          <td><strong>Backend y BD</strong></td>
+          <td>Liberación automática de reservas vencidas (Cron Job).</td>
+          <td>Tarea programada en NestJS que cambie a <code>EXPIRED</code> los turnos en estado <code>HELD</code> si no completan las 6 cuotas antes de <code>hold_expires_at</code>.</td>
         </tr>
         <tr>
-          <td><code>courts</code></td>
-          <td>Contiene las canchas pertenecientes a cada complejo (<code>complex_id</code>), nombre de la cancha, formato de juego (Fútbol 6, Fútbol 7 o Fútbol 8), tipo de césped sintético y precio por hora diurno (<code>base_price_day</code>) y nocturno (<code>base_price_night</code>).</td>
+          <td><strong>Backend y Cloud</strong></td>
+          <td>Subida de clips cortos de suplentes a Cloudinary.</td>
+          <td>Endpoint para que un jugador suplente suba su propio video de 15 a 30 segundos validando duración y peso del archivo.</td>
         </tr>
         <tr>
-          <td><code>bookings</code></td>
-          <td>Almacena las reservas y bloqueos de horarios por cancha (<code>court_id</code>), fecha y hora de inicio y fin (<code>start_time</code>, <code>end_time</code>), modalidad de pago (<code>FULL</code>, <code>SPLIT</code> o <code>CASH_RECEPTION</code>), estado del turno (<code>HELD</code>, <code>CONFIRMED</code>, <code>BLOCKED_RECEPTION</code>) y una restricción <code>EXCLUDE USING gist</code> que impide registrar dos reservas en el mismo horario.</td>
+          <td><strong>Frontend Web</strong></td>
+          <td>Historial de ingresos y exportación de reportes para dueños.</td>
+          <td>Vista adicional en el panel web de administración con el resumen semanal de reservas por cancha y descarga en formato CSV.</td>
         </tr>
         <tr>
-          <td><code>split_payments</code></td>
-          <td>Controla el pago dividido asociado a una reserva (<code>booking_id</code>), el código para compartir por WhatsApp (<code>split_code</code>), el monto por jugador (<code>amount_per_slot</code>), el total de cupos (<code>total_slots</code>) y la cantidad de cupos ya pagados (<code>paid_slots</code>).</td>
-        </tr>
-        <tr>
-          <td><code>payment_shares</code></td>
-          <td>Detalla cada pago individual realizado dentro de un pago dividido (<code>split_payment_id</code>), guardando el nombre del jugador, el método elegido (<code>YAPE</code>, <code>PLIN</code> o <code>CARD</code>) y el estado del abono.</td>
-        </tr>
-        <tr>
-          <td><code>substitute_profiles</code></td>
-          <td>Guarda la información de la bolsa de suplentes: posición en cancha (<code>ARQUERO</code>, <code>DEFENSA</code>, <code>MEDIOCAMPO</code>, <code>DELANTERO</code>), puntaje de puntualidad (<code>punctuality_score</code>), partidos jugados y la URL del video corto (<code>video_clip_url</code>) con una restricción <code>CHECK</code> de entre 15 y 30 segundos.</td>
+          <td><strong>Frontend Móvil</strong></td>
+          <td>Compilación de APK en Flutter y pruebas en celulares Android.</td>
+          <td>Generación del archivo instalable APK conectado al backend desplegado en la nube (Render) y pruebas con usuarios locales.</td>
         </tr>
       </tbody>
     </table>
-    <div class="latex-caption"><strong>Tabla 1:</strong> Tablas principales definidas en el esquema PostgreSQL (<code>schema.sql</code>).</div>
-  </div>
-
-  <!-- PÁGINA 2: PANEL WEB DUEÑOS Y BLOQUEO RÁPIDO (CAPTURAS COMPLETAS) -->
-  <div class="page-break"></div>
-
-  <h2 class="latex-section top"><span class="sec-num">3</span>Interfaces del Frontend</h2>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.1</span>Panel web para dueños de complejos deportivos</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-54 gap-right">
-          <div class="fig-box">
-            <img class="full-web" src="screenshots/01-admin-dashboard.png" alt="Panel web para dueños de complejos" />
-            <div class="latex-caption"><strong>Figura 1:</strong> Panel web de administración para dueños de complejos.</div>
-          </div>
-        </td>
-        <td class="mp-46 mp-text">
-          <p>
-            El panel web para los administradores de canchas se desarrolló con <strong>HTML5</strong>, <strong>CSS3</strong> y <strong>Tailwind CSS</strong> dentro de la carpeta <code>/web-admin-tailwind</code>.
-          </p>
-          <p>
-            En la parte superior muestra los datos del complejo deportivo seleccionado, el estado de verificación del RUC y el resumen de reservas del día. En la parte inferior se encuentra la parrilla horaria de cada cancha diferenciando con colores los turnos libres, los pagados por la aplicación, los que están en pago dividido y los bloqueados en recepción.
-          </p>
-          <p>
-            Para construir esta vista se utilizan los datos almacenados en las tablas <code>complexes</code>, <code>courts</code>, <code>bookings</code> y <code>split_payments</code>.
-          </p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.2</span>Bloqueo rápido de turnos en recepción</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-46 gap-right mp-text">
-          <p>
-            Dentro del mismo panel web implementamos una ventana modal en HTML y Tailwind CSS para que el recepcionista pueda registrar rápidamente una venta presencial en ventanilla o una reserva hecha por llamada telefónica.
-          </p>
-          <p>
-            El formulario permite seleccionar la cancha, el horario disponible, el canal de venta (efectivo/POS o teléfono) y el nombre del cliente. Al guardar el bloqueo, el turno pasa al estado <code>BLOCKED_RECEPTION</code> dentro de la tabla <code>bookings</code> de la base de datos para que ningún jugador pueda reservar esa misma hora desde el celular.
-          </p>
-        </td>
-        <td class="mp-54">
-          <div class="fig-box">
-            <img class="full-web" src="screenshots/02-admin-quick-block.png" alt="Ventana modal de bloqueo rápido en recepción" />
-            <div class="latex-caption"><strong>Figura 2:</strong> Ventana modal de bloqueo rápido en recepción.</div>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- PÁGINA 3: MAPA DE COMPLEJOS Y DETALLE DE CANCHA (CAPTURAS COMPLETAS) -->
-  <div class="page-break"></div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.3</span>Mapa de complejos y filtros por distritos de Arequipa</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-45 gap-right">
-          <div class="fig-box">
-            <img class="full-mobile" src="screenshots/03-mobile-map.png" alt="Pantalla móvil del mapa de complejos en Arequipa" />
-            <div class="latex-caption"><strong>Figura 3:</strong> Pantalla móvil del mapa de complejos en Arequipa.</div>
-          </div>
-        </td>
-        <td class="mp-55 mp-text">
-          <p>
-            La aplicación móvil para jugadores y organizadores se estructuró en <strong>Flutter (Dart)</strong> dentro de <code>/mobile-flutter/lib</code>, acompañada de un prototipo interactivo en HTML y CSS (<code>demo-app-mobile.html</code>) para mostrar las vistas en el navegador.
-          </p>
-          <p>
-            La primera pantalla (<code>arequipa_map_screen.dart</code>) muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
-          </p>
-          <p>
-            Debajo del mapa se listan las tarjetas de cada local mostrando su foto, dirección, calificación y distancia, leyendo los registros verificados de la tabla <code>complexes</code> y los precios base de la tabla <code>courts</code>.
-          </p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.4</span>Detalle de cancha y parrilla de disponibilidad</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-55 gap-right mp-text">
-          <p>
-            Al entrar a un complejo deportivo se abre la pantalla de detalle (<code>court_detail_screen.dart</code>). En la parte superior se muestra la foto de la cancha, su dirección en Arequipa y pestañas para cambiar entre las canchas del local (por ejemplo, Cancha 1 de Fútbol 6, Cancha 2 de Fútbol 6 o Cancha 3 de Fútbol 8).
-          </p>
-          <p>
-            En el centro diseñamos la parrilla horaria donde el jugador ve qué horas están disponibles y cuáles ya están ocupadas o en proceso de pago dividido. En la parte inferior se muestran las reseñas dejadas por otros jugadores. Esta vista se alimenta directamente de las tablas <code>courts</code>, <code>bookings</code> y <code>court_reviews</code>.
-          </p>
-        </td>
-        <td class="mp-45">
-          <div class="fig-box">
-            <img class="full-mobile" src="screenshots/04-mobile-courts.png" alt="Vista móvil de horarios por cancha y reseñas" />
-            <div class="latex-caption"><strong>Figura 4:</strong> Vista móvil de horarios por cancha y reseñas.</div>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- PÁGINA 4: PAGOS DIVIDIDOS Y BOLSA DE SUPLENTES (CAPTURAS COMPLETAS) -->
-  <div class="page-break"></div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.5</span>Pantalla de pagos divididos (Split Payment)</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-45 gap-right">
-          <div class="fig-box">
-            <img class="full-mobile" src="screenshots/05-mobile-split.png" alt="Vista de progreso de pago dividido" />
-            <div class="latex-caption"><strong>Figura 5:</strong> Vista de progreso de pago dividido entre jugadores.</div>
-          </div>
-        </td>
-        <td class="mp-55 mp-text">
-          <p>
-            La pestaña de pagos divididos (<code>split_payment_screen.dart</code>) fue diseñada para que el organizador no tenga que pagar toda la cancha por su cuenta.
-          </p>
-          <p>
-            La interfaz muestra el progreso de los pagos con una barra visual y un contador claro (<em>“Cupos pagados: 4 de 6”</em> junto al monto recaudado S/ 60.00 de S/ 90.00), además de los botones para compartir el enlace de cobro por WhatsApp.
-          </p>
-          <p>
-            Más abajo incluye los botones de método de pago (Yape, Plin o tarjeta) para abonar la cuota individual de S/ 15.00 y la lista de compañeros que ya pagaron. Toda esta información corresponde a las tablas <code>split_payments</code> y <code>payment_shares</code>.
-          </p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.6</span>Bolsa de suplentes verificados con clips de video</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-55 gap-right mp-text">
-          <p>
-            La vista de la bolsa de suplentes (<code>substitutes_pool_screen.dart</code>) permite buscar jugadores disponibles cuando a un equipo le falta un integrante poco antes del partido.
-          </p>
-          <p>
-            En la parte superior colocamos filtros por posición (<code>Arquero</code>, <code>Defensa</code>, <code>Mediocampo</code> y <code>Delantero</code>). Cada tarjeta muestra un reproductor de video con un clip corto de 15 a 30 segundos donde se ve cómo juega el suplente, junto con su nombre, distrito, porcentaje de puntualidad, cantidad de partidos jugados y el botón para convocarlo.
-          </p>
-          <p>
-            Los datos mostrados en estas tarjetas se obtienen de la unión entre las tablas <code>substitute_profiles</code> y <code>users</code>.
-          </p>
-        </td>
-        <td class="mp-45">
-          <div class="fig-box">
-            <img class="full-mobile" src="screenshots/06-mobile-substitutes.png" alt="Bolsa de suplentes con filtros por posición y video" />
-            <div class="latex-caption"><strong>Figura 6:</strong> Bolsa de suplentes con filtros por posición y video.</div>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <!-- PÁGINA 5: REGISTRO SMS, CHAT ENMASCARADO Y CONCLUSIONES (CAPTURAS COMPLETAS) -->
-  <div class="page-break"></div>
-
-  <div class="minipage-block">
-    <h3 class="latex-subsection"><span class="subsec-num">3.7</span>Registro con código SMS y contacto con número oculto</h3>
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-45 gap-right">
-          <div class="fig-box">
-            <img class="full-mobile-short" src="screenshots/07-mobile-otp-auth.png" alt="Ventana de registro y validación por código SMS" />
-            <div class="latex-caption"><strong>Figura 7:</strong> Ventana de registro por roles y validación por código SMS.</div>
-          </div>
-        </td>
-        <td class="mp-55 mp-text">
-          <p>
-            Para la parte de seguridad en el frontend móvil implementamos dos ventanas modales:
-          </p>
-          <p>
-            La primera (Figura 7) corresponde al formulario de registro y verificación por SMS (OTP), donde el usuario selecciona si ingresa como <code>Organizador</code> o como <code>Dueño</code>, escribe su nombre y valida su número de celular con un código de 6 dígitos que se registra en las tablas <code>otp_challenges</code> y <code>users</code>.
-          </p>
-          <p>
-            La segunda ventana (Figura 8) se abre al convocar a un suplente. Muestra un chat interno donde el número real del jugador nunca aparece completo, mostrándose únicamente la columna generada <code>phone_masked</code> (por ejemplo, <code>+51 9•• ••• 101</code>) y los mensajes guardados en las tablas <code>contact_relays</code> y <code>relay_messages</code>.
-          </p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-  <div class="minipage-block">
-    <table class="minipage-row">
-      <tr>
-        <td class="mp-55 gap-right mp-text">
-          <h2 class="latex-section top"><span class="sec-num">4</span>Conclusiones del avance</h2>
-          <p>
-            En este avance completamos la estructura de la base de datos en PostgreSQL (<code>schema.sql</code> y datos de prueba en <code>seed.sql</code>) abarcando todas las tablas necesarias para usuarios, complejos de Arequipa, canchas, reservas, pagos divididos y perfiles de suplentes.
-          </p>
-          <p>
-            Asimismo, terminamos el diseño e implementación de todas las pantallas comprometidas en el frontend: tanto el panel web administrativo en HTML y Tailwind CSS para los dueños de canchas como las vistas móviles en Flutter y su prototipo ejecutable para los jugadores y organizadores.
-          </p>
-        </td>
-        <td class="mp-45">
-          <div class="fig-box">
-            <img class="full-mobile-short" src="screenshots/08-mobile-masked-chat.png" alt="Chat interno con número telefónico enmascarado" />
-            <div class="latex-caption"><strong>Figura 8:</strong> Chat interno con número telefónico enmascarado.</div>
-          </div>
-        </td>
-      </tr>
-    </table>
+    <div class="latex-caption"><strong>Tabla 1:</strong> Cronograma de tareas y entregables comprometidos para la semana del 6 al 12 de noviembre de 2026.</div>
   </div>
 
 </body>
