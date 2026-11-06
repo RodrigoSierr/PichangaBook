@@ -6,7 +6,7 @@
   <style>
     @page {
       size: A4 portrait;
-      margin: 18mm 20mm 18mm 20mm;
+      margin: 16mm 18mm 16mm 18mm;
       @bottom-center {
         content: counter(page);
         font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
@@ -23,8 +23,8 @@
 
     body {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 10.3pt;
-      line-height: 1.38;
+      font-size: 10.1pt;
+      line-height: 1.36;
       color: #000000;
       background-color: #ffffff;
     }
@@ -32,32 +32,32 @@
     /* Estilo \maketitle de LaTeX article */
     .maketitle {
       text-align: center;
-      margin-top: 1mm;
-      margin-bottom: 5mm;
+      margin-top: 0.5mm;
+      margin-bottom: 4mm;
     }
 
     .maketitle-title {
-      font-size: 15.8pt;
+      font-size: 15.5pt;
       font-weight: bold;
-      line-height: 1.22;
-      margin-bottom: 1.2mm;
+      line-height: 1.2;
+      margin-bottom: 1mm;
     }
 
     .maketitle-subtitle {
-      font-size: 11.4pt;
-      line-height: 1.3;
-      margin-bottom: 0.8mm;
+      font-size: 11.2pt;
+      line-height: 1.28;
+      margin-bottom: 0.6mm;
     }
 
     .maketitle-course {
-      font-size: 10pt;
-      line-height: 1.3;
-      margin-bottom: 2.8mm;
+      font-size: 9.8pt;
+      line-height: 1.28;
+      margin-bottom: 2.2mm;
     }
 
     .maketitle-authors {
-      font-size: 11pt;
-      margin-bottom: 1.8mm;
+      font-size: 10.8pt;
+      margin-bottom: 1.2mm;
     }
 
     .maketitle-authors span {
@@ -66,17 +66,17 @@
     }
 
     .maketitle-date {
-      font-size: 10.2pt;
+      font-size: 10pt;
     }
 
     /* Secciones estilo LaTeX \section y \subsection */
     h2.latex-section {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 13pt;
+      font-size: 12.8pt;
       font-weight: bold;
       color: #000000;
-      margin-top: 4mm;
-      margin-bottom: 2.2mm;
+      margin-top: 3.2mm;
+      margin-bottom: 1.8mm;
       page-break-after: avoid;
       break-after: avoid;
     }
@@ -87,40 +87,40 @@
 
     h2.latex-section .sec-num {
       display: inline-block;
-      margin-right: 3.2mm;
+      margin-right: 3mm;
     }
 
     h3.latex-subsection {
       font-family: "Latin Modern Roman", "LM Roman 10", "Liberation Serif", serif;
-      font-size: 11.2pt;
+      font-size: 11pt;
       font-weight: bold;
       color: #000000;
-      margin-top: 2.8mm;
-      margin-bottom: 2mm;
+      margin-top: 2.2mm;
+      margin-bottom: 1.6mm;
       page-break-after: avoid;
       break-after: avoid;
     }
 
     h3.latex-subsection .subsec-num {
       display: inline-block;
-      margin-right: 2.8mm;
+      margin-right: 2.6mm;
     }
 
     p {
-      margin-bottom: 2.3mm;
+      margin-bottom: 2mm;
       text-align: justify;
       hyphens: auto;
     }
 
     code, .ttt {
       font-family: "Latin Modern Mono", "LM Mono 10", "Liberation Mono", monospace;
-      font-size: 9.1pt;
+      font-size: 8.9pt;
       overflow-wrap: break-word;
     }
 
     /* Diagramas SVG estilo LaTeX */
     .diagram-container {
-      margin: 2.5mm 0 4mm 0;
+      margin: 1.8mm 0 2.8mm 0;
       text-align: center;
       page-break-inside: avoid;
       break-inside: avoid;
@@ -128,7 +128,7 @@
 
     /* Tabla LaTeX con \hline */
     .table-container {
-      margin: 2.5mm 0 3.5mm 0;
+      margin: 2.2mm 0 3mm 0;
       page-break-inside: avoid;
       break-inside: avoid;
     }
@@ -136,15 +136,15 @@
     table.latex-tabular {
       width: 100%;
       border-collapse: collapse;
-      font-size: 9.1pt;
-      line-height: 1.28;
+      font-size: 9pt;
+      line-height: 1.26;
       border: 0.25mm solid #000000;
     }
 
     table.latex-tabular th,
     table.latex-tabular td {
       border: 0.25mm solid #000000;
-      padding: 1.4mm 2mm;
+      padding: 1.05mm 1.8mm;
       vertical-align: top;
       text-align: left;
     }
@@ -154,17 +154,17 @@
     }
 
     .latex-caption {
-      font-size: 9pt;
+      font-size: 8.8pt;
       text-align: center;
-      margin-top: 1.5mm;
-      line-height: 1.28;
+      margin-top: 1.2mm;
+      line-height: 1.25;
     }
 
     /* Minipages de dos columnas */
     .minipage-block {
       page-break-inside: avoid;
       break-inside: avoid;
-      margin-bottom: 5mm;
+      margin-bottom: 4.8mm;
     }
 
     table.minipage-row {
@@ -206,7 +206,7 @@
     }
 
     .fig-box img.full-mobile-short {
-      max-height: 82mm;
+      max-height: 67mm;
       width: auto;
       max-width: 100%;
       display: block;
@@ -214,9 +214,9 @@
     }
 
     .mp-text p {
-      font-size: 10pt;
-      line-height: 1.38;
-      margin-bottom: 2.2mm;
+      font-size: 9.9pt;
+      line-height: 1.36;
+      margin-bottom: 2.1mm;
       text-align: left;
     }
 
@@ -232,7 +232,7 @@
 </head>
 <body>
 
-  <!-- PÁGINA 1: TÍTULO, RESUMEN Y DIAGRAMAS (ARQUITECTURA + ENTIDAD-RELACIÓN) -->
+  <!-- PÁGINA 1: TÍTULO, RESUMEN Y DIAGRAMAS (ARQUITECTURA + ENTIDAD-RELACIÓN COMPLETO) -->
   <div class="maketitle">
     <div class="maketitle-title">Envío de Evidencias MVP: PichangaBook Arequipa</div>
     <div class="maketitle-subtitle">Avance de Backend, Frontend, Diagramas y Planificación</div>
@@ -246,150 +246,228 @@
 
   <h2 class="latex-section top"><span class="sec-num">1</span>Resumen del Avance del MVP</h2>
   <p>
-    En este documento presentamos las evidencias de avance del Producto Mínimo Viable (MVP) de <strong>PichangaBook Arequipa</strong> (repositorio <code>github.com/RodrigoSierr/PichangaBook</code>). El proyecto resuelve tres problemas al alquilar canchas sintéticas en Arequipa: las reservas duplicadas entre recepción y WhatsApp, la dificultad de cobrar la cuota a cada amigo del partido y la falta de suplentes de último minuto. Hasta la fecha hemos implementado el esquema de base de datos en <strong>PostgreSQL</strong>, el servidor backend en <strong>NestJS con Socket.io</strong> y las interfaces de usuario en <strong>HTML5/Tailwind CSS</strong> (panel web de dueños) y <strong>Flutter/Dart</strong> (aplicación móvil para jugadores).
+    En este informe presentamos las evidencias del Producto Mínimo Viable (MVP) de <strong>PichangaBook Arequipa</strong> (repositorio <code>github.com/RodrigoSierr/PichangaBook</code>). El proyecto resuelve tres problemas frecuentes en el alquiler de canchas sintéticas en Arequipa: las reservas duplicadas entre recepción y WhatsApp, la dificultad del organizador para cobrar las cuotas individuales de sus compañeros y la falta de suplentes verificados de último minuto. El monorepo cuenta con tres carpetas conectadas entre sí: <code>/backend-nestjs</code> (API REST y WebSockets en NestJS + PostgreSQL), <code>/web-admin-tailwind</code> (panel web omnicanal para dueños) y <code>/mobile-flutter</code> (pantallas en Flutter/Dart y cliente móvil ejecutable).
   </p>
 
   <h2 class="latex-section"><span class="sec-num">2</span>Diagramas del Sistema</h2>
 
   <h3 class="latex-subsection"><span class="subsec-num">2.1</span>Diagrama de Arquitectura Backend–Frontend</h3>
   <p>
-    El siguiente diagrama muestra cómo se comunican el panel web de recepción y la aplicación móvil con los módulos del backend en NestJS y la base de datos PostgreSQL mediante peticiones REST y eventos en tiempo real por WebSockets:
+    El diagrama muestra los módulos reales configurados en <code>src/app.module.ts</code> y su comunicación con el panel web, la app móvil y la base de datos PostgreSQL:
   </p>
 
   <div class="diagram-container">
-    <svg width="100%" height="145" viewBox="0 0 680 155" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Roman', serif;">
+    <svg width="100%" height="128" viewBox="0 0 680 140" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Roman', serif;">
       <!-- Clientes Frontend -->
-      <rect x="8" y="12" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <text x="92" y="31" font-size="10" font-weight="bold" text-anchor="middle">Frontend Móvil (Jugadores)</text>
-      <text x="92" y="45" font-size="8.5" text-anchor="middle">Flutter (Dart) + Prototipo Web</text>
-      <text x="92" y="58" font-size="8" text-anchor="middle">Mapa, Reservas, Split, Suplentes</text>
+      <rect x="6" y="8" width="176" height="54" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="94" y="25" font-size="8.6" font-weight="bold" text-anchor="middle">Frontend Móvil (/mobile-flutter)</text>
+      <text x="94" y="38" font-size="8.0" text-anchor="middle">Flutter (Dart) + demo-app-mobile.html</text>
+      <text x="94" y="51" font-size="7.7" text-anchor="middle">RealtimeApiService (REST + Socket.io)</text>
 
-      <rect x="8" y="84" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <text x="92" y="103" font-size="10" font-weight="bold" text-anchor="middle">Frontend Web (Dueños)</text>
-      <text x="92" y="117" font-size="8.5" text-anchor="middle">HTML5 + CSS3 + Tailwind CSS</text>
-      <text x="92" y="130" font-size="8" text-anchor="middle">Agenda, Bloqueo Recepción, RUC</text>
+      <rect x="6" y="76" width="176" height="54" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="94" y="93" font-size="8.5" font-weight="bold" text-anchor="middle">Frontend Web (/web-admin-tailwind)</text>
+      <text x="94" y="106" font-size="8.0" text-anchor="middle">index.html (HTML5 + Tailwind CSS)</text>
+      <text x="94" y="119" font-size="7.7" text-anchor="middle">Agenda en vivo, Bloqueo y RUC SUNAT</text>
 
-      <!-- Conexiones -->
-      <line x1="176" y1="40" x2="252" y2="58" stroke="#000000" stroke-width="1"/>
-      <line x1="176" y1="112" x2="252" y2="94" stroke="#000000" stroke-width="1"/>
-      <text x="214" y="37" font-size="8" text-anchor="middle">HTTP REST</text>
-      <text x="214" y="122" font-size="8" text-anchor="middle">Socket.io (WS)</text>
+      <!-- Conexiones Frontend <-> Backend -->
+      <line x1="182" y1="35" x2="246" y2="52" stroke="#000000" stroke-width="1"/>
+      <line x1="182" y1="103" x2="246" y2="86" stroke="#000000" stroke-width="1"/>
+      <text x="214" y="33" font-size="7.5" text-anchor="middle">REST (/api/*)</text>
+      <text x="214" y="112" font-size="7.5" text-anchor="middle">Socket.io (WS)</text>
 
       <!-- Backend NestJS -->
-      <rect x="252" y="14" width="196" height="126" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
-      <text x="350" y="33" font-size="10.5" font-weight="bold" text-anchor="middle">Backend NestJS (TypeScript)</text>
-      <line x1="264" y1="41" x2="436" y2="41" stroke="#000000" stroke-width="0.6"/>
-      <text x="350" y="56" font-size="8.5" text-anchor="middle">AuthModule (OTP SMS y Relay)</text>
-      <text x="350" y="71" font-size="8.5" text-anchor="middle">ComplexesModule (Filtro AQP y RUC)</text>
-      <text x="350" y="86" font-size="8.5" text-anchor="middle">BookingsModule (Reservas y Split)</text>
-      <text x="350" y="101" font-size="8.5" text-anchor="middle">SubstitutesModule (Bolsa y Clips)</text>
-      <text x="350" y="118" font-size="8.5" font-weight="bold" text-anchor="middle">BookingsGateway (Socket.io)</text>
+      <rect x="246" y="6" width="206" height="126" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+      <text x="349" y="22" font-size="10" font-weight="bold" text-anchor="middle">Backend NestJS (/backend-nestjs)</text>
+      <line x1="256" y1="28" x2="442" y2="28" stroke="#000000" stroke-width="0.6"/>
+      <text x="349" y="41" font-size="8.1" text-anchor="middle">AuthModule (AuthService + OtpService + JWT)</text>
+      <text x="349" y="54" font-size="8.1" text-anchor="middle">ComplexesModule (Complexes + Availability)</text>
+      <text x="349" y="67" font-size="8.1" text-anchor="middle">BookingsModule (BookingsService + Split)</text>
+      <text x="349" y="80" font-size="8.1" text-anchor="middle">SubstitutesModule (Bolsa + ContactRelays)</text>
+      <text x="349" y="93" font-size="8.1" font-weight="bold" text-anchor="middle">BookingsGateway + RealtimeBus (RxJS)</text>
+      <text x="349" y="106" font-size="8.1" text-anchor="middle">IntegrationsModule (Culqi, Maps, Media)</text>
+      <text x="349" y="119" font-size="8.1" text-anchor="middle">DatabaseModule (pg Pool / PGlite WASM)</text>
 
-      <!-- Conexiones Backend -> BD -->
-      <line x1="448" y1="54" x2="504" y2="44" stroke="#000000" stroke-width="1"/>
-      <line x1="448" y1="102" x2="504" y2="112" stroke="#000000" stroke-width="1" stroke-dasharray="3,2"/>
+      <!-- Conexiones Backend -> BD y Servicios -->
+      <line x1="452" y1="45" x2="504" y2="36" stroke="#000000" stroke-width="1"/>
+      <line x1="452" y1="95" x2="504" y2="104" stroke="#000000" stroke-width="1" stroke-dasharray="3,2"/>
 
-      <!-- Base de datos y Servicios -->
-      <rect x="504" y="12" width="168" height="58" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
-      <text x="588" y="31" font-size="10" font-weight="bold" text-anchor="middle">Base de Datos PostgreSQL</text>
-      <text x="588" y="45" font-size="8.2" text-anchor="middle">Esquema ACID (schema.sql)</text>
-      <text x="588" y="58" font-size="8" text-anchor="middle">Constraint GiST anti-doble turno</text>
+      <!-- Base de datos y Adaptadores -->
+      <rect x="504" y="8" width="170" height="56" fill="#ffffff" stroke="#000000" stroke-width="1.2"/>
+      <text x="589" y="25" font-size="9.5" font-weight="bold" text-anchor="middle">PostgreSQL (schema.sql)</text>
+      <text x="589" y="38" font-size="8" text-anchor="middle">12 tablas + extensión btree_gist</text>
+      <text x="589" y="51" font-size="7.8" text-anchor="middle">Transacciones ACID y bloqueo GiST</text>
 
-      <rect x="504" y="84" width="168" height="56" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <text x="588" y="103" font-size="9.5" font-weight="bold" text-anchor="middle">Servicios Integrados</text>
-      <text x="588" y="117" font-size="8" text-anchor="middle">Mapas (Google Maps / Leaflet)</text>
-      <text x="588" y="130" font-size="8" text-anchor="middle">Culqi / Yape · Clips de Video MP4</text>
+      <rect x="504" y="76" width="170" height="54" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <text x="589" y="93" font-size="9.2" font-weight="bold" text-anchor="middle">Adaptadores Externos</text>
+      <text x="589" y="106" font-size="7.8" text-anchor="middle">Culqi (Yape/Plin/Card + HMAC)</text>
+      <text x="589" y="119" font-size="7.8" text-anchor="middle">Google Maps / Haversine · Cloudinary</text>
     </svg>
-    <div class="latex-caption"><strong>Figura 1:</strong> Diagrama de arquitectura general entre el Frontend (Web/Móvil), el Backend NestJS y PostgreSQL.</div>
+    <div class="latex-caption"><strong>Figura 1:</strong> Diagrama de arquitectura del monorepo con los módulos de <code>AppModule</code> en NestJS.</div>
   </div>
 
-  <h3 class="latex-subsection"><span class="subsec-num">2.2</span>Diagrama Entidad-Relación de la Base de Datos</h3>
+  <h3 class="latex-subsection"><span class="subsec-num">2.2</span>Diagrama Entidad-Relación de la Base de Datos (PostgreSQL)</h3>
   <p>
-    El modelo relacional implementado en <code>backend-nestjs/schema.sql</code> se compone de las siguientes entidades principales y sus relaciones de integridad referencial:
+    El siguiente diagrama Entidad-Relación refleja las <strong>12 tablas</strong> definidas en <code>backend-nestjs/schema.sql</code> con sus llaves primarias (<code>PK</code>), foráneas (<code>FK</code>) y restricciones de unicidad (<code>UQ</code>):
   </p>
 
   <div class="diagram-container">
-    <svg width="100%" height="182" viewBox="0 0 680 192" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Mono', monospace;">
-      <!-- users -->
-      <rect x="10" y="10" width="145" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="10" y="10" width="145" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="82" y="22" font-size="9" font-weight="bold" text-anchor="middle">users</text>
-      <text x="16" y="38" font-size="7.8">PK id (UUID)</text>
-      <text x="16" y="50" font-size="7.8">   role (OWNER|ORGANIZER)</text>
-      <text x="16" y="62" font-size="7.8">   phone_e164</text>
-      <text x="16" y="74" font-size="7.8">   phone_masked (GEN)</text>
+    <svg width="100%" height="252" viewBox="0 0 680 268" xmlns="http://www.w3.org/2000/svg" style="font-family: 'Latin Modern Mono', monospace;">
+      <!-- FILA 1: districts -> complexes -> courts -> bookings -->
+      <!-- 1. districts -->
+      <rect x="6" y="6" width="138" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="6" y="6" width="138" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="75" y="17" font-size="8.4" font-weight="bold" text-anchor="middle">districts</text>
+      <text x="11" y="31" font-size="7.2">PK code VARCHAR(32)</text>
+      <text x="11" y="42" font-size="7.2">UQ name VARCHAR(80)</text>
+      <text x="11" y="53" font-size="7.2">   lat, lng NUMERIC(9,6)</text>
+      <text x="11" y="64" font-size="7.2">   is_key_zone BOOLEAN</text>
 
-      <!-- complexes -->
-      <rect x="195" y="10" width="145" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="195" y="10" width="145" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="267" y="22" font-size="9" font-weight="bold" text-anchor="middle">complexes</text>
-      <text x="201" y="38" font-size="7.8">PK id (UUID)</text>
-      <text x="201" y="50" font-size="7.8">FK owner_id -&gt; users</text>
-      <text x="201" y="62" font-size="7.8">   ruc (CHAR 11), district</text>
-      <text x="201" y="74" font-size="7.8">   verification_status</text>
+      <!-- 2. complexes -->
+      <rect x="172" y="6" width="148" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="172" y="6" width="148" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="246" y="17" font-size="8.4" font-weight="bold" text-anchor="middle">complexes</text>
+      <text x="177" y="31" font-size="7.2">PK id UUID</text>
+      <text x="177" y="42" font-size="7.2">FK owner_id -&gt; users.id</text>
+      <text x="177" y="53" font-size="7.2">FK district_code -&gt; districts</text>
+      <text x="177" y="64" font-size="7.2">UQ ruc CHAR(11), verif_status</text>
+      <text x="177" y="74" font-size="7.2">   lat, lng, address</text>
 
-      <!-- courts -->
-      <rect x="380" y="10" width="135" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="380" y="10" width="135" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="447" y="22" font-size="9" font-weight="bold" text-anchor="middle">courts</text>
-      <text x="386" y="38" font-size="7.8">PK id (UUID)</text>
-      <text x="386" y="50" font-size="7.8">FK complex_id</text>
-      <text x="386" y="62" font-size="7.8">   players_per_side</text>
-      <text x="386" y="74" font-size="7.8">   price_cents</text>
+      <!-- 3. courts -->
+      <rect x="348" y="6" width="142" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="348" y="6" width="142" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="419" y="17" font-size="8.4" font-weight="bold" text-anchor="middle">courts</text>
+      <text x="353" y="31" font-size="7.2">PK id UUID</text>
+      <text x="353" y="42" font-size="7.2">FK complex_id -&gt; complexes</text>
+      <text x="353" y="53" font-size="7.2">   name, surface, players</text>
+      <text x="353" y="64" font-size="7.2">   price_cents, price_peak</text>
+      <text x="353" y="74" font-size="7.2">   open_hour, close_hour</text>
 
-      <!-- bookings -->
-      <rect x="545" y="10" width="128" height="76" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="545" y="10" width="128" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="609" y="22" font-size="9" font-weight="bold" text-anchor="middle">bookings</text>
-      <text x="551" y="38" font-size="7.8">PK id (UUID)</text>
-      <text x="551" y="50" font-size="7.8">FK court_id</text>
-      <text x="551" y="62" font-size="7.8">   starts_at, ends_at</text>
-      <text x="551" y="74" font-size="7.8">   status (GiST excl)</text>
+      <!-- 4. bookings -->
+      <rect x="518" y="6" width="156" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="518" y="6" width="156" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="596" y="17" font-size="8.4" font-weight="bold" text-anchor="middle">bookings</text>
+      <text x="523" y="31" font-size="7.2">PK id UUID</text>
+      <text x="523" y="42" font-size="7.2">FK court_id -&gt; courts.id</text>
+      <text x="523" y="53" font-size="7.2">FK organizer_id -&gt; users.id</text>
+      <text x="523" y="64" font-size="7.2">   channel, status, payment_mode</text>
+      <text x="523" y="74" font-size="7.2">   starts_at, ends_at (GiST excl)</text>
 
-      <!-- substitute_profiles -->
-      <rect x="10" y="110" width="165" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="10" y="110" width="165" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="92" y="122" font-size="9" font-weight="bold" text-anchor="middle">substitute_profiles</text>
-      <text x="16" y="138" font-size="7.8">PK,FK user_id -&gt; users</text>
-      <text x="16" y="150" font-size="7.8">   position, punctuality</text>
-      <text x="16" y="162" font-size="7.8">   clip_url (15-30 seg)</text>
+      <!-- Flechas Fila 1 -->
+      <line x1="144" y1="42" x2="172" y2="42" stroke="#000000" stroke-width="0.9"/>
+      <text x="158" y="38" font-size="7" text-anchor="middle">1:N</text>
 
-      <!-- split_payments -->
-      <rect x="240" y="110" width="185" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="240" y="110" width="185" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="332" y="122" font-size="9" font-weight="bold" text-anchor="middle">split_payments</text>
-      <text x="246" y="138" font-size="7.8">PK id (UUID)</text>
-      <text x="246" y="150" font-size="7.8">FK booking_id -&gt; bookings</text>
-      <text x="246" y="162" font-size="7.8">   share_token, paid/total_slots</text>
+      <line x1="320" y1="42" x2="348" y2="42" stroke="#000000" stroke-width="0.9"/>
+      <text x="334" y="38" font-size="7" text-anchor="middle">1:N</text>
 
-      <!-- payment_shares -->
-      <rect x="470" y="110" width="203" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
-      <rect x="470" y="110" width="203" height="18" fill="#f2f2f2" stroke="#000000" stroke-width="1"/>
-      <text x="571" y="122" font-size="9" font-weight="bold" text-anchor="middle">payment_shares</text>
-      <text x="476" y="138" font-size="7.8">PK id (UUID)</text>
-      <text x="476" y="150" font-size="7.8">FK split_payment_id</text>
-      <text x="476" y="162" font-size="7.8">   payer_name, method, amount</text>
+      <line x1="490" y1="42" x2="518" y2="42" stroke="#000000" stroke-width="0.9"/>
+      <text x="504" y="38" font-size="7" text-anchor="middle">1:N</text>
 
-      <!-- Líneas de relación -->
-      <line x1="155" y1="48" x2="195" y2="48" stroke="#000000" stroke-width="1"/>
-      <text x="175" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+      <!-- FILA 2: users, reviews, booking_events, split_payments -->
+      <!-- 5. users -->
+      <rect x="6" y="96" width="138" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="6" y="96" width="138" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="75" y="107" font-size="8.4" font-weight="bold" text-anchor="middle">users</text>
+      <text x="11" y="121" font-size="7.2">PK id UUID</text>
+      <text x="11" y="132" font-size="7.2">   full_name, role (ENUM)</text>
+      <text x="11" y="143" font-size="7.2">UQ phone_e164 VARCHAR(16)</text>
+      <text x="11" y="154" font-size="7.2">   phone_masked (GENERATED)</text>
+      <text x="11" y="164" font-size="7.2">   phone_verified_at, trust</text>
 
-      <line x1="340" y1="48" x2="380" y2="48" stroke="#000000" stroke-width="1"/>
-      <text x="360" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+      <!-- 6. reviews -->
+      <rect x="172" y="96" width="148" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="172" y="96" width="148" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="246" y="107" font-size="8.4" font-weight="bold" text-anchor="middle">reviews</text>
+      <text x="177" y="121" font-size="7.2">PK id UUID</text>
+      <text x="177" y="132" font-size="7.2">FK complex_id -&gt; complexes</text>
+      <text x="177" y="143" font-size="7.2">FK user_id -&gt; users.id</text>
+      <text x="177" y="154" font-size="7.2">   rating SMALLINT (1..5)</text>
+      <text x="177" y="164" font-size="7.2">   comment VARCHAR(400)</text>
 
-      <line x1="515" y1="48" x2="545" y2="48" stroke="#000000" stroke-width="1"/>
-      <text x="530" y="44" font-size="7.5" text-anchor="middle">1:N</text>
+      <!-- 7. booking_events -->
+      <rect x="348" y="96" width="142" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="348" y="96" width="142" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="419" y="107" font-size="8.4" font-weight="bold" text-anchor="middle">booking_events</text>
+      <text x="353" y="121" font-size="7.2">PK id BIGSERIAL</text>
+      <text x="353" y="132" font-size="7.2">FK booking_id -&gt; bookings</text>
+      <text x="353" y="143" font-size="7.2">FK complex_id -&gt; complexes</text>
+      <text x="353" y="154" font-size="7.2">FK actor_id -&gt; users.id</text>
+      <text x="353" y="164" font-size="7.2">   event_type, payload JSONB</text>
 
-      <line x1="82" y1="86" x2="82" y2="110" stroke="#000000" stroke-width="1"/>
-      <text x="93" y="101" font-size="7.5">1:1</text>
+      <!-- 8. split_payments -->
+      <rect x="518" y="96" width="156" height="72" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="518" y="96" width="156" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="596" y="107" font-size="8.4" font-weight="bold" text-anchor="middle">split_payments</text>
+      <text x="523" y="121" font-size="7.2">PK id UUID</text>
+      <text x="523" y="132" font-size="7.2">UQ,FK booking_id -&gt; bookings</text>
+      <text x="523" y="143" font-size="7.2">FK organizer_id -&gt; users.id</text>
+      <text x="523" y="154" font-size="7.2">   paid_slots / total_slots</text>
+      <text x="523" y="164" font-size="7.2">UQ share_token, status</text>
 
-      <line x1="600" y1="86" x2="350" y2="110" stroke="#000000" stroke-width="1"/>
-      <text x="485" y="96" font-size="7.5">1:1</text>
+      <!-- Conectores entre Fila 1 y Fila 2 -->
+      <line x1="144" y1="132" x2="172" y2="132" stroke="#000000" stroke-width="0.9"/>
+      <text x="158" y="128" font-size="7" text-anchor="middle">1:N</text>
 
-      <line x1="425" y1="146" x2="470" y2="146" stroke="#000000" stroke-width="1"/>
-      <text x="447" y="142" font-size="7.5" text-anchor="middle">1:N</text>
+      <line x1="246" y1="78" x2="246" y2="96" stroke="#000000" stroke-width="0.9"/>
+      <text x="256" y="90" font-size="7">1:N</text>
+
+      <polyline points="542,78 542,87 419,87 419,96" fill="none" stroke="#000000" stroke-width="0.9"/>
+      <text x="480" y="84" font-size="7" text-anchor="middle">1:N</text>
+
+      <line x1="596" y1="78" x2="596" y2="96" stroke="#000000" stroke-width="0.9"/>
+      <text x="606" y="90" font-size="7">1:1</text>
+
+      <!-- FILA 3: substitute_profiles, substitute_invitations, contact_relays + relay_messages, payment_shares -->
+      <!-- 9. substitute_profiles -->
+      <rect x="6" y="186" width="138" height="74" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="6" y="186" width="138" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="75" y="197" font-size="8.2" font-weight="bold" text-anchor="middle">substitute_profiles</text>
+      <text x="11" y="211" font-size="7.2">PK id UUID</text>
+      <text x="11" y="222" font-size="7.2">UQ,FK user_id -&gt; users.id</text>
+      <text x="11" y="233" font-size="7.2">FK district_code -&gt; districts</text>
+      <text x="11" y="244" font-size="7.2">   position, punctuality</text>
+      <text x="11" y="254" font-size="7.2">   clip_url, clip_duration_s</text>
+
+      <!-- 10. substitute_invitations -->
+      <rect x="172" y="186" width="148" height="74" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="172" y="186" width="148" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="246" y="197" font-size="8.1" font-weight="bold" text-anchor="middle">substitute_invitations</text>
+      <text x="177" y="211" font-size="7.2">PK id UUID</text>
+      <text x="177" y="222" font-size="7.2">FK substitute_id -&gt; subst_prof</text>
+      <text x="177" y="233" font-size="7.2">FK organizer_id -&gt; users.id</text>
+      <text x="177" y="244" font-size="7.2">FK booking_id -&gt; bookings.id</text>
+      <text x="177" y="254" font-size="7.2">   status (SENT|ACCEPTED|...)</text>
+
+      <!-- 11 & 12. contact_relays + relay_messages -->
+      <rect x="348" y="186" width="142" height="74" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="348" y="186" width="142" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="419" y="197" font-size="7.9" font-weight="bold" text-anchor="middle">contact_relays / messages</text>
+      <text x="353" y="211" font-size="7.1">PK id UUID (contact_relays)</text>
+      <text x="353" y="222" font-size="7.1">FK user_a_id, user_b_id -&gt; users</text>
+      <text x="353" y="233" font-size="7.1">   proxy_number VARCHAR(20)</text>
+      <text x="353" y="244" font-size="7.1">1:N relay_messages (FK relay_id)</text>
+      <text x="353" y="254" font-size="7.1">   body, was_redacted BOOLEAN</text>
+
+      <!-- 13. payment_shares -->
+      <rect x="518" y="186" width="156" height="74" fill="#ffffff" stroke="#000000" stroke-width="1"/>
+      <rect x="518" y="186" width="156" height="16" fill="#efefef" stroke="#000000" stroke-width="1"/>
+      <text x="596" y="197" font-size="8.4" font-weight="bold" text-anchor="middle">payment_shares</text>
+      <text x="523" y="211" font-size="7.2">PK id UUID</text>
+      <text x="523" y="222" font-size="7.2">FK split_payment_id -&gt; split</text>
+      <text x="523" y="233" font-size="7.2">FK payer_user_id -&gt; users.id</text>
+      <text x="523" y="244" font-size="7.2">   payer_name, method, provider</text>
+      <text x="523" y="254" font-size="7.2">UQ provider_charge_id, amount</text>
+
+      <!-- Conectores Fila 2 <-> Fila 3 -->
+      <line x1="75" y1="168" x2="75" y2="186" stroke="#000000" stroke-width="0.9"/>
+      <text x="85" y="180" font-size="7">1:1</text>
+
+      <line x1="144" y1="222" x2="172" y2="222" stroke="#000000" stroke-width="0.9"/>
+      <text x="158" y="218" font-size="7" text-anchor="middle">1:N</text>
+
+      <line x1="596" y1="168" x2="596" y2="186" stroke="#000000" stroke-width="0.9"/>
+      <text x="606" y="180" font-size="7">1:N</text>
     </svg>
-    <div class="latex-caption"><strong>Figura 2:</strong> Diagrama Entidad-Relación de las tablas principales en PostgreSQL.</div>
+    <div class="latex-caption"><strong>Figura 2:</strong> Diagrama Entidad-Relación completo de las 12 tablas definidas en <code>backend-nestjs/schema.sql</code>.</div>
   </div>
 
   <!-- PÁGINA 2: EVIDENCIAS DE CÓDIGO (BASE DE DATOS Y BACKEND NESTJS) -->
@@ -409,10 +487,10 @@
         </td>
         <td class="mp-46 mp-text">
           <p>
-            En la captura se observa el archivo <code>backend-nestjs/schema.sql</code> con la definición de la tabla <code>bookings</code> y la tabla de auditoría <code>booking_events</code>.
+            En la captura se observa el archivo <code>backend-nestjs/schema.sql</code> (líneas 118 a 154) con la definición de las tablas <code>bookings</code> y <code>booking_events</code>.
           </p>
           <p>
-            Cada reserva guarda la cancha (<code>court_id</code>), el canal de origen (<code>APP</code>, <code>RECEPTION</code> o <code>PHONE</code>), el estado del turno y el rango horario (<code>starts_at</code> y <code>ends_at</code>). En las líneas 140 a 143 programamos la restricción <code>CONSTRAINT bookings_no_overlap EXCLUDE USING gist</code>, que impide a nivel de base de datos que dos reservas activas ocupen la misma cancha en el mismo horario.
+            Cada fila registra la cancha (<code>court_id</code>), el organizador (<code>organizer_id</code>), el canal (<code>APP</code>, <code>RECEPTION</code>, <code>PHONE</code> o <code>WHATSAPP</code>), el estado y los timestamps <code>starts_at</code> y <code>ends_at</code>. En las líneas 140 a 143 programamos <code>CONSTRAINT bookings_no_overlap EXCLUDE USING gist</code> usando la extensión <code>btree_gist</code>, lo que impide en el propio motor PostgreSQL que dos turnos activos (<code>HELD</code>, <code>PENDING_PAYMENT</code>, <code>CONFIRMED</code> o <code>BLOCKED</code>) se crucen en la misma cancha.
           </p>
         </td>
       </tr>
@@ -425,10 +503,10 @@
       <tr>
         <td class="mp-46 gap-right mp-text">
           <p>
-            El servicio <code>BookingsService</code> (en <code>src/bookings/bookings.service.ts</code>) gestiona la creación de reservas, el bloqueo rápido desde recepción y el avance de los pagos divididos.
+            El servicio <code>BookingsService</code> (en <code>src/bookings/bookings.service.ts</code>) ejecuta toda creación de reserva o pago dentro de una transacción SQL mediante <code>this.db.withTransaction(...)</code>.
           </p>
           <p>
-            Como muestra la captura del código en las líneas 94 a 126, cuando un organizador elige la modalidad <code>SPLIT</code>, el backend abre una transacción SQL, inserta el registro en <code>split_payments</code> calculando el monto individual por jugador (<code>amount_per_slot_cents</code>), registra el primer abono en <code>payment_shares</code> y guarda el evento en <code>booking_events</code> para notificar al panel del dueño.
+            Como muestra la captura del código en las líneas 91 a 128, cuando la reserva se crea en modo <code>SPLIT</code>, el servicio inserta el registro en <code>split_payments</code> con el token único <code>share_token</code> y vencimiento de 30 minutos, procesa el cobro del primer cupo con <code>this.culqi.createCharge(...)</code>, guarda el abono en <code>payment_shares</code> y registra el evento en <code>booking_events</code>.
           </p>
         </td>
         <td class="mp-54">
@@ -456,10 +534,10 @@
         </td>
         <td class="mp-46 mp-text">
           <p>
-            Para que los bloqueos hechos en recepción y los abonos del pago dividido se reflejen sin recargar la página, implementamos la clase <code>BookingsGateway</code> en <code>src/bookings/bookings.gateway.ts</code> usando <code>@nestjs/websockets</code> y <strong>Socket.io</strong>.
+            Para que los bloqueos hechos en recepción y los abonos del pago dividido se reflejen al instante sin recargar la pantalla, implementamos la clase <code>BookingsGateway</code> en <code>src/bookings/bookings.gateway.ts</code> con <code>@nestjs/websockets</code> y <strong>Socket.io</strong>.
           </p>
           <p>
-            En las líneas 46 a 65 se aprecia cómo el gateway escucha el bus interno de eventos (<code>RealtimeBus</code>) y emite las actualizaciones (<code>slot:updated</code> y <code>split:updated</code>) hacia la sala del complejo deportivo (<code>complex:&lt;id&gt;</code>) cada vez que cambia un turno.
+            En las líneas 46 a 65 se observa cómo <code>onModuleInit()</code> se suscribe al bus reactivo <code>RealtimeBus</code> (RxJS) y difunde los eventos <code>slot:updated</code>, <code>split:updated</code> y <code>feed:event</code> hacia la sala del complejo (<code>complex:&lt;id&gt;</code>) y al canal <code>demo:global</code>.
           </p>
         </td>
       </tr>
@@ -472,10 +550,10 @@
       <tr>
         <td class="mp-46 gap-right mp-text">
           <p>
-            En la carpeta <code>/mobile-flutter/lib</code> estructuramos las vistas móviles en <strong>Dart / Flutter</strong> conectadas al backend mediante el servicio <code>RealtimeApiService</code>.
+            En la carpeta <code>/mobile-flutter/lib</code> implementamos las pantallas móviles en <strong>Dart / Flutter</strong> (<code>arequipa_map_screen.dart</code>, <code>court_detail_screen.dart</code>, <code>split_payment_screen.dart</code> y <code>substitutes_pool_screen.dart</code>) conectadas al cliente <code>RealtimeApiService</code>.
           </p>
           <p>
-            La captura muestra el archivo <code>arequipa_map_screen.dart</code>, donde definimos el widget con estado <code>ArequipaMapScreen</code>, la posición inicial de la cámara sobre las coordenadas de Arequipa (<code>LatLng(-16.3880, -71.5430)</code>) y la lista de distritos (Cayma, Yanahuara, Cerro Colorado, J.L. Bustamante y Sachaca) que filtra las canchas consultando la API del backend.
+            La captura muestra las primeras 35 líneas de <code>arequipa_map_screen.dart</code>, donde se define el <code>StatefulWidget</code> con el paquete <code>google_maps_flutter</code>, el centro del mapa en Arequipa (<code>LatLng(-16.3880, -71.5430)</code>) y el catálogo de distritos (<code>CAYMA</code>, <code>YANAHUARA</code>, <code>CERRO_COLORADO</code>, <code>JLBYR</code> y <code>SACHACA</code>).
           </p>
         </td>
         <td class="mp-54">
@@ -505,10 +583,10 @@
         </td>
         <td class="mp-46 mp-text">
           <p>
-            El panel web (<code>/web-admin-tailwind/index.html</code>) fue maquetado con <strong>HTML5</strong> y <strong>Tailwind CSS</strong>. Al abrirse se conecta al backend NestJS mediante <code>GET /api/complexes</code> y al canal de Socket.io.
+            El panel web (<code>/web-admin-tailwind/index.html</code>) fue desarrollado con <strong>HTML5</strong>, <strong>CSS3</strong> y <strong>Tailwind CSS</strong>. Al iniciar consulta <code>GET /api/complexes</code> y <code>GET /api/owner/complexes/:id/dashboard</code> en el backend NestJS.
           </p>
           <p>
-            Muestra los indicadores del complejo deportivo, el validador de RUC con el algoritmo módulo 11 de SUNAT, la parrilla horaria en vivo de cada cancha y el monitor lateral de pagos divididos junto con la bitácora de eventos recibidos por WebSockets.
+            Muestra las métricas de ocupación del día, el formulario de validación de RUC mediante <code>GET /api/ruc/:ruc/validate</code> (algoritmo módulo 11 de SUNAT) y subida de licencia en <code>POST /api/complexes/:id/verification-document</code>, además de la parrilla horaria por cancha y la bitácora de eventos WebSocket.
           </p>
         </td>
       </tr>
@@ -521,10 +599,10 @@
       <tr>
         <td class="mp-46 gap-right mp-text">
           <p>
-            Cuando un cliente paga en efectivo en la boletería o reserva por teléfono, el encargado abre este modal en el panel web, elige la cancha, la hora y el nombre del grupo, y pulsa <em>“Bloquear Turno Ahora”</em>.
+            Cuando ingresa un alquiler presencial en boletería o por llamada telefónica, el recepcionista abre este modal en el panel web, selecciona la cancha, la hora, el canal (<code>RECEPTION</code> o <code>PHONE</code>) y el nombre del cliente.
           </p>
           <p>
-            La interfaz envía una petición <code>POST /api/bookings/reception-block</code> al backend NestJS, el cual guarda el turno con estado <code>BLOCKED</code> en PostgreSQL y emite el evento por Socket.io para que en la aplicación móvil aparezca ocupado al instante.
+            Al confirmar, el frontend envía <code>POST /api/bookings/reception-block</code> hacia <code>BookingsController</code>. El backend inserta el turno con estado <code>BLOCKED</code> en la tabla <code>bookings</code> y emite el evento <code>slot:updated</code> por Socket.io para actualizar al instante la parrilla de los jugadores.
           </p>
         </td>
         <td class="mp-54">
@@ -552,10 +630,10 @@
         </td>
         <td class="mp-55 mp-text">
           <p>
-            La pantalla principal de la app móvil muestra el mapa de Arequipa con pines que indican el precio por hora de cada complejo deportivo y botones superiores para filtrar por distrito (Cayma, Cerro Colorado, Yanahuara y José Luis Bustamante y Rivero).
+            La vista inicial de la aplicación móvil muestra el mapa de Arequipa con pines que indican la tarifa por hora de cada complejo deportivo y botones superiores para filtrar por distrito (obtenidos de la tabla <code>districts</code> mediante <code>GET /api/districts</code>).
           </p>
           <p>
-            Al seleccionar un distrito, el frontend consulta <code>GET /api/complexes?district=...</code> en el backend NestJS, el cual devuelve únicamente los complejos con RUC verificado en PostgreSQL ordenados por cercanía en kilómetros usando la fórmula de Haversine.
+            Al elegir un distrito, la interfaz invoca <code>GET /api/complexes?district=...</code> en <code>ComplexesController</code>, que consulta en PostgreSQL los locales con <code>verification_status = 'VERIFIED'</code>, cruza su calificación desde la vista <code>v_complex_ratings</code> y calcula la distancia en kilómetros con la fórmula de Haversine.
           </p>
         </td>
       </tr>
@@ -568,10 +646,10 @@
       <tr>
         <td class="mp-55 gap-right mp-text">
           <p>
-            Al elegir un complejo se muestra su fotografía, calificación, pestañas para cambiar entre sus canchas (Cancha 1 Fútbol 6, Cancha 2 Fútbol 6, Cancha 3 Fútbol 8) y las reseñas escritas por otros jugadores.
+            Al seleccionar un complejo se consulta <code>GET /api/complexes/:id</code> y <code>GET /api/courts/:id/availability</code> (servido por <code>AvailabilityService.courtGrid</code>), mostrando las canchas del local (Fútbol 6 y Fútbol 8) y los comentarios guardados en la tabla <code>reviews</code>.
           </p>
           <p>
-            La parrilla horaria consulta los turnos del día en el backend y se mantiene suscrita por WebSockets: muestra en verde los turnos disponibles, en morado los pagados por app, en azul los que están recolectando pagos divididos (<code>4/6</code>) y en ámbar los bloqueados en recepción.
+            La parrilla horaria diferencia los cuatro estados reales del turno: disponible en verde, reservado por app en morado (<code>CONFIRMED</code>), pago dividido en curso en azul (<code>HELD</code> mostrando el conteo <code>4/6</code>) y bloqueado por recepción en ámbar (<code>BLOCKED</code>).
           </p>
         </td>
         <td class="mp-45">
@@ -599,10 +677,10 @@
         </td>
         <td class="mp-55 mp-text">
           <p>
-            En esta vista el organizador genera un link de cobro fraccionado para compartirlo con su grupo por WhatsApp y sigue en vivo cuántos compañeros ya abonaron su parte (por ejemplo, <em>“Cupos pagados: 4 de 6 — S/ 60.00 / S/ 90.00”</em>).
+            Esta pantalla consulta el estado del cobro fraccionado mediante <code>GET /api/split-payments/:token</code> (token <code>pk4de6demo</code>), mostrando la barra de progreso en vivo (<em>“Cupos pagados: 4 de 6 — S/ 60.00 / S/ 90.00”</em>) y el botón para compartir el link por WhatsApp.
           </p>
           <p>
-            Cada vez que un jugador abona su cuota de S/ 15.00 eligiendo Yape, Plin o tarjeta, el frontend invoca <code>POST /api/bookings/split/:token/pay</code> en el backend NestJS. Al completarse el sexto cupo, la reserva pasa automáticamente de <code>HELD</code> a <code>CONFIRMED</code>.
+            Cuando un compañero abona su cuota de S/ 15.00 con Yape, Plin o tarjeta, la vista envía <code>POST /api/split-payments/:token/pay</code>. El método <code>paySplitSlot</code> bloquea la fila en <code>split_payments</code> con <code>FOR UPDATE</code>, inserta el pago en <code>payment_shares</code> y, al llegar a 6/6, cambia la reserva de <code>HELD</code> a <code>CONFIRMED</code>.
           </p>
         </td>
       </tr>
@@ -615,10 +693,10 @@
       <tr>
         <td class="mp-55 gap-right mp-text">
           <p>
-            La pestaña de bolsa de suplentes permite convocar jugadores de emergencia filtrando por posición en la cancha (<code>Arquero</code>, <code>Defensa</code>, <code>Mediocampo</code> y <code>Delantero</code>) mediante el endpoint <code>GET /api/substitutes</code>.
+            La bolsa de suplentes consulta <code>GET /api/substitutes?position=...</code> en <code>SubstitutesController</code>, haciendo un <code>JOIN</code> en PostgreSQL entre las tablas <code>substitute_profiles</code>, <code>users</code> y <code>districts</code> para filtrar por posición (<code>ARQUERO</code>, <code>DEFENSA</code>, <code>MEDIOCAMPO</code> o <code>DELANTERO</code>).
           </p>
           <p>
-            Cada tarjeta incluye un reproductor de video con un clip corto de 15 a 30 segundos para comprobar el nivel técnico del jugador antes de invitarlo, además de mostrar su distrito, su porcentaje de puntualidad, partidos jugados y el botón de convocatoria segura.
+            Cada tarjeta muestra un reproductor de video con el clip técnico de 15 a 30 segundos (<code>clip_url</code> y <code>clip_duration_s</code>), el porcentaje de puntualidad (<code>punctuality_score</code>), los partidos jugados (<code>matches_played</code>) y el botón para convocarlo.
           </p>
         </td>
         <td class="mp-45">
@@ -652,14 +730,14 @@
         </td>
       </tr>
     </table>
-    <p style="margin-top: 2.5mm;">
-      En el módulo de autenticación implementamos el registro diferenciado por rol (<code>Organizador</code> vs. <code>Dueño</code>) validado mediante un código temporal de 6 dígitos por SMS (<code>POST /api/auth/otp/send</code> y <code>/verify</code>) para evitar cuentas falsas. Además, al convocar a un suplente se abre un canal interno de contacto (Figura 14) donde el teléfono personal se muestra siempre enmascarado (<code>+51 9•• ••• 101</code>) y el backend oculta cualquier número celular escrito en los mensajes.
+    <p style="margin-top: 2.2mm;">
+      Para prevenir cuentas falsas, el modal de acceso (Figura 13) solicita un código OTP de 6 dígitos mediante <code>POST /api/auth/otp/request</code> y lo valida en <code>POST /api/auth/otp/verify</code> (gestionado por <code>OtpService</code> y <code>AuthService</code>), registrando al usuario en la tabla <code>users</code> con su rol (<code>ORGANIZER</code> u <code>OWNER</code>) y fecha de verificación <code>phone_verified_at</code>. Asimismo, al convocar a un suplente mediante <code>POST /api/substitutes/:id/invite</code> se crea una sesión en <code>contact_relays</code> con un <code>proxy_number</code> temporal (Figura 14); los mensajes enviados a <code>POST /api/relays/:id/messages</code> se guardan en <code>relay_messages</code> ocultando cualquier celular escrito en el texto y exponiendo solo la columna generada <code>phone_masked</code> (<code>+51 9•• ••• 101</code>).
     </p>
   </div>
 
   <h2 class="latex-section"><span class="sec-num">5</span>Avance para la Semana Siguiente (6 al 12 de noviembre de 2026)</h2>
   <p>
-    Para la entrega de la próxima semana nos enfocaremos en reemplazar los adaptadores simulados por integraciones en modo de prueba real y cerrar los flujos pendientes entre el backend y la aplicación móvil:
+    Para la entrega de la próxima semana nos enfocaremos en reemplazar los adaptadores de demostración por integraciones en modo de prueba real y completar los flujos pendientes entre el backend y la aplicación móvil:
   </p>
 
   <div class="table-container">
@@ -675,27 +753,27 @@
         <tr>
           <td><strong>Backend (Pagos)</strong></td>
           <td>Integración con el entorno Sandbox real de Culqi / Yape.</td>
-          <td>Conexión de <code>CulqiService</code> con llaves de prueba reales para procesar abonos del Split Payment y recibir webhooks firmados.</td>
+          <td>Conexión de <code>CulqiService</code> con llaves de prueba reales para procesar abonos en <code>POST /api/split-payments/:token/pay</code> y recibir webhooks en <code>/api/payments/webhooks/culqi</code>.</td>
         </tr>
         <tr>
           <td><strong>Backend y BD</strong></td>
           <td>Liberación automática de reservas vencidas (Cron Job).</td>
-          <td>Tarea programada en NestJS que cambie a <code>EXPIRED</code> los turnos en estado <code>HELD</code> si no completan las 6 cuotas antes de <code>hold_expires_at</code>.</td>
+          <td>Tarea programada en NestJS que libere los turnos en estado <code>HELD</code> y marque el <code>split_payment</code> como <code>EXPIRED</code> si no completan los cupos antes de <code>hold_expires_at</code>.</td>
         </tr>
         <tr>
           <td><strong>Backend y Cloud</strong></td>
           <td>Subida de clips cortos de suplentes a Cloudinary.</td>
-          <td>Endpoint para que un jugador suplente suba su propio video de 15 a 30 segundos validando duración y peso del archivo.</td>
+          <td>Flujo completo usando la firma de <code>POST /api/substitutes/clip-upload-signature</code> para subir videos reales de 15 a 30 segundos desde la app móvil.</td>
         </tr>
         <tr>
           <td><strong>Frontend Web</strong></td>
           <td>Historial de ingresos y exportación de reportes para dueños.</td>
-          <td>Vista adicional en el panel web de administración con el resumen semanal de reservas por cancha y descarga en formato CSV.</td>
+          <td>Vista adicional en el panel web (<code>/web-admin-tailwind</code>) con el resumen semanal de reservas por cancha y descarga en formato CSV.</td>
         </tr>
         <tr>
           <td><strong>Frontend Móvil</strong></td>
           <td>Compilación de APK en Flutter y pruebas en celulares Android.</td>
-          <td>Generación del archivo instalable APK conectado al backend desplegado en la nube (Render) y pruebas con usuarios locales.</td>
+          <td>Generación del archivo instalable APK desde <code>/mobile-flutter</code> conectado al backend desplegado en Render y pruebas con usuarios locales en Arequipa.</td>
         </tr>
       </tbody>
     </table>
