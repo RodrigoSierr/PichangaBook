@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
-import { CurrentUser, Public } from '../common/auth/auth.guard';
+import { CurrentUser, Public, Roles } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
 import { SubstitutesService } from './substitutes.service';
 
@@ -17,37 +17,43 @@ export class SubstitutesController {
     return this.substitutes.list({ position, district, onlyVerified });
   }
 
-  @Public()
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('substitutes/clip-upload-signature')
   @HttpCode(200)
-  signClip(@CurrentUser() user?: AuthUser) {
+  signClip(@CurrentUser() user: AuthUser) {
     return this.substitutes.signClipUpload(user);
   }
 
-  @Public()
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('substitutes/:id/invite')
   @HttpCode(200)
   invite(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { bookingId?: string; message?: string },
-    @CurrentUser() user?: AuthUser,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.substitutes.inviteSubstitute(id, body ?? {}, user);
   }
 
-  @Public()
-  @Get('relays/:id')
-  getRelay(@Param('id') id: string) {
-    return this.substitutes.getRelay(id);
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Get('relays')
+  myRelays(@CurrentUser() user: AuthUser) {
+    return this.substitutes.myRelays(user);
   }
 
-  @Public()
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Get('relays/:id')
+  getRelay(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthUser) {
+    return this.substitutes.getRelay(id, user);
+  }
+
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('relays/:id/messages')
   @HttpCode(200)
   sendMessage(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { text: string },
-    @CurrentUser() user?: AuthUser,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.substitutes.sendRelayMessage(id, body.text, user);
   }

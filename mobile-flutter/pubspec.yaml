@@ -1,7 +1,7 @@
 name: pichangabook_mobile
-description: PichangaBook Arequipa - App Móvil para Jugadores y Organizadores (Flutter / Dart)
+description: PichangaBook Arequipa - App Móvil para Jugadores, Organizadores y Dueños (Flutter / Dart)
 publish_to: 'none'
-version: 0.4.0+1
+version: 1.0.0+1
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -16,6 +16,7 @@ dependencies:
   video_player: ^2.9.2
   firebase_auth: ^5.3.1
   url_launcher: ^6.3.1
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:

@@ -1,0 +1,9 @@
+# Copia este archivo a mobile-flutter/android/key.properties (ignorado por Git)
+# o define las variables de entorno PICHANGA_KEYSTORE_PATH, PICHANGA_KEYSTORE_PASSWORD,
+# PICHANGA_KEY_ALIAS, PICHANGA_KEY_PASSWORD y MAPS_API_KEY antes de compilar Release.
+
+storePassword=TU_PASSWORD_KEYSTORE
+keyPassword=TU_PASSWORD_LLAVE
+keyAlias=pichangabook_release
+storeFile=upload-keystore.jks
+MAPS_API_KEY=TU_GOOGLE_MAPS_ANDROID_API_KEY

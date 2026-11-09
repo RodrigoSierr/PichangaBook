@@ -1,8 +1,8 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common';
 import { CurrentUser, Public } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
 import { AuthService } from './auth.service';
-import { FirebaseLoginDto, RequestOtpDto, VerifyOtpDto } from './dto/auth.dto';
+import { DemoSessionDto, FirebaseLoginDto, RequestOtpDto, UpdateProfileDto, VerifyOtpDto } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -32,8 +32,21 @@ export class AuthController {
     return this.auth.loginWithFirebase(dto.idToken, dto.fullName, dto.role);
   }
 
+  /** Sesión rápida firmada con JWT para cuentas semilla (sólo si allowDemoFallback=true). */
+  @Public()
+  @Post('demo-session')
+  @HttpCode(200)
+  demoSession(@Body() dto: DemoSessionDto) {
+    return this.auth.issueDemoSession(dto.role);
+  }
+
   @Get('me')
   me(@CurrentUser() user: AuthUser) {
     return this.auth.me(user.sub);
+  }
+
+  @Patch('me')
+  updateMe(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
+    return this.auth.updateProfile(user.sub, dto);
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Pool, PoolClient } from 'pg';
 import { PGlite } from '@electric-sql/pglite';
@@ -14,12 +14,15 @@ export interface SqlExecutor {
 
 export type DbDriver = 'postgres' | 'pglite';
 
+export interface MigrationRecord {
+  version: string;
+  name: string;
+  appliedAt: string;
+}
+
 /**
- * Acceso a PostgreSQL con dos drivers intercambiables:
- *  - `postgres`: servidor real (Docker / Render / AWS RDS) vía `pg.Pool`.
- *  - `pglite`  : PostgreSQL 17+ compilado a WASM y embebido en el proceso.
- *                Ejecuta EXACTAMENTE el mismo schema.sql (enums, EXCLUDE GiST,
- *                columnas generadas, transacciones ACID) sin instalar nada.
+ * Acceso a PostgreSQL con dos drivers intercambiables (`pg.Pool` y `PGlite` WASM)
+ * y motor de migraciones incrementales versionadas (`schema_migrations`).
  */
 @Injectable()
 export class DatabaseService implements SqlExecutor, OnModuleInit, OnApplicationShutdown {
@@ -47,9 +50,11 @@ export class DatabaseService implements SqlExecutor, OnModuleInit, OnApplication
         extensions: { btree_gist },
       });
       await this.lite.waitReady;
-      this.logger.warn('DATABASE_URL vacío → PostgreSQL embebido (PGlite/WASM) en modo DEMO');
+      this.logger.warn('DATABASE_URL vacío → PostgreSQL embebido (PGlite/WASM)');
     }
-    await this.migrateIfEmpty();
+    if (this.cfg.dbAutoMigrate) {
+      await this.runMigrations({ seedDemo: this.cfg.shouldSeedDemoData });
+    }
   }
 
   async onApplicationShutdown(): Promise<void> {
@@ -57,18 +62,95 @@ export class DatabaseService implements SqlExecutor, OnModuleInit, OnApplication
     await this.lite?.close();
   }
 
-  private async migrateIfEmpty(): Promise<void> {
-    if (!this.cfg.dbAutoMigrate) return;
-    const [row] = await this.query<{ exists: string | null }>(
-      `SELECT to_regclass('public.bookings')::text AS exists`,
-    );
-    if (row?.exists) return;
+  /**
+   * Ejecuta migraciones incrementales versionadas sobre una instalación limpia
+   * o sobre una base de datos preexistente sin pérdida de datos, y carga `seed.sql`
+   * únicamente cuando `seedDemo` está activo (entornos demo opt-in).
+   */
+  async runMigrations(options?: { seedDemo?: boolean }): Promise<{
+    applied: string[];
+    seeded: boolean;
+  }> {
+    const seedDemo = options?.seedDemo ?? this.cfg.shouldSeedDemoData;
     const root = resolve(__dirname, '..', '..');
-    const schema = readFileSync(resolve(root, 'schema.sql'), 'utf8');
-    const seed = readFileSync(resolve(root, 'seed.sql'), 'utf8');
-    await this.exec(schema);
-    await this.exec(seed);
-    this.logger.log('schema.sql + seed.sql aplicados');
+
+    await this.exec(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        version    VARCHAR(64) PRIMARY KEY,
+        name       TEXT        NOT NULL,
+        applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      );
+    `);
+
+    const existingRows = await this.query<{ version: string }>(
+      `SELECT version FROM schema_migrations ORDER BY version ASC`,
+    );
+    const appliedSet = new Set(existingRows.map((r) => r.version));
+    const newlyApplied: string[] = [];
+
+    // 1. Esquema base 001_initial_schema (compatible con instalaciones limpias y preexistentes)
+    if (!appliedSet.has('001_initial_schema')) {
+      const [bookingsCheck] = await this.query<{ exists: string | null }>(
+        `SELECT to_regclass('public.bookings')::text AS exists`,
+      );
+      if (!bookingsCheck?.exists) {
+        const schemaSql = readFileSync(resolve(root, 'schema.sql'), 'utf8');
+        await this.exec(schemaSql);
+      }
+      await this.query(
+        `INSERT INTO schema_migrations (version, name) VALUES ($1, $2) ON CONFLICT (version) DO NOTHING`,
+        ['001_initial_schema', 'schema.sql'],
+      );
+      appliedSet.add('001_initial_schema');
+      newlyApplied.push('001_initial_schema');
+    }
+
+    // 2. Migraciones incrementales en /migrations/*.sql
+    const migrationsDir = resolve(root, 'migrations');
+    if (existsSync(migrationsDir)) {
+      const files = readdirSync(migrationsDir)
+        .filter((f) => f.endsWith('.sql'))
+        .sort();
+      for (const file of files) {
+        const version = file.replace(/\.sql$/i, '');
+        if (appliedSet.has(version)) continue;
+        const sql = readFileSync(resolve(migrationsDir, file), 'utf8');
+        await this.exec(sql);
+        await this.query(
+          `INSERT INTO schema_migrations (version, name) VALUES ($1, $2) ON CONFLICT (version) DO NOTHING`,
+          [version, file],
+        );
+        appliedSet.add(version);
+        newlyApplied.push(version);
+      }
+    }
+
+    // 3. Carga condicional de seed.sql (SOLO en entornos demo opt-in y cuando está vacío)
+    let seeded = false;
+    if (seedDemo) {
+      const [distCount] = await this.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM districts`,
+      );
+      if ((distCount?.count ?? 0) === 0) {
+        const seedSql = readFileSync(resolve(root, 'seed.sql'), 'utf8');
+        await this.exec(seedSql);
+        seeded = true;
+      }
+    }
+
+    if (newlyApplied.length > 0 || seeded) {
+      this.logger.log(
+        `Migraciones verificadas (${newlyApplied.join(', ') || 'al día'})${seeded ? ' + seed.sql cargado (modo demo)' : ''}`,
+      );
+    }
+
+    return { applied: newlyApplied, seeded };
+  }
+
+  async listMigrations(): Promise<MigrationRecord[]> {
+    return this.query<MigrationRecord>(
+      `SELECT version, name, applied_at AS "appliedAt" FROM schema_migrations ORDER BY version ASC`,
+    );
   }
 
   /** Ejecuta SQL multi-sentencia sin parámetros (migraciones). */

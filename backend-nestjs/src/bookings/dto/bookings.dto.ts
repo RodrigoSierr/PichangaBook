@@ -1,10 +1,11 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   Matches,
   Max,
   MaxLength,
@@ -40,6 +41,11 @@ export class CreateBookingDto {
   @IsIn(['CARD', 'YAPE', 'PLIN'])
   method?: 'CARD' | 'YAPE' | 'PLIN';
 
+  @IsString()
+  @IsNotEmpty({ message: 'Se requiere el token de pago (sourceId) generado por la pasarela' })
+  @MaxLength(80)
+  sourceId: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(120)
@@ -49,6 +55,19 @@ export class CreateBookingDto {
   @IsString()
   @MaxLength(280)
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  idempotencyKey?: string;
+
+  /**
+   * Sólo para pruebas de compensación en modo demo: simula que la reserva fue invalidada
+   * después de haberse ejecutado el cargo en la pasarela para verificar la reversa/reembolso.
+   */
+  @IsOptional()
+  @IsBoolean()
+  simulatePostChargeConflict?: boolean;
 }
 
 export class ReceptionBlockDto {
@@ -83,13 +102,20 @@ export class ReceptionBlockDto {
 
 export class PaySplitSlotDto {
   @IsString()
+  @IsNotEmpty()
   @MaxLength(120)
   payerName: string;
 
   @IsIn(['CARD', 'YAPE', 'PLIN'])
   method: 'CARD' | 'YAPE' | 'PLIN';
 
+  @IsString()
+  @IsNotEmpty({ message: 'Se requiere el token de pago (sourceId) generado por la pasarela' })
+  @MaxLength(80)
+  sourceId: string;
+
   @IsOptional()
   @IsString()
-  sourceId?: string;
+  @MaxLength(120)
+  idempotencyKey?: string;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Post } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, HttpCode, Post } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Public } from './common/auth/auth.guard';
@@ -25,26 +25,30 @@ export class AppController {
     );
     return {
       status: 'ok',
-      project: 'PichangaBook Arequipa · Avance MVP (28 oct 2026)',
+      project: 'PichangaBook Arequipa · MVP Funcional',
       authors: ['Rodrigo Sierra', 'Samuel Iman'],
       databaseDriver: this.db.driver,
       postgresVersion: row?.version,
       demoMode: this.cfg.demoMode,
+      integrations: this.cfg.integrationStatus,
       limaDate: limaToday(),
       counts: { complexes: row?.complexes ?? 0, substitutes: row?.substitutes ?? 0 },
     };
   }
 
-  /** Reinicia las reservas y el Split Payment (4/6) a su estado semilla para repetir la demo en vivo. */
+  /** Reinicia los datos a su estado semilla únicamente cuando el entorno está en modo demo opt-in. */
   @Public()
   @Post('demo/reset')
   @HttpCode(200)
   async resetDemo() {
+    if (!this.cfg.demoMode || this.cfg.isProduction) {
+      throw new ForbiddenException('El reinicio de datos de demostración está deshabilitado fuera de modo demo local.');
+    }
     const root = resolve(__dirname, '..');
     const seed = readFileSync(resolve(root, 'seed.sql'), 'utf8');
     await this.db.exec(`
       TRUNCATE relay_messages, contact_relays, substitute_invitations,
-               payment_shares, split_payments, booking_events, bookings,
+               payment_shares, payment_attempts, split_payments, booking_events, bookings,
                reviews, substitute_profiles, courts, complexes, users, districts
       RESTART IDENTITY CASCADE;
     `);
@@ -52,6 +56,6 @@ export class AppController {
     this.bus.publish('complex:00000000-0000-4000-b000-00000000c001', 'demo:reset', {
       at: new Date().toISOString(),
     });
-    return { ok: true, message: 'Datos semilla restaurados para la demostración en vivo.' };
+    return { ok: true, message: 'Datos semilla restaurados correctamente.' };
   }
 }

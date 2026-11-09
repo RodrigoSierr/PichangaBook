@@ -8,14 +8,17 @@ import {
   Patch,
   Post,
   Query,
+  Res,
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 import { CurrentUser, Public, Roles } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
 import { isValidDate, limaToday } from '../common/utils/time.util';
 import { isValidRuc } from '../common/utils/ruc.util';
+import { MAX_VERIFICATION_DOC_BYTES } from '../integrations/media.service';
 import { AvailabilityService } from './availability.service';
 import { ComplexesService } from './complexes.service';
 import { CreateComplexDto, DateQuery, ListComplexesQuery, ReviewDto, VerificationDto } from './dto/complexes.dto';
@@ -68,22 +71,74 @@ export class ComplexesController {
     return this.complexes.create(user, dto);
   }
 
-  /** Subida de ficha RUC o licencia de funcionamiento municipal (validación documental). */
+  /**
+   * Subida de ficha RUC o licencia de funcionamiento municipal.
+   * Multer aplica `limits: { fileSize: 5 MB }` ANTES de cargar el archivo completo en memoria.
+   * Conserva ownership: sólo el OWNER dueño del complejo o un ADMIN puede subir el documento.
+   */
   @Roles('OWNER', 'ADMIN')
   @Post('complexes/:id/verification-document')
-  @UseInterceptors(FileInterceptor('document'))
+  @UseInterceptors(
+    FileInterceptor('document', {
+      limits: {
+        fileSize: MAX_VERIFICATION_DOC_BYTES,
+        files: 1,
+      },
+    }),
+  )
   uploadDoc(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthUser,
     @UploadedFile() file: any,
   ) {
     return this.complexes.uploadVerificationDocument(id, user, file);
   }
 
-  @Roles('ADMIN', 'OWNER')
+  /**
+   * Consulta autorizada del documento de verificación (conserva ownership para OWNER dueño del complejo o ADMIN).
+   * Genera una URL temporal firmada con expiración corta.
+   */
+  @Roles('OWNER', 'ADMIN')
+  @Get('complexes/:id/verification-document')
+  getDocAccess(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.complexes.getVerificationDocumentAccess(id, user);
+  }
+
+  /**
+   * Descarga protegida desde almacenamiento privado mediante URL temporal firmada o JWT de OWNER/ADMIN.
+   */
+  @Public()
+  @Get('complexes/:id/verification-document/download')
+  async downloadDoc(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('file') file: string | undefined,
+    @Query('expires') expires: string | undefined,
+    @Query('sig') sig: string | undefined,
+    @CurrentUser() user: AuthUser | undefined,
+    @Res() res: Response,
+  ) {
+    const doc = await this.complexes.downloadVerificationDocument(id, { file, expires, sig }, user);
+    res.setHeader('Content-Type', doc.contentType);
+    res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+    res.setHeader('Content-Disposition', `inline; filename="${doc.fileName}"`);
+    res.status(200).send(doc.buffer);
+  }
+
+  /**
+   * Aprobación/rechazo documental: restringido EXCLUSIVAMENTE a un administrador (`@Roles('ADMIN')`).
+   * Un propietario (`OWNER`) no puede asignarse `VERIFIED` a sí mismo.
+   */
+  @Roles('ADMIN')
   @Patch('complexes/:id/verification')
-  setVerification(@Param('id') id: string, @Body() dto: VerificationDto) {
-    return this.complexes.setVerification(id, dto);
+  async setVerification(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: VerificationDto,
+  ) {
+    return this.complexes.setVerification(id, dto, user);
   }
 
   @Public()

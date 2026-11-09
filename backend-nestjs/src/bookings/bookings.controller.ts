@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,112 +9,107 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  RawBodyRequest,
+  Req,
 } from '@nestjs/common';
-import { CurrentUser, Public } from '../common/auth/auth.guard';
+import type { Request } from 'express';
+import { CurrentUser, Public, Roles } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
-import { limaToday } from '../common/utils/time.util';
-import { CulqiService } from '../integrations/culqi.service';
+import { DateQuery } from '../complexes/dto/complexes.dto';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto, PaySplitSlotDto, ReceptionBlockDto } from './dto/bookings.dto';
 
 @Controller()
 export class BookingsController {
-  constructor(
-    private readonly bookings: BookingsService,
-    private readonly culqi: CulqiService,
-  ) {}
+  constructor(private readonly bookings: BookingsService) {}
 
-  /** Crear reserva desde la app móvil (seña completa o Split Payment). */
-  @Public()
+  /** Historial de reservas del jugador u organizador autenticado. */
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Get('bookings/my')
+  myBookings(@CurrentUser() user: AuthUser) {
+    return this.bookings.myBookings(user.sub);
+  }
+
+  /** Reserva desde la App Móvil (FULL_DEPOSIT o SPLIT). Exige JWT y sourceId válido. */
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('bookings')
-  create(@Body() dto: CreateBookingDto, @CurrentUser() user?: AuthUser) {
+  create(@Body() dto: CreateBookingDto, @CurrentUser() user: AuthUser) {
     return this.bookings.createBooking(dto, user);
   }
 
-  /** Bloqueo rápido desde el Panel de Recepción (ventas presenciales o telefónicas). */
-  @Public()
+  /** Bloqueo Rápido en Recepción (ventas en boletería o por teléfono). Exige rol OWNER y propiedad del complejo. */
+  @Roles('OWNER', 'ADMIN')
   @Post('bookings/reception-block')
-  receptionBlock(@Body() dto: ReceptionBlockDto, @CurrentUser() user?: AuthUser) {
+  receptionBlock(@Body() dto: ReceptionBlockDto, @CurrentUser() user: AuthUser) {
     return this.bookings.receptionBlock(dto, user);
   }
 
-  /** Liberar turno bloqueado o cancelar reserva. */
-  @Public()
+  /** Liberar un turno bloqueado o cancelar una reserva (sólo dueño del complejo o titular de la reserva). */
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Delete('bookings/:id')
-  release(@Param('id') id: string, @CurrentUser() user?: AuthUser) {
+  release(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthUser) {
     return this.bookings.releaseBooking(id, user);
   }
 
-  @Public()
-  @Post('bookings/:id/release')
-  @HttpCode(200)
-  releasePost(@Param('id') id: string, @CurrentUser() user?: AuthUser) {
-    return this.bookings.releaseBooking(id, user);
-  }
-
-  /** Dashboard omnicanal del dueño de complejo. */
-  @Public()
+  /** Dashboard omnicanal del dueño de complejo (ocupación, KPIs, parrilla y feed en vivo). */
+  @Roles('OWNER', 'ADMIN')
   @Get('owner/complexes/:id/dashboard')
-  ownerDashboard(@Param('id') id: string, @Query('date') date?: string) {
-    return this.bookings.ownerDashboard(id, date ?? limaToday());
+  dashboard(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() q: DateQuery,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.bookings.ownerDashboard(id, q.date, user);
   }
 
-  /** Consultar estado en vivo del Split Payment ("Cupos pagados: 4 de 6"). */
+  /** Reporte consolidado de reservas e ingresos conciliados para el dueño del complejo (exportación CSV). */
+  @Roles('OWNER', 'ADMIN')
+  @Get('owner/complexes/:id/report')
+  report(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthUser) {
+    return this.bookings.ownerReport(id, user);
+  }
+
+  /** Ejecución manual/administrativa de liberación de reservas HELD vencidas. */
+  @Roles('OWNER', 'ADMIN')
+  @Post('bookings/expire-holds')
+  @HttpCode(200)
+  async expireHolds() {
+    const expiredCount = await this.bookings.expireStaleHolds();
+    return { expiredCount };
+  }
+
+  /** Estado en vivo del Split Payment ("Cupos pagados: 4 de 6") para el link compartido en WhatsApp. */
   @Public()
   @Get('split-payments/:token')
   getSplit(@Param('token') token: string) {
     return this.bookings.getSplitByToken(token);
   }
 
-  /** Pagar 1 cupo del Split Payment (Yape, Plin o Tarjeta). */
-  @Public()
+  /** Abonar 1 cupo del Split Payment (Yape / Plin / Tarjeta). Exige usuario autenticado y sourceId válido. */
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('split-payments/:token/pay')
   @HttpCode(200)
   paySplit(
     @Param('token') token: string,
     @Body() dto: PaySplitSlotDto,
-    @CurrentUser() user?: AuthUser,
+    @CurrentUser() user: AuthUser,
   ) {
     return this.bookings.paySplitSlot(token, dto, user);
   }
 
-  /** Webhook oficial / simulado de Culqi (con verificación HMAC-SHA256). */
+  /**
+   * Webhook de Culqi (`charge.creation.succeeded` / `charge.creation.pending` / `charge.creation.failed`).
+   * Verifica firma HMAC-SHA256 sobre `rawBody`, estructura del payload, moneda (`PEN`),
+   * estado del cargo, referencia local y monto exacto antes de acreditar.
+   */
   @Public()
   @Post('payments/webhooks/culqi')
   @HttpCode(200)
   async culqiWebhook(
-    @Body() body: { type?: string; data?: string; metadata?: Record<string, string> },
+    @Req() req: RawBodyRequest<Request>,
+    @Body() body: any,
     @Headers('x-culqi-signature') signature?: string,
   ) {
-    const raw = JSON.stringify(body);
-    if (signature && !this.culqi.verifySignature(raw, signature)) {
-      throw new BadRequestException('Firma x-culqi-signature inválida');
-    }
-    const charge = body.data ? JSON.parse(body.data) : body;
-    const token = charge?.metadata?.splitToken;
-    const payerName = charge?.metadata?.payerName || 'Jugador WebHook';
-    const rawMethod = (charge?.source?.type || 'yape').toString().toUpperCase();
-    const method: 'CARD' | 'YAPE' | 'PLIN' =
-      rawMethod === 'CARD' || rawMethod === 'PLIN' ? rawMethod : 'YAPE';
-
-    if (token) {
-      const sp = await this.bookings.getSplitByToken(token);
-      await this.bookings.recordVerifiedShare({
-        splitId: sp.id,
-        bookingId: sp.bookingId,
-        complexId: sp.complexId,
-        courtId: sp.courtId,
-        courtName: sp.courtName,
-        date: sp.date,
-        hour: sp.hour,
-        priceCents: sp.totalCents,
-        payerUserId: null,
-        payerName,
-        method,
-        providerChargeId: charge.id || `chr_wh_${Date.now()}`,
-        amountCents: sp.amountPerSlotCents,
-      });
-    }
-    return { received: true };
+    return this.bookings.processCulqiWebhook(req.rawBody, signature, body);
   }
 }

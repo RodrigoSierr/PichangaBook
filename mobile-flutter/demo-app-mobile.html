@@ -395,6 +395,16 @@
     let selectedOtpRole = 'ORGANIZER';
     let lastFlashedSlot = null;
 
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function notifyMobile(title, subtitle, tone = 'emerald') {
       const box = document.getElementById('mobileToast');
       const el = document.createElement('div');
@@ -405,9 +415,40 @@
           ? 'bg-sky-950/95 border-sky-400/50 text-sky-200'
           : 'bg-emerald-950/95 border-emerald-400/50 text-emerald-200';
       el.className = `border rounded-2xl px-3.5 py-2.5 shadow-xl backdrop-blur-md ${cls}`;
-      el.innerHTML = `<div class="text-xs font-extrabold">${title}</div><div class="text-[10px] opacity-90">${subtitle}</div>`;
+      const titleEl = document.createElement('div');
+      titleEl.className = 'text-xs font-extrabold';
+      titleEl.textContent = title ?? '';
+      const subEl = document.createElement('div');
+      subEl.className = 'text-[10px] opacity-90';
+      subEl.textContent = subtitle ?? '';
+      el.appendChild(titleEl);
+      el.appendChild(subEl);
       box.prepend(el);
       setTimeout(() => el.remove(), 4000);
+    }
+
+    let mobileJwtToken = localStorage.getItem('pichangabook_mobile_jwt') || null;
+
+    async function ensureMobileSession() {
+      if (mobileJwtToken) return mobileJwtToken;
+      const res = await fetch(`${API_BASE}/api/auth/demo-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: 'ORGANIZER' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        mobileJwtToken = data.accessToken;
+        localStorage.setItem('pichangabook_mobile_jwt', mobileJwtToken);
+      }
+      return mobileJwtToken;
+    }
+
+    function mobileAuthHeaders(extra = {}) {
+      return {
+        ...extra,
+        ...(mobileJwtToken ? { Authorization: `Bearer ${mobileJwtToken}` } : {}),
+      };
     }
 
     function switchTab(tab) {
@@ -639,9 +680,10 @@
 
     async function submitMobileBooking(paymentMode) {
       closeBookModal();
+      await ensureMobileSession();
       const res = await fetch(`${API_BASE}/api/bookings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           courtId: currentCourt.id,
           date: currentGridDate,
@@ -649,7 +691,7 @@
           paymentMode,
           totalSlots: 6,
           method: 'YAPE',
-          payerName: 'Diego Salas (Organizador)',
+          sourceId: `ype_sandbox_mobile_${Date.now()}`,
         }),
       });
       const data = await res.json();
@@ -708,10 +750,10 @@
           (sh, idx) => `
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 flex items-center justify-between text-xs">
             <div>
-              <span class="font-bold text-white">#${idx + 1} ${sh.payerName}</span>
-              <span class="block text-[10px] mono text-slate-400">Cargo Culqi: ${sh.providerChargeId}</span>
+              <span class="font-bold text-white">#${idx + 1} ${escapeHtml(sh.payerName)}</span>
+              <span class="block text-[10px] mono text-slate-400">Cargo Culqi: ${escapeHtml(sh.providerChargeId)}</span>
             </div>
-            <span class="mono text-xs font-bold text-emerald-400">${sh.method} · S/ ${(sh.amountCents / 100).toFixed(2)}</span>
+            <span class="mono text-xs font-bold text-emerald-400">${escapeHtml(sh.method)} · S/ ${(sh.amountCents / 100).toFixed(2)}</span>
           </div>`,
         )
         .join('');
@@ -729,11 +771,17 @@
     }
 
     async function payOneSlotFromMobile() {
+      await ensureMobileSession();
       const payerName = document.getElementById('payerNameInput').value.trim() || 'Samuel I. (UCSP)';
+      const prefix = selectedPayMethod === 'CARD' ? 'tok' : selectedPayMethod === 'PLIN' ? 'pln' : 'ype';
       const res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}/pay`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payerName, method: selectedPayMethod }),
+        headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({
+          payerName,
+          method: selectedPayMethod,
+          sourceId: `${prefix}_sandbox_${Date.now()}`,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -816,13 +864,29 @@
     }
 
     async function inviteSubstitute(subId) {
+      await ensureMobileSession();
+      let bookingId = '00000000-0000-4000-e000-0000000000b2';
+      try {
+        const myRes = await fetch(`${API_BASE}/api/bookings/my`, { headers: mobileAuthHeaders() });
+        if (myRes.ok) {
+          const myBookings = await myRes.json();
+          const active = (myBookings || []).find((b) => b.status === 'HELD' || b.status === 'CONFIRMED');
+          if (active?.id) bookingId = active.id;
+        }
+      } catch (_) {}
+
       const res = await fetch(`${API_BASE}/api/substitutes/${subId}/invite`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
+        headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ bookingId }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        notifyMobile('Convocatoria rechazada', data.message || 'Se requiere una reserva activa propia', 'amber');
+        return;
+      }
       activeRelayId = data.relay.id;
+      socket.emit('relay:join', { relayId: activeRelayId, accessToken: mobileJwtToken });
       document.getElementById('relaySubName').textContent =
         `${data.substitute.fullName} (${data.substitute.position})`;
       document.getElementById('relayProxyInfo').textContent =
@@ -841,10 +905,10 @@
           (m) => `
           <div class="bg-slate-900 border border-slate-800 rounded-xl p-2">
             <div class="flex items-center justify-between text-[10px] text-emerald-400 font-bold">
-              <span>${m.senderName || 'Organizador'}</span>
+              <span>${escapeHtml(m.senderName || 'Organizador')}</span>
               ${m.wasRedacted ? '<span class="text-amber-300">🔒 Teléfono redactado por seguridad</span>' : ''}
             </div>
-            <p class="text-slate-200 mt-0.5">${m.body}</p>
+            <p class="text-slate-200 mt-0.5">${escapeHtml(m.body)}</p>
           </div>`,
         )
         .join('');
@@ -857,12 +921,15 @@
       const text = input.value.trim();
       if (!text || !activeRelayId) return;
       input.value = '';
+      await ensureMobileSession();
       await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ text }),
       });
-      const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`);
+      const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`, {
+        headers: mobileAuthHeaders(),
+      });
       const d = await r.json();
       renderRelayMessages(d.messages);
     }
@@ -923,6 +990,8 @@
       });
       const data = await res.json();
       if (res.ok) {
+        mobileJwtToken = data.accessToken;
+        localStorage.setItem('pichangabook_mobile_jwt', mobileJwtToken);
         document.getElementById('userChipBtn').textContent =
           `${data.user.fullName.split(' ')[0]} (${data.user.role === 'OWNER' ? 'Dueño' : 'Org.'})`;
         closeOtpModal();
@@ -991,10 +1060,12 @@
         if (activeRelayId) {
           await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ text: 'Confirmo llegada 19:45. Mi cel es 958222333 por si acaso.' }),
           });
-          const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`);
+          const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`, {
+            headers: mobileAuthHeaders(),
+          });
           const d = await r.json();
           renderRelayMessages(d.messages);
         }

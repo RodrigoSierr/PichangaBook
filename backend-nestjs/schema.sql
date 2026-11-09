@@ -21,7 +21,7 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;   -- igualdad (=) dentro de índices 
 -- -----------------------------------------------------------------------------
 CREATE TYPE user_role           AS ENUM ('PLAYER', 'ORGANIZER', 'OWNER', 'ADMIN');
 CREATE TYPE verification_status AS ENUM ('PENDING', 'IN_REVIEW', 'VERIFIED', 'REJECTED');
-CREATE TYPE booking_status      AS ENUM ('HELD', 'PENDING_PAYMENT', 'CONFIRMED', 'BLOCKED', 'CANCELLED');
+CREATE TYPE booking_status      AS ENUM ('HELD', 'PENDING_PAYMENT', 'CONFIRMED', 'BLOCKED', 'CANCELLED', 'EXPIRED');
 CREATE TYPE booking_channel     AS ENUM ('APP', 'RECEPTION', 'PHONE', 'WHATSAPP');
 CREATE TYPE payment_mode        AS ENUM ('FULL_DEPOSIT', 'SPLIT');
 CREATE TYPE split_status        AS ENUM ('OPEN', 'COMPLETED', 'EXPIRED', 'CANCELLED');
@@ -169,6 +169,7 @@ CREATE TABLE split_payments (
     mode                   payment_mode NOT NULL,
     total_slots            SMALLINT     NOT NULL CHECK (total_slots BETWEEN 1 AND 22),
     paid_slots             SMALLINT     NOT NULL DEFAULT 0,
+    reserved_slots         SMALLINT     NOT NULL DEFAULT 0,
     amount_per_slot_cents  INTEGER      NOT NULL CHECK (amount_per_slot_cents > 0),
     total_cents            INTEGER      NOT NULL CHECK (total_cents > 0),
     share_token            VARCHAR(32)  NOT NULL UNIQUE,      -- link público /pay/{token}
@@ -176,13 +177,54 @@ CREATE TABLE split_payments (
     expires_at             TIMESTAMPTZ  NOT NULL,
     completed_at           TIMESTAMPTZ,
     created_at             TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    CHECK (paid_slots BETWEEN 0 AND total_slots)              -- "Cupos pagados: 4 de 6"
+    CHECK (paid_slots BETWEEN 0 AND total_slots),             -- "Cupos pagados: 4 de 6"
+    CHECK (reserved_slots >= 0 AND paid_slots + reserved_slots <= total_slots)
 );
+
+-- Registro de intentos de cobro, conciliación y compensación (reembolsos/anulaciones)
+CREATE TABLE payment_attempts (
+    id                  UUID             PRIMARY KEY DEFAULT gen_random_uuid(),
+    idempotency_key     VARCHAR(120)     NOT NULL UNIQUE,
+    booking_id          UUID             REFERENCES bookings(id) ON DELETE SET NULL,
+    split_payment_id    UUID             REFERENCES split_payments(id) ON DELETE SET NULL,
+    user_id             UUID             REFERENCES users(id) ON DELETE SET NULL,
+    payer_name          VARCHAR(120)     NOT NULL,
+    purpose             VARCHAR(32)      NOT NULL,            -- FULL_DEPOSIT | SPLIT_INITIAL | SPLIT_SLOT
+    method              payment_method   NOT NULL,
+    provider            payment_provider NOT NULL DEFAULT 'CULQI',
+    source_id           VARCHAR(120)     NOT NULL,
+    amount_cents        INTEGER          NOT NULL CHECK (amount_cents > 0),
+    currency            CHAR(3)          NOT NULL DEFAULT 'PEN',
+    provider_charge_id  VARCHAR(80)      UNIQUE,
+    status              VARCHAR(32)      NOT NULL DEFAULT 'INITIATED'
+                        CHECK (status IN (
+                          'INITIATED',
+                          'PENDING',
+                          'SUCCEEDED',
+                          'FAILED',
+                          'COMPENSATING',
+                          'REFUNDED',
+                          'COMPENSATION_FAILED'
+                        )),
+    simulated           BOOLEAN          NOT NULL DEFAULT FALSE,
+    refund_id           VARCHAR(80),
+    refund_reason       TEXT,
+    refunded_at         TIMESTAMPTZ,
+    error_code          VARCHAR(64),
+    error_message       TEXT,
+    metadata            JSONB            NOT NULL DEFAULT '{}',
+    created_at          TIMESTAMPTZ      NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ      NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_payment_attempts_booking ON payment_attempts (booking_id);
+CREATE INDEX idx_payment_attempts_split   ON payment_attempts (split_payment_id);
+CREATE INDEX idx_payment_attempts_charge  ON payment_attempts (provider_charge_id);
 
 -- Cada cupo pagado (idempotencia por id de cargo de la pasarela)
 CREATE TABLE payment_shares (
     id                  UUID             PRIMARY KEY DEFAULT gen_random_uuid(),
     split_payment_id    UUID             NOT NULL REFERENCES split_payments(id) ON DELETE CASCADE,
+    attempt_id          UUID             REFERENCES payment_attempts(id) ON DELETE SET NULL,
     payer_user_id       UUID             REFERENCES users(id),
     payer_name          VARCHAR(120)     NOT NULL,
     method              payment_method   NOT NULL,
@@ -190,6 +232,9 @@ CREATE TABLE payment_shares (
     provider_charge_id  VARCHAR(80)      NOT NULL UNIQUE,     -- evita doble abono si el webhook se repite
     amount_cents        INTEGER          NOT NULL CHECK (amount_cents > 0),
     status              share_status     NOT NULL DEFAULT 'PAID',
+    refund_id           VARCHAR(80),
+    refund_reason       TEXT,
+    refunded_at         TIMESTAMPTZ,
     paid_at             TIMESTAMPTZ      NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_payment_shares_split ON payment_shares (split_payment_id);

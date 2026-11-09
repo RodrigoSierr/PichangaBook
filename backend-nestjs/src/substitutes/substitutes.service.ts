@@ -1,11 +1,19 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { randomInt } from 'node:crypto';
 import { DatabaseService } from '../database/database.service';
 import { MediaService } from '../integrations/media.service';
 import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { AuthUser } from '../common/types';
 import { redactContactInfo } from '../common/utils/phone.util';
-import { DEMO_ORGANIZER_ID } from '../bookings/bookings.service';
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 @Injectable()
 export class SubstitutesService {
@@ -51,20 +59,71 @@ export class SubstitutesService {
     );
   }
 
-  signClipUpload(user?: AuthUser) {
-    return this.media.signClipUpload(user?.sub ?? DEMO_ORGANIZER_ID);
+  signClipUpload(user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para obtener firma de subida.');
+    return this.media.signClipUpload(user.sub);
   }
 
   /**
-   * Convoca a un suplente de emergencia y abre un canal seguro (chat interno + número proxy VoIP)
-   * sin revelar el número de celular real de ninguna de las partes.
+   * Convoca a un suplente de emergencia validando previamente que:
+   *  1. Se indique un `bookingId` válido.
+   *  2. La reserva exista en la base de datos.
+   *  3. La reserva pertenezca al organizador autenticado (`organizer_id = user.sub` o `ADMIN`).
+   *  4. La reserva esté vigente (`status IN ('HELD', 'CONFIRMED')`, no vencida ni cancelada).
    */
   async inviteSubstitute(
     substituteId: string,
     body: { bookingId?: string; message?: string },
-    user?: AuthUser,
+    user: AuthUser,
   ) {
-    const organizerId = user?.sub ?? DEMO_ORGANIZER_ID;
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para convocar a un suplente.');
+
+    const bookingId = body?.bookingId?.trim();
+    if (!bookingId || !UUID_REGEX.test(bookingId)) {
+      throw new BadRequestException({
+        code: 'BOOKING_ID_REQUIRED',
+        message: 'Se requiere un bookingId UUID válido de una reserva activa para convocar a un suplente.',
+      });
+    }
+
+    const booking = await this.db.one<{
+      id: string;
+      organizerId: string | null;
+      status: string;
+      startsAt: Date;
+      endsAt: Date;
+      holdExpiresAt: Date | null;
+    }>(
+      `SELECT id, organizer_id AS "organizerId", status,
+              starts_at AS "startsAt", ends_at AS "endsAt",
+              hold_expires_at AS "holdExpiresAt"
+         FROM bookings WHERE id = $1`,
+      [bookingId],
+    );
+    if (!booking) {
+      throw new NotFoundException({
+        code: 'BOOKING_NOT_FOUND',
+        message: 'La reserva indicada no existe.',
+      });
+    }
+    if (booking.organizerId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException({
+        code: 'BOOKING_OWNERSHIP_FORBIDDEN',
+        message: 'Solo el organizador titular de la reserva puede convocar suplentes para este partido.',
+      });
+    }
+    const isHoldExpired =
+      (booking.status === 'HELD' || booking.status === 'PENDING_PAYMENT') &&
+      booking.holdExpiresAt &&
+      new Date(booking.holdExpiresAt).getTime() <= Date.now();
+    if (!['HELD', 'CONFIRMED'].includes(booking.status) || isHoldExpired) {
+      throw new ConflictException({
+        code: 'BOOKING_NOT_ACTIVE',
+        message: `No se puede convocar un suplente para una reserva en estado ${isHoldExpired ? 'EXPIRED' : booking.status}.`,
+      });
+    }
+
+    const organizerId = user.sub;
     const sub = await this.db.one<{
       id: string;
       userId: string;
@@ -81,6 +140,9 @@ export class SubstitutesService {
       [substituteId],
     );
     if (!sub) throw new NotFoundException('Perfil de suplente no encontrado');
+    if (sub.userId === organizerId) {
+      throw new BadRequestException('No puedes convocarte a ti mismo como suplente.');
+    }
 
     const proxyNumber = `+51 (054) 64${randomInt(10, 99)}-${randomInt(100, 999)}`;
     const initialText =
@@ -94,44 +156,66 @@ export class SubstitutesService {
          VALUES ($1, $2, $3, 'SENT')
          ON CONFLICT (substitute_id, booking_id) DO UPDATE SET status = 'SENT'
          RETURNING id, status, created_at AS "createdAt"`,
-        [substituteId, organizerId, body.bookingId ?? null],
+        [substituteId, organizerId, booking.id],
       );
 
       const [rel] = await tx.query<{ id: string; proxyNumber: string; expiresAt: string }>(
         `INSERT INTO contact_relays (user_a_id, user_b_id, booking_id, proxy_number, expires_at)
          VALUES ($1, $2, $3, $4, now() + INTERVAL '4 hours')
          RETURNING id, proxy_number AS "proxyNumber", expires_at AS "expiresAt"`,
-        [organizerId, sub.userId, body.bookingId ?? null, proxyNumber],
+        [organizerId, sub.userId, booking.id, proxyNumber],
       );
 
       const [msg] = await tx.query(
         `INSERT INTO relay_messages (relay_id, sender_id, body, was_redacted)
          VALUES ($1, $2, $3, $4)
-         RETURNING id, body, was_redacted AS "wasRedacted", created_at AS "createdAt"`,
+         RETURNING id, sender_id AS "senderId", body, was_redacted AS "wasRedacted", created_at AS "createdAt"`,
         [rel.id, organizerId, sanitized.body, sanitized.redacted],
       );
 
       return { invitation: inv, relay: rel, firstMessage: msg };
     });
 
+    const senderName = user.name || 'Organizador';
     const payload = {
       invitation,
       substitute: sub,
       relay: {
         ...relay,
         privacyNotice:
-          'Números reales protegidos con enmascaramiento E.164 y central VoIP temporal antifraude.',
+          'Números reales protegidos con enmascaramiento E.164 y redacción automática de datos de contacto.',
       },
-      messages: [{ ...firstMessage, senderRole: 'ORGANIZER', senderName: 'Diego Salas (Organizador)' }],
+      messages: [{ ...firstMessage, senderRole: user.role, senderName }],
     };
 
     this.bus.publish(Rooms.relay(relay.id), 'relay:message', payload.messages[0]);
     return payload;
   }
 
-  async getRelay(relayId: string) {
+  async myRelays(user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException();
+    return this.db.query(
+      `SELECT r.id, r.proxy_number AS "proxyNumber", r.expires_at AS "expiresAt",
+              ua.full_name AS "userAName", ua.phone_masked AS "userAPhoneMasked",
+              ub.full_name AS "userBName", ub.phone_masked AS "userBPhoneMasked",
+              r.created_at AS "createdAt"
+         FROM contact_relays r
+         JOIN users ua ON ua.id = r.user_a_id
+         JOIN users ub ON ub.id = r.user_b_id
+        WHERE (r.user_a_id = $1 OR r.user_b_id = $1)
+          AND r.expires_at > now()
+        ORDER BY r.created_at DESC
+        LIMIT 20`,
+      [user.sub],
+    );
+  }
+
+  async getRelay(relayId: string, user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para consultar este canal.');
     const relay = await this.db.one<{
       id: string;
+      userAId: string;
+      userBId: string;
       proxyNumber: string;
       expiresAt: string;
       userAName: string;
@@ -139,7 +223,8 @@ export class SubstitutesService {
       userBName: string;
       userBPhoneMasked: string;
     }>(
-      `SELECT r.id, r.proxy_number AS "proxyNumber", r.expires_at AS "expiresAt",
+      `SELECT r.id, r.user_a_id AS "userAId", r.user_b_id AS "userBId",
+              r.proxy_number AS "proxyNumber", r.expires_at AS "expiresAt",
               ua.full_name AS "userAName", ua.phone_masked AS "userAPhoneMasked",
               ub.full_name AS "userBName", ub.phone_masked AS "userBPhoneMasked"
          FROM contact_relays r
@@ -149,6 +234,9 @@ export class SubstitutesService {
       [relayId],
     );
     if (!relay) throw new NotFoundException('Canal seguro no encontrado');
+    if (relay.userAId !== user.sub && relay.userBId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException('No eres participante de este canal de contacto.');
+    }
 
     const messages = await this.db.query(
       `SELECT m.id, m.sender_id AS "senderId", u.full_name AS "senderName",
@@ -160,19 +248,34 @@ export class SubstitutesService {
     return { ...relay, messages };
   }
 
-  async sendRelayMessage(relayId: string, text: string, user?: AuthUser) {
+  async sendRelayMessage(relayId: string, text: string, user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para enviar mensajes.');
     if (!text || !text.trim()) throw new BadRequestException('Escribe un mensaje');
-    const senderId = user?.sub ?? DEMO_ORGANIZER_ID;
+
+    const relay = await this.db.one<{ id: string; userAId: string; userBId: string; expiresAt: Date }>(
+      `SELECT id, user_a_id AS "userAId", user_b_id AS "userBId", expires_at AS "expiresAt"
+         FROM contact_relays WHERE id = $1`,
+      [relayId],
+    );
+    if (!relay) throw new NotFoundException('Canal seguro no encontrado');
+    if (relay.userAId !== user.sub && relay.userBId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException('No eres participante de este canal de contacto.');
+    }
+    if (new Date(relay.expiresAt).getTime() <= Date.now()) {
+      throw new BadRequestException('Esta sesión de contacto temporal ha expirado.');
+    }
+
     const sanitized = redactContactInfo(text.trim());
 
     const msg = await this.db.one(
       `INSERT INTO relay_messages (relay_id, sender_id, body, was_redacted)
        VALUES ($1, $2, $3, $4)
        RETURNING id, sender_id AS "senderId", body, was_redacted AS "wasRedacted", created_at AS "createdAt"`,
-      [relayId, senderId, sanitized.body, sanitized.redacted],
+      [relayId, user.sub, sanitized.body, sanitized.redacted],
     );
 
-    this.bus.publish(Rooms.relay(relayId), 'relay:message', msg);
-    return msg;
+    const enriched = { ...msg, senderName: user.name || 'Participante' };
+    this.bus.publish(Rooms.relay(relayId), 'relay:message', enriched);
+    return enriched;
   }
 }

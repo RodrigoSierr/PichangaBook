@@ -44,3 +44,19 @@ export class FirebaseLoginDto {
   @Type(() => String)
   role?: (typeof PUBLIC_ROLES)[number];
 }
+
+/**
+ * Actualización de perfil de usuario (`/api/auth/me`).
+ * Por seguridad (prevención de escalamiento de privilegios), NO admite modificar `role`.
+ */
+export class UpdateProfileDto {
+  @IsOptional()
+  @IsString()
+  @Length(2, 120)
+  fullName?: string;
+}
+
+export class DemoSessionDto {
+  @IsIn(PUBLIC_ROLES)
+  role: (typeof PUBLIC_ROLES)[number];
+}

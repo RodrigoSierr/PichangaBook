@@ -9,6 +9,7 @@ import { AppConfig } from './config/app.config';
 async function bootstrap() {
   const logger = new Logger('PichangaBook');
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
     cors: { origin: '*', credentials: true },
   });
 
@@ -21,12 +22,13 @@ async function bootstrap() {
     }),
   );
 
-  // Archivos estáticos: fotos de canchas, clips de 15-30s, documentos RUC y vistas frontend
+  // Archivos estáticos públicos: fotos de canchas, clips de 15-30s y vistas frontend.
+  // NOTA DE SEGURIDAD: los documentos RUC/licencias se almacenan en almacenamiento privado
+  // fuera de /public y NUNCA se exponen como archivos estáticos públicos.
   const backendRoot = resolve(__dirname, '..');
   const monorepoRoot = resolve(backendRoot, '..');
 
   app.useStaticAssets(resolve(backendRoot, 'public'), { prefix: '/' });
-  app.useStaticAssets(resolve(backendRoot, 'uploads'), { prefix: '/uploads' });
   app.useStaticAssets(resolve(monorepoRoot, 'web-admin-tailwind'), { prefix: '/admin' });
   app.useStaticAssets(resolve(monorepoRoot, 'mobile-flutter'), {
     prefix: '/mobile',

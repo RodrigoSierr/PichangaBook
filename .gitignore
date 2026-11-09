@@ -15,6 +15,13 @@ mobile-flutter/.packages
 .env.local
 .env.*.local
 backend-nestjs/.env
+backend-nestjs/private-storage/
+mobile-flutter/android/key.properties
+*.jks
+*.keystore
+
+# Local agent skills
+.agents/
 
 # Logs & caches
 *.log

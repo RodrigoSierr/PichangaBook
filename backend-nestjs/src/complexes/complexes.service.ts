@@ -5,11 +5,12 @@ import {
   Injectable,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { AppConfig } from '../config/app.config';
 import { MapsService } from '../integrations/maps.service';
-import { MediaService } from '../integrations/media.service';
+import { MAX_VERIFICATION_DOC_BYTES, MediaService } from '../integrations/media.service';
 import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { AuthUser } from '../common/types';
 import { isValidRuc } from '../common/utils/ruc.util';
@@ -114,7 +115,7 @@ export class ComplexesService {
   }
 
   // ---------------------------------------------------------------------------
-  // Dueños: alta de complejo + validación documental (RUC / licencia)
+  // Dueños: alta de complejo + validación documental privada (RUC / licencia)
   // ---------------------------------------------------------------------------
   async create(owner: AuthUser, dto: CreateComplexDto) {
     if (!isValidRuc(dto.ruc)) {
@@ -143,13 +144,26 @@ export class ComplexesService {
     }
   }
 
-  async assertOwner(complexId: string, user: AuthUser): Promise<{ id: string; name: string; ownerId: string }> {
-    const row = await this.db.one<{ id: string; name: string; ownerId: string }>(
-      `SELECT id, name, owner_id AS "ownerId" FROM complexes WHERE id = $1`,
+  async assertOwner(
+    complexId: string,
+    user: AuthUser,
+  ): Promise<{ id: string; name: string; ownerId: string; licenseDocUrl: string | null; verificationStatus: string }> {
+    const row = await this.db.one<{
+      id: string;
+      name: string;
+      ownerId: string;
+      licenseDocUrl: string | null;
+      verificationStatus: string;
+    }>(
+      `SELECT id, name, owner_id AS "ownerId", license_doc_url AS "licenseDocUrl",
+              verification_status AS "verificationStatus"
+         FROM complexes WHERE id = $1`,
       [complexId],
     );
     if (!row) throw new NotFoundException('Complejo no encontrado');
-    if (row.ownerId !== user.sub && user.role !== 'ADMIN') throw new ForbiddenException('No eres dueño de este complejo');
+    if (row.ownerId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException('No eres dueño de este complejo');
+    }
     return row;
   }
 
@@ -160,30 +174,100 @@ export class ComplexesService {
   ) {
     await this.assertOwner(complexId, user);
     if (!file) throw new BadRequestException('Adjunta el PDF/imagen de tu ficha RUC o licencia municipal');
-    if (file.size > 5 * 1024 * 1024) throw new BadRequestException('Máximo 5 MB');
-    const url = this.media.saveVerificationDocument(complexId, file);
-    const updated = await this.db.one(
+    if (file.size > MAX_VERIFICATION_DOC_BYTES) {
+      throw new BadRequestException('Máximo 5 MB');
+    }
+    const saved = this.media.saveVerificationDocument(complexId, file);
+    const updated = await this.db.one<{
+      id: string;
+      verificationStatus: string;
+      licenseDocUrl: string;
+    }>(
       `UPDATE complexes SET license_doc_url = $2, license_doc_uploaded_at = now(),
               verification_status = 'IN_REVIEW', verification_notes = NULL
         WHERE id = $1
         RETURNING id, verification_status AS "verificationStatus", license_doc_url AS "licenseDocUrl"`,
-      [complexId, url],
+      [complexId, saved.storageKey],
     );
-    this.bus.publish(Rooms.complex(complexId), 'complex:verification', updated);
-
-    // DEMO: simula la revisión del backoffice (en producción la hace un admin + consulta SUNAT)
-    const secs = this.cfg.demoAutoVerifySeconds;
-    if (this.cfg.demoMode && secs > 0) {
-      setTimeout(() => {
-        this.setVerification(complexId, { status: 'VERIFIED', notes: 'Validado automáticamente (demo)' }).catch((e) =>
-          this.logger.error(e),
-        );
-      }, secs * 1000);
-    }
-    return updated;
+    const signed = this.media.createSignedDocumentUrl(complexId, saved.fileName);
+    const payload = {
+      ...updated,
+      temporaryDownloadUrl: signed.url,
+      expiresAt: signed.expiresAt,
+    };
+    this.bus.publish(Rooms.complex(complexId), 'complex:verification', payload);
+    return payload;
   }
 
-  async setVerification(complexId: string, dto: VerificationDto) {
+  /**
+   * Consulta autorizada del documento de verificación (sólo el OWNER propietario del complejo o un ADMIN).
+   * Devuelve una URL temporal firmada con HMAC para descargar el archivo desde almacenamiento privado.
+   */
+  async getVerificationDocumentAccess(complexId: string, user: AuthUser) {
+    const complex = await this.assertOwner(complexId, user);
+    const fileName = this.media.extractFileNameFromKey(complex.licenseDocUrl);
+    if (!fileName) {
+      throw new NotFoundException('Este complejo aún no tiene un documento de verificación cargado.');
+    }
+    const signed = this.media.createSignedDocumentUrl(complexId, fileName);
+    return {
+      complexId: complex.id,
+      verificationStatus: complex.verificationStatus,
+      storageKey: complex.licenseDocUrl,
+      temporaryDownloadUrl: signed.url,
+      expiresAt: signed.expiresAt,
+      expiresInSeconds: signed.expiresInSeconds,
+    };
+  }
+
+  /**
+   * Descarga protegida del archivo desde almacenamiento privado:
+   * exige o bien una firma temporal HMAC vigente (`expires` + `sig`), o bien sesión de `OWNER` propietario / `ADMIN`.
+   */
+  async downloadVerificationDocument(
+    complexId: string,
+    query: { file?: string; expires?: string; sig?: string },
+    user?: AuthUser,
+  ) {
+    const row = await this.db.one<{
+      id: string;
+      ownerId: string;
+      licenseDocUrl: string | null;
+    }>(
+      `SELECT id, owner_id AS "ownerId", license_doc_url AS "licenseDocUrl" FROM complexes WHERE id = $1`,
+      [complexId],
+    );
+    if (!row) throw new NotFoundException('Complejo no encontrado');
+    const storedFileName = this.media.extractFileNameFromKey(row.licenseDocUrl);
+    if (!storedFileName) {
+      throw new NotFoundException('Documento no disponible.');
+    }
+    const requestedFile = query.file || storedFileName;
+    if (requestedFile !== storedFileName) {
+      throw new ForbiddenException('El archivo solicitado no coincide con el documento activo del complejo.');
+    }
+
+    const signedOk = this.media.verifySignedDocumentAccess(complexId, storedFileName, query.expires, query.sig);
+    if (!signedOk) {
+      if (!user?.sub) {
+        throw new UnauthorizedException('Acceso privado: se requiere URL temporal firmada vigente o sesión autorizada.');
+      }
+      if (row.ownerId !== user.sub && user.role !== 'ADMIN') {
+        throw new ForbiddenException('No tienes autorización para acceder al documento privado de este complejo.');
+      }
+    }
+
+    return this.media.readPrivateVerificationDocument(complexId, storedFileName);
+  }
+
+  /**
+   * Aprobación o rechazo documental de un complejo deportivo.
+   * Restringido exclusivamente al rol `ADMIN` (un `OWNER` jamás puede auto-aprobarse a `VERIFIED`).
+   */
+  async setVerification(complexId: string, dto: VerificationDto, actor: AuthUser) {
+    if (!actor || actor.role !== 'ADMIN') {
+      throw new ForbiddenException('Solo un administrador de la plataforma puede aprobar o rechazar la verificación documental.');
+    }
     const updated = await this.db.one(
       `UPDATE complexes SET verification_status = $2::verification_status, verification_notes = $3,
               verified_at = CASE WHEN $2::verification_status = 'VERIFIED' THEN now() ELSE NULL END
@@ -191,7 +275,7 @@ export class ComplexesService {
         RETURNING id, name, verification_status AS "verificationStatus", verification_notes AS "verificationNotes"`,
       [complexId, dto.status, dto.notes ?? null],
     );
-    if (!updated) throw new NotFoundException();
+    if (!updated) throw new NotFoundException('Complejo no encontrado');
     this.bus.publish(Rooms.complex(complexId), 'complex:verification', updated);
     return updated;
   }
