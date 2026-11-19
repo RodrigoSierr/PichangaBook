@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PichangaBook Arequipa · App Móvil</title>
+  <link rel="icon" type="image/png" href="/media/logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -49,7 +50,6 @@
     h1 { font-size: 24px; font-weight: 800; color: #FFFFFF; line-height: 1.25; letter-spacing: -0.025em; }
     h2 { font-size: 19px; font-weight: 800; color: #FFFFFF; line-height: 1.3; letter-spacing: -0.02em; }
     h3 { font-size: 15px; font-weight: 700; color: #F8FAFC; line-height: 1.35; letter-spacing: -0.015em; }
-    p, span, label, li, button, select, input, a { color: #E2E8F0; }
     * { scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { display: none; }
     .mono { font-family: 'JetBrains Mono', monospace; }
@@ -202,7 +202,7 @@
       <section id="tab-courts" class="hidden space-y-4">
         <!-- Cabecera con foto del complejo seleccionado -->
         <div class="relative rounded-2xl overflow-hidden border border-slate-800 h-40 bg-slate-900">
-          <img id="detailPhoto" src="../backend-nestjs/public/media/court-1.jpg" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='/media/court-1.jpg';}" alt="Cancha sintética" class="w-full h-full object-cover" />
+          <img id="detailPhoto" src="/media/court-1.jpg" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='../backend-nestjs/public/media/court-1.jpg';}" alt="Cancha sintética" class="w-full h-full object-cover" />
           <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent"></div>
           <div class="absolute bottom-3 left-3.5 right-3.5 flex items-end justify-between gap-2">
             <div>
@@ -305,7 +305,7 @@
               </div>
 
               <!-- Barra segmentada de bloques -->
-              <div id="mSplitSegments" class="grid grid-cols-6 gap-1.5 pt-0.5"></div>
+              <div id="mSplitSegments" class="grid gap-1.5 pt-0.5" style="grid-template-columns: repeat(6, minmax(0, 1fr));"></div>
 
               <p id="mSplitHint" class="text-xs text-slate-300 pt-0.5"></p>
             </div>
@@ -329,7 +329,7 @@
           </div>
 
           <!-- Formulario limpio para abonar un cupo en vivo (Yape / Plin / Tarjeta) -->
-          <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-4 space-y-3">
+          <div id="mSplitPayCard" class="bg-[#111827] border border-white/[0.07] rounded-2xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <h3 class="text-sm font-extrabold text-white">Pagar mi cuota</h3>
               <span id="mSplitSlotPriceLabel" class="text-xs font-mono font-bold text-emerald-300 tabular-nums">S/ 15.00</span>
@@ -345,11 +345,14 @@
               <label for="payerNameInput" class="sr-only">Nombre del jugador</label>
               <input id="payerNameInput" type="text" value="" placeholder="Tu nombre o teléfono"
                 class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
-              <button type="button" onclick="payOneSlotFromMobile()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs whitespace-nowrap transition">
+              <button id="mPaySlotSubmitBtn" type="button" onclick="payOneSlotFromMobile()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs whitespace-nowrap transition">
                 Abonar cuota
               </button>
             </div>
           </div>
+
+          <!-- Aviso limpio cuando el Split ya se completó o expiró -->
+          <div id="mSplitClosedBanner" class="hidden rounded-2xl p-4 border text-xs font-semibold"></div>
 
           <!-- Lista limpia de pagos de jugadores -->
           <div class="space-y-2.5">
@@ -448,12 +451,12 @@
 
         <div class="grid grid-cols-2 gap-2.5">
           <button type="button" onclick="submitMobileBooking('FULL_DEPOSIT')" class="cursor-pointer p-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-left transition">
-            <div class="text-xs font-extrabold">Pagar Seña (50%)</div>
-            <div class="text-[11px] opacity-90 mt-1">Confirmación inmediata con Yape o Plin</div>
+            <div id="bookDepositTitle" class="text-xs font-extrabold text-slate-950">Pagar Seña (50%)</div>
+            <div id="bookDepositSubtitle" class="text-[11px] text-slate-950/85 mt-1">Confirmación inmediata con Yape o Plin</div>
           </button>
           <button type="button" onclick="submitMobileBooking('SPLIT')" class="cursor-pointer p-3.5 rounded-2xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-left transition">
-            <div class="text-xs font-extrabold">Dividir entre 6</div>
-            <div class="text-[11px] opacity-90 mt-1">Genera link de cobro para tu grupo</div>
+            <div id="bookSplitTitle" class="text-xs font-extrabold text-slate-950">Dividir entre 6</div>
+            <div id="bookSplitSubtitle" class="text-[11px] text-slate-950/85 mt-1">Genera link de cobro para tu grupo</div>
           </button>
         </div>
       </div>
@@ -543,7 +546,7 @@
               <span class="font-semibold text-indigo-300">Vista previa del Highlight (15-30s)</span>
               <span id="subClipPreviewStatus" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Listo</span>
             </div>
-            <video id="subClipPreviewVideo" src="../backend-nestjs/public/media/clips/mediocampo.mp4" controls muted playsinline class="w-full h-28 rounded-xl object-cover bg-black"></video>
+            <video id="subClipPreviewVideo" src="/media/clips/mediocampo.mp4" controls muted playsinline preload="none" class="w-full h-28 rounded-xl object-cover bg-black"></video>
             <div class="grid grid-cols-1 gap-1.5 pt-1">
               <label for="subClipFileInput" class="cursor-pointer flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 font-semibold text-[11px] transition">
                 <span>📁 Subir video .mp4 / .mov desde dispositivo</span>
@@ -958,6 +961,9 @@
     }
 
     function resolveMediaUrl(mediaPath) {
+      if (mediaPath && /^(https?:|blob:|data:)/i.test(mediaPath)) {
+        return mediaPath;
+      }
       const cleanPath = mediaPath && mediaPath.startsWith('/') ? mediaPath : `/${mediaPath || 'media/court-1.jpg'}`;
       if (window.location.pathname.includes('/mobile-flutter/') || window.location.protocol === 'file:') {
         return `../backend-nestjs/public${cleanPath}`;
@@ -966,8 +972,14 @@
     }
 
     function fallbackMediaUrl(mediaPath) {
+      if (mediaPath && /^(https?:|blob:|data:)/i.test(mediaPath)) {
+        return `${API_BASE}/media/court-1.jpg`;
+      }
       const cleanPath = mediaPath && mediaPath.startsWith('/') ? mediaPath : `/${mediaPath || 'media/court-1.jpg'}`;
-      return `../backend-nestjs/public${cleanPath}`;
+      if (window.location.pathname.includes('/mobile-flutter/') || window.location.protocol === 'file:') {
+        return `../backend-nestjs/public${cleanPath}`;
+      }
+      return `${API_BASE}${cleanPath}`;
     }
 
     function formatMethodClean(method) {
@@ -1001,6 +1013,13 @@
 
     let mobileJwtToken = localStorage.getItem('pichangabook_mobile_jwt') || null;
     let mobileServerDemoMode = window.location.protocol === 'file:';
+    let mobileHealthChecked = false;
+    let mobileSessionVerified = false;
+    let joinedComplexId = '00000000-0000-4000-b000-00000000c001';
+    let joinedSplitToken = null;
+    let activeRelayMessages = [];
+    let currentMobileTab = 'map';
+    let lastSplitEventAt = 0;
 
     function syncMobileDemoVisibility() {
       const homeBanner = document.getElementById('homeDemoSplitBanner');
@@ -1019,15 +1038,22 @@
       }
     }
 
-    async function ensureMobileSession() {
-      try {
-        const healthRes = await fetch(`${API_BASE}/api/health`);
-        if (healthRes.ok) {
-          const h = await healthRes.json();
-          mobileServerDemoMode = Boolean(h.demoMode || h.allowDemoFallback);
-        }
-      } catch {}
-      syncMobileDemoVisibility();
+    async function ensureMobileSession(forceRefresh = false) {
+      if (!forceRefresh && mobileSessionVerified && mobileJwtToken) {
+        return mobileJwtToken;
+      }
+
+      if (!mobileHealthChecked || forceRefresh) {
+        try {
+          const healthRes = await fetch(`${API_BASE}/api/health`);
+          if (healthRes.ok) {
+            const h = await healthRes.json();
+            mobileServerDemoMode = Boolean(h.demoMode || h.allowDemoFallback);
+            mobileHealthChecked = true;
+          }
+        } catch {}
+        syncMobileDemoVisibility();
+      }
 
       if (mobileJwtToken) {
         try {
@@ -1038,9 +1064,11 @@
             const me = await meRes.json();
             const chip = document.getElementById('userChipBtn');
             if (chip && me?.fullName) chip.textContent = me.fullName.split(' ')[0];
+            mobileSessionVerified = true;
             return mobileJwtToken;
           }
           mobileJwtToken = null;
+          mobileSessionVerified = false;
           localStorage.removeItem('pichangabook_mobile_jwt');
         } catch {}
       }
@@ -1060,6 +1088,7 @@
         if (res.ok) {
           const data = await res.json();
           mobileJwtToken = data.accessToken;
+          mobileSessionVerified = true;
           localStorage.setItem('pichangabook_mobile_jwt', mobileJwtToken);
           if (chip && data.user?.fullName) {
             chip.textContent = data.user.fullName.split(' ')[0];
@@ -1078,8 +1107,28 @@
       };
     }
 
-    function switchTab(rawTab) {
+    function joinComplexRoom(complexId) {
+      if (!complexId) return;
+      if (socket && socket.connected) {
+        if (joinedComplexId && joinedComplexId !== complexId) {
+          socket.emit('complex:leave', { complexId: joinedComplexId });
+        }
+        socket.emit('complex:join', { complexId, accessToken: mobileJwtToken || undefined });
+      }
+      joinedComplexId = complexId;
+    }
+
+    function joinSplitRoom(token) {
+      if (!token) return;
+      joinedSplitToken = token;
+      if (socket && socket.connected) {
+        socket.emit('split:join', { token });
+      }
+    }
+
+    function switchTab(rawTab, opts = {}) {
       const tab = rawTab === 'matches' ? 'split' : rawTab;
+      currentMobileTab = tab;
       ['map', 'courts', 'split', 'subs'].forEach((t) => {
         document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
         const nav = document.getElementById(`nav-${t}`);
@@ -1090,9 +1139,9 @@
         }
       });
       if (tab === 'map' && mapInstance) setTimeout(() => mapInstance.invalidateSize(), 100);
-      if (tab === 'courts' && currentComplex) loadComplexDetail(currentComplex.id);
-      if (tab === 'split') loadMobileSplit();
-      if (tab === 'subs') loadSubstitutes('ALL');
+      if (tab === 'courts' && currentComplex && !opts.skipReload) loadComplexDetail(currentComplex.id);
+      if (tab === 'split' && !opts.skipReload) loadMobileSplit();
+      if (tab === 'subs' && !opts.skipReload) loadSubstitutes('ALL');
     }
 
     // -------------------------------------------------------------------------
@@ -1160,20 +1209,26 @@
       if (mapInstance) {
         mapMarkers.forEach((m) => m.remove());
         mapMarkers = [];
+        const coords = [];
         complexes.forEach((c) => {
+          const priceLabel = c.minPriceCents ? `S/ ${(c.minPriceCents / 100).toFixed(0)}` : 'Ver';
+          const ratingTxt = Number(c.rating) > 0 ? `★ ${c.rating}` : 'Nuevo';
           const icon = L.divIcon({
             className: '',
             iconSize: null,
-            html: `<div style="display:inline-block;background:#10b981;color:#052e16;font-weight:800;font-size:11px;padding:4px 9px;border-radius:999px;border:2px solid #fff;box-shadow:0 4px 12px rgba(16,185,129,0.5);white-space:nowrap;transform:translate(-50%,-50%);">S/ ${(c.minPriceCents / 100).toFixed(0)}</div>`,
+            html: `<div style="display:inline-block;background:#10b981;color:#052e16;font-weight:800;font-size:11px;padding:4px 9px;border-radius:999px;border:2px solid #fff;box-shadow:0 4px 12px rgba(16,185,129,0.5);white-space:nowrap;transform:translate(-50%,-50%);">${priceLabel}</div>`,
           });
           const marker = L.marker([c.lat, c.lng], { icon })
             .addTo(mapInstance)
-            .bindPopup(`<b>${c.name}</b><br/>${c.districtName} · ★ ${c.rating}`);
+            .bindPopup(`<b>${escapeHtml(c.name)}</b><br/>${escapeHtml(c.districtName)} · ${ratingTxt}`);
           marker.on('click', () => openComplexFromMap(c.id));
           mapMarkers.push(marker);
+          coords.push([c.lat, c.lng]);
         });
-        if (complexes.length) {
-          mapInstance.setView([complexes[0].lat, complexes[0].lng], code === 'ALL' ? 12 : 14);
+        if (coords.length === 1) {
+          mapInstance.setView(coords[0], 14);
+        } else if (coords.length > 1) {
+          mapInstance.fitBounds(L.latLngBounds(coords), { padding: [24, 24], maxZoom: code === 'ALL' ? 13 : 15 });
         }
       }
 
@@ -1194,6 +1249,8 @@
           const rawPhoto = c.photos?.[0] || `/media/court-${(idx % 4) + 1}.jpg`;
           const primarySrc = resolveMediaUrl(rawPhoto);
           const backupSrc = fallbackMediaUrl(rawPhoto);
+          const priceTxt = c.minPriceCents ? `Desde S/ ${(c.minPriceCents / 100).toFixed(0)}/h` : 'Tarifas disponibles';
+          const ratingTxt = Number(c.rating) > 0 ? `★ ${c.rating}` : '★ Nuevo';
           return `
           <div onclick="openComplexFromMap('${c.id}')" class="cursor-pointer bg-[#10192d] hover:bg-[#15223b] border border-slate-800/90 rounded-2xl p-3.5 flex items-center gap-3.5 transition">
             <div class="w-16 h-16 rounded-xl bg-emerald-950/60 border border-slate-700/80 overflow-hidden shrink-0 flex items-center justify-center">
@@ -1202,12 +1259,12 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between gap-2">
                 <span class="text-[11px] font-semibold text-emerald-400 tabular-nums">${escapeHtml(c.districtName)} · ${c.distanceKm ?? 1.8} km</span>
-                <span class="text-xs font-bold text-amber-400 tabular-nums">★ ${c.rating}</span>
+                <span class="text-xs font-bold text-amber-400 tabular-nums">${ratingTxt}</span>
               </div>
               <h3 class="text-sm font-extrabold text-white truncate mt-0.5">${escapeHtml(c.name)}</h3>
               <p class="text-xs text-slate-400 truncate">${escapeHtml(c.address)}</p>
               <div class="flex items-center justify-between mt-1.5">
-                <span class="text-xs font-extrabold text-white tabular-nums">Desde S/ ${(c.minPriceCents / 100).toFixed(0)}/h</span>
+                <span class="text-xs font-extrabold text-white tabular-nums">${priceTxt}</span>
                 <span class="text-xs font-bold text-emerald-400">Ver horarios →</span>
               </div>
             </div>
@@ -1217,8 +1274,24 @@
     }
 
     async function openComplexFromMap(complexId) {
+      switchTab('courts', { skipReload: true });
       await loadComplexDetail(complexId);
-      switchTab('courts');
+    }
+
+    function renderCourtPills() {
+      const pills = document.getElementById('courtPills');
+      if (!pills || !currentComplex?.courts) return;
+      pills.innerHTML = currentComplex.courts
+        .map(
+          (c) => `
+          <button type="button" onclick="selectCourt('${c.id}')"
+            class="cursor-pointer py-2 px-2.5 rounded-xl text-xs font-bold border transition truncate ${
+              currentCourt?.id === c.id
+                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
+                : 'bg-[#10192d] text-slate-300 border-slate-800 hover:border-slate-700'
+            }">${escapeHtml(c.name)}</button>`,
+        )
+        .join('');
     }
 
     // -------------------------------------------------------------------------
@@ -1234,6 +1307,7 @@
         detail = FALLBACK_COMPLEXES.find((c) => c.id === complexId) || FALLBACK_COMPLEXES[0];
       }
       currentComplex = detail;
+      joinComplexRoom(detail.id);
 
       const rawDetailPhoto = detail.photos?.[0] || '/media/court-1.jpg';
       const detailImg = document.getElementById('detailPhoto');
@@ -1248,45 +1322,47 @@
       detailImg.src = resolveMediaUrl(rawDetailPhoto);
       document.getElementById('detailName').textContent = detail.name;
       document.getElementById('detailAddress').textContent = `${detail.address} (${detail.districtName})`;
-      document.getElementById('detailRating').textContent = `★ ${detail.rating}`;
-      document.getElementById('detailReviewsCount').textContent = `${detail.reviewsCount || (detail.reviews || []).length} reseñas`;
+      document.getElementById('detailRating').textContent = Number(detail.rating) > 0 ? `★ ${detail.rating}` : '★ Nuevo';
+      const revCount = detail.reviewsCount || (detail.reviews || []).length;
+      document.getElementById('detailReviewsCount').textContent = revCount ? `${revCount} reseñas` : 'Sin reseñas';
 
       if (!currentCourt || currentCourt.complexId !== detail.id) {
         currentCourt = detail.courts[0];
       }
 
-      const pills = document.getElementById('courtPills');
-      pills.innerHTML = detail.courts
-        .map(
-          (c) => `
-          <button type="button" onclick="selectCourt('${c.id}')"
-            class="cursor-pointer py-2 px-2.5 rounded-xl text-xs font-bold border transition truncate ${
-              currentCourt?.id === c.id
-                ? 'bg-emerald-500 text-slate-950 border-emerald-400'
-                : 'bg-[#10192d] text-slate-300 border-slate-800 hover:border-slate-700'
-            }">${escapeHtml(c.name)}</button>`,
-        )
-        .join('');
+      renderCourtPills();
 
-      document.getElementById('reviewsList').innerHTML = (detail.reviews || [])
-        .map(
-          (r) => `
-          <div class="bg-[#10192d] border border-slate-800/80 rounded-xl p-3 text-xs">
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-white">${escapeHtml(r.author || r.authorName)}</span>
-              <span class="text-amber-400 font-bold">${'★'.repeat(r.rating || 5)}</span>
-            </div>
-            <p class="text-slate-300 mt-1 leading-relaxed">${escapeHtml(r.comment)}</p>
-          </div>`,
-        )
-        .join('');
+      document.getElementById('reviewsList').innerHTML = (detail.reviews || []).length
+        ? (detail.reviews || [])
+            .map(
+              (r) => `
+              <div class="bg-[#10192d] border border-slate-800/80 rounded-xl p-3 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-white">${escapeHtml(r.author || r.authorName)}</span>
+                  <span class="text-amber-400 font-bold">${'★'.repeat(r.rating || 5)}</span>
+                </div>
+                <p class="text-slate-300 mt-1 leading-relaxed">${escapeHtml(r.comment)}</p>
+              </div>`,
+            )
+            .join('')
+        : '<div class="text-xs text-slate-400 py-2">Aún no hay reseñas para esta sede.</div>';
 
       if (currentCourt) await loadCourtAvailability(currentCourt.id);
     }
 
     async function selectCourt(courtId) {
       currentCourt = currentComplex.courts.find((c) => c.id === courtId);
-      await loadComplexDetail(currentComplex.id);
+      renderCourtPills();
+      if (currentCourt) await loadCourtAvailability(currentCourt.id);
+    }
+
+    function openSplitFromSlot(token) {
+      if (token) {
+        activeSplitToken = token;
+        syncMobileDemoVisibility();
+        joinSplitRoom(token);
+      }
+      switchTab('split');
     }
 
     async function loadCourtAvailability(courtId) {
@@ -1338,8 +1414,9 @@
           }
 
           if (s.status === 'HELD' && s.split) {
+            const safeSplitTok = escapeHtml(s.split.shareToken || activeSplitToken);
             return `
-              <button type="button" onclick="switchTab('split')"
+              <button type="button" onclick="openSplitFromSlot('${safeSplitTok}')"
                 class="${flash} cursor-pointer rounded-xl p-3 bg-sky-950/50 hover:bg-sky-900/55 border border-sky-500/40 border-l-4 border-l-sky-400 text-left transition flex flex-col justify-between min-h-[78px]">
                 <div class="flex items-center justify-between w-full">
                   <span class="mono font-extrabold text-sm text-white tabular-nums">${escapeHtml(s.label)}</span>
@@ -1370,6 +1447,28 @@
               </div>`;
           }
 
+          if (s.status === 'PAST') {
+            return `
+              <div class="rounded-xl p-3 bg-slate-900/50 border border-slate-800/70 border-l-4 border-l-slate-700 opacity-55 flex flex-col justify-between min-h-[78px]">
+                <div class="flex items-center justify-between w-full">
+                  <span class="mono font-bold text-sm text-slate-400 tabular-nums">${escapeHtml(s.label)}</span>
+                  <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">Pasado</span>
+                </div>
+                <div class="text-xs font-semibold text-slate-500 mt-2">Cerrado</div>
+              </div>`;
+          }
+
+          if (s.status === 'PENDING_PAYMENT') {
+            return `
+              <div class="${flash} rounded-xl p-3 bg-indigo-950/45 border border-indigo-500/35 border-l-4 border-l-indigo-400 flex flex-col justify-between min-h-[78px]">
+                <div class="flex items-center justify-between w-full">
+                  <span class="mono font-extrabold text-sm text-white tabular-nums">${escapeHtml(s.label)}</span>
+                  <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-indigo-500/25 text-indigo-100">Pago</span>
+                </div>
+                <div class="text-xs font-bold text-indigo-200 mt-2">En proceso...</div>
+              </div>`;
+          }
+
           return `
             <div class="${flash} rounded-xl p-3 bg-purple-950/45 border border-purple-500/40 border-l-4 border-l-purple-400 flex flex-col justify-between min-h-[78px]">
               <div class="flex items-center justify-between w-full">
@@ -1389,8 +1488,17 @@
 
     function openBookModal(hour, priceCents) {
       pendingSlotHour = hour;
+      const slotsCount = Number(currentCourt?.playersPerSide) || 6;
+      const depositSoles = (Math.round(priceCents * 0.5) / 100).toFixed(2);
+      const perSlotSoles = (Math.ceil(priceCents / slotsCount) / 100).toFixed(2);
       document.getElementById('bookModalTitle').textContent =
         `${currentCourt.name} · ${String(hour).padStart(2, '0')}:00 (S/ ${(priceCents / 100).toFixed(0)})`;
+      const depTitle = document.getElementById('bookDepositTitle');
+      if (depTitle) depTitle.textContent = `Pagar Seña 50% (S/ ${depositSoles})`;
+      const splitTitle = document.getElementById('bookSplitTitle');
+      if (splitTitle) splitTitle.textContent = `Dividir entre ${slotsCount} (S/ ${perSlotSoles})`;
+      const splitSub = document.getElementById('bookSplitSubtitle');
+      if (splitSub) splitSub.textContent = `Pagas 1/${slotsCount} y compartes link por WhatsApp`;
       const m = document.getElementById('bookSlotModal');
       m.classList.remove('hidden');
       m.classList.add('flex');
@@ -1405,20 +1513,31 @@
     async function submitMobileBooking(paymentMode) {
       closeBookModal();
       await ensureMobileSession();
+      const totalSlots = Number(currentCourt?.playersPerSide) || 6;
+      const makePayload = () =>
+        JSON.stringify({
+          courtId: currentCourt.id,
+          date: currentGridDate,
+          hour: pendingSlotHour,
+          paymentMode,
+          totalSlots,
+          method: 'YAPE',
+          sourceId: `ype_sandbox_mobile_${Date.now()}`,
+        });
       try {
-        const res = await fetch(`${API_BASE}/api/bookings`, {
+        let res = await fetch(`${API_BASE}/api/bookings`, {
           method: 'POST',
           headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            courtId: currentCourt.id,
-            date: currentGridDate,
-            hour: pendingSlotHour,
-            paymentMode,
-            totalSlots: 6,
-            method: 'YAPE',
-            sourceId: `ype_sandbox_mobile_${Date.now()}`,
-          }),
+          body: makePayload(),
         });
+        if (res.status === 401 && mobileServerDemoMode) {
+          await ensureMobileSession(true);
+          res = await fetch(`${API_BASE}/api/bookings`, {
+            method: 'POST',
+            headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: makePayload(),
+          });
+        }
         const data = await res.json();
         if (!res.ok) {
           notifyMobile('Turno no disponible', data.message || 'Fue bloqueado recientemente en recepción', 'amber');
@@ -1429,7 +1548,8 @@
         if (paymentMode === 'SPLIT' && splitObj?.shareToken) {
           activeSplitToken = splitObj.shareToken;
           syncMobileDemoVisibility();
-          notifyMobile('Pago dividido creado (1 de 6)', 'Comparte el enlace con tu equipo por WhatsApp', 'sky');
+          joinSplitRoom(activeSplitToken);
+          notifyMobile(`Pago dividido creado (1 de ${splitObj.totalSlots || totalSlots})`, 'Comparte el enlace con tu equipo por WhatsApp', 'sky');
           switchTab('split');
         } else {
           notifyMobile('¡Reserva confirmada!', 'La parrilla fue actualizada en vivo.', 'emerald');
@@ -1500,9 +1620,16 @@
 
       if (emptyEl) emptyEl.classList.add('hidden');
       if (activeEl) activeEl.classList.remove('hidden');
+      joinSplitRoom(sp.shareToken || activeSplitToken);
 
-      document.getElementById('mSplitBadge').textContent =
-        sp.remainingSlots === 0 ? 'Confirmado 6/6' : `Split ${sp.paidSlots}/${sp.totalSlots}`;
+      const isCompleted = sp.status === 'COMPLETED' || sp.remainingSlots === 0;
+      const isExpiredOrCancelled = sp.status === 'EXPIRED' || sp.status === 'CANCELLED';
+
+      document.getElementById('mSplitBadge').textContent = isCompleted
+        ? `Confirmado ${sp.paidSlots}/${sp.totalSlots}`
+        : isExpiredOrCancelled
+        ? (sp.status === 'EXPIRED' ? 'Expirado' : 'Cancelado')
+        : `Split ${sp.paidSlots}/${sp.totalSlots}`;
       document.getElementById('mSplitCourt').textContent = `${sp.courtName} (${sp.complexName})`;
       document.getElementById('mSplitMeta').textContent =
         `${sp.date} · ${sp.hourLabel} hrs · Organiza: ${sp.organizerName}`;
@@ -1511,6 +1638,23 @@
         `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
       const slotPriceEl = document.getElementById('mSplitSlotPriceLabel');
       if (slotPriceEl) slotPriceEl.textContent = `S/ ${(sp.amountPerSlotCents / 100).toFixed(2)}`;
+
+      const payCard = document.getElementById('mSplitPayCard');
+      const closedBanner = document.getElementById('mSplitClosedBanner');
+      if (payCard && closedBanner) {
+        if (isCompleted) {
+          payCard.classList.add('hidden');
+          closedBanner.className = 'rounded-2xl p-4 border border-emerald-500/35 bg-emerald-950/35 text-emerald-200 text-xs font-semibold';
+          closedBanner.textContent = `✓ ¡Todos los cupos (${sp.paidSlots}/${sp.totalSlots}) fueron cubiertos! La cancha quedó confirmada automáticamente.`;
+        } else if (isExpiredOrCancelled) {
+          payCard.classList.add('hidden');
+          closedBanner.className = 'rounded-2xl p-4 border border-amber-500/35 bg-amber-950/35 text-amber-200 text-xs font-semibold';
+          closedBanner.textContent = 'Esta reserva dividida expiró o fue cancelada. Puedes reservar un nuevo horario desde el Mapa.';
+        } else {
+          payCard.classList.remove('hidden');
+          closedBanner.classList.add('hidden');
+        }
+      }
 
       const homePill = document.getElementById('homeSplitPill');
       if (homePill) homePill.textContent = `${sp.paidSlots}/${sp.totalSlots} pagados`;
@@ -1523,6 +1667,8 @@
         homeBanner.classList.add('flex');
       }
 
+      const segsEl = document.getElementById('mSplitSegments');
+      segsEl.style.gridTemplateColumns = `repeat(${Math.max(1, Number(sp.totalSlots) || 6)}, minmax(0, 1fr))`;
       const segs = [];
       for (let i = 1; i <= sp.totalSlots; i++) {
         const paid = i <= sp.paidSlots;
@@ -1532,12 +1678,13 @@
           }"></div>`,
         );
       }
-      document.getElementById('mSplitSegments').innerHTML = segs.join('');
+      segsEl.innerHTML = segs.join('');
 
-      document.getElementById('mSplitHint').innerHTML =
-        sp.remainingSlots === 0
-          ? `<span class="text-emerald-300 font-bold">✓ ¡6 de 6 cupos completados! Cancha confirmada automáticamente.</span>`
-          : `Faltan <strong>${sp.remainingSlots} jugador(es)</strong> por abonar su cuota de <strong>S/ ${(sp.amountPerSlotCents / 100).toFixed(2)}</strong>.`;
+      document.getElementById('mSplitHint').innerHTML = isCompleted
+        ? `<span class="text-emerald-300 font-bold">✓ ¡${sp.totalSlots} de ${sp.totalSlots} cupos completados! Cancha confirmada automáticamente.</span>`
+        : isExpiredOrCancelled
+        ? `<span class="text-amber-300 font-bold">Reserva ${sp.status === 'EXPIRED' ? 'expirada' : 'cancelada'}.</span>`
+        : `Faltan <strong>${sp.remainingSlots} jugador(es)</strong> por abonar su cuota de <strong>S/ ${(sp.amountPerSlotCents / 100).toFixed(2)}</strong>.`;
 
       document.getElementById('mWhatsappBtn').href = sp.whatsappUrl;
 
@@ -1578,35 +1725,87 @@
     }
 
     async function payOneSlotFromMobile() {
+      const btn = document.getElementById('mPaySlotSubmitBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Procesando...';
+      }
       await ensureMobileSession();
       const payerName = document.getElementById('payerNameInput').value.trim() || 'Samuel I. (UCSP)';
       const prefix = selectedPayMethod === 'CARD' ? 'tok' : selectedPayMethod === 'PLIN' ? 'pln' : 'ype';
+      const makeBody = () =>
+        JSON.stringify({
+          payerName,
+          method: selectedPayMethod,
+          sourceId: `${prefix}_sandbox_${Date.now()}`,
+        });
       try {
-        const res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}/pay`, {
+        let res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}/pay`, {
           method: 'POST',
           headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            payerName,
-            method: selectedPayMethod,
-            sourceId: `${prefix}_sandbox_${Date.now()}`,
-          }),
+          body: makeBody(),
         });
-        const data = await res.json();
+        if (res.status === 401 && mobileServerDemoMode) {
+          await ensureMobileSession(true);
+          res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}/pay`, {
+            method: 'POST',
+            headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: makeBody(),
+          });
+        }
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          notifyMobile('Split completado', data.message || 'Todos los cupos ya fueron pagados', 'sky');
+          const isFull = data.code === 'SPLIT_ALREADY_COMPLETED';
+          notifyMobile(
+            isFull ? 'Split completado' : 'No se pudo procesar el pago',
+            data.message || 'Verifica el estado del pago dividido.',
+            isFull ? 'sky' : 'amber',
+          );
+          await loadMobileSplit();
           return;
         }
-        document.getElementById('payerNameInput').value = 'Samuel I. (Jugador 6)';
+        if (data.paidSlots === 5 && data.totalSlots === 6) {
+          document.getElementById('payerNameInput').value = 'Samuel I. (Jugador 6)';
+        } else if (data.remainingSlots > 0) {
+          document.getElementById('payerNameInput').value = `Jugador ${data.paidSlots + 1}`;
+        } else {
+          document.getElementById('payerNameInput').value = '';
+        }
+        if (Date.now() - lastSplitEventAt > 1200) {
+          notifyMobile(
+            data.progressLabel || 'Cuota abonada',
+            `${payerName} pagó con ${formatMethodClean(selectedPayMethod)}`,
+            'sky',
+          );
+        }
         await loadMobileSplit();
       } catch {
-        notifyMobile('Abono registrado', `${payerName} abonó S/ 15.00 con ${formatMethodClean(selectedPayMethod)}`, 'emerald');
+        notifyMobile('Abono registrado', `${payerName} abonó su cuota con ${formatMethodClean(selectedPayMethod)}`, 'emerald');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Abonar cuota';
+        }
       }
     }
 
-    function copySplitLink() {
+    async function copySplitLink() {
       const url = `${API_BASE}/mobile/?split=${activeSplitToken}`;
-      navigator.clipboard?.writeText(url);
-      notifyMobile('Enlace copiado', 'Compártelo en tu grupo de WhatsApp', 'sky');
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else {
+          const ta = document.createElement('textarea');
+          ta.value = url;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+        }
+        notifyMobile('Enlace copiado', 'Compártelo en tu grupo de WhatsApp', 'sky');
+      } catch {
+        notifyMobile('Enlace listo', url, 'sky');
+      }
     }
 
     // -------------------------------------------------------------------------
@@ -1677,16 +1876,33 @@
 
       document.getElementById('substitutesList').innerHTML = subs
         .map(
-          (s) => `
+          (s) => {
+            const defaultPosterByPos = {
+              ARQUERO: '/media/player-arquero.jpg',
+              DEFENSA: '/media/player-defensa.jpg',
+              MEDIOCAMPO: '/media/player-mediocampo.jpg',
+              DELANTERO: '/media/player-delantero.jpg',
+            };
+            const posterSrc = resolveMediaUrl(s.clipPosterUrl || defaultPosterByPos[s.position] || '/media/player-mediocampo.jpg');
+            const hasClip = Boolean(s.clipUrl);
+            const mediaHtml = hasClip
+              ? `<video src="${resolveMediaUrl(s.clipUrl)}" poster="${posterSrc}"
+                  controls preload="metadata" playsinline
+                  class="w-full h-full object-cover"></video>`
+              : `<img src="${posterSrc}" alt="${escapeHtml(s.fullName)}" class="w-full h-full object-cover" />`;
+            const clipBadge = hasClip
+              ? `<span class="absolute top-2.5 left-2.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-950/85 text-emerald-300 border border-emerald-500/35 tabular-nums">
+                  Clip ${s.clipDurationS || 20}s
+                </span>`
+              : `<span class="absolute top-2.5 left-2.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-950/85 text-slate-300 border border-slate-700">
+                  Perfil activo
+                </span>`;
+            return `
           <div class="bg-[#10192d] border border-slate-800/90 rounded-2xl overflow-hidden">
             <!-- Minirreproductor de video de 15 a 30 segundos -->
             <div class="relative bg-slate-950 h-40">
-              <video src="${resolveMediaUrl(s.clipUrl)}" poster="${resolveMediaUrl(s.clipPosterUrl)}"
-                controls preload="metadata" playsinline
-                class="w-full h-full object-cover"></video>
-              <span class="absolute top-2.5 left-2.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-950/85 text-emerald-300 border border-emerald-500/35 tabular-nums">
-                Clip ${s.clipDurationS}s
-              </span>
+              ${mediaHtml}
+              ${clipBadge}
               <span class="absolute top-2.5 right-2.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950">
                 ${escapeHtml(s.position)}
               </span>
@@ -1721,7 +1937,8 @@
                 <span>Convocar suplente</span>
               </button>
             </div>
-          </div>`,
+          </div>`;
+          },
         )
         .join('');
     }
@@ -1730,7 +1947,11 @@
       await ensureMobileSession();
       let bookingId = '00000000-0000-4000-e000-0000000000b2';
       try {
-        const myRes = await fetch(`${API_BASE}/api/bookings/my`, { headers: mobileAuthHeaders() });
+        let myRes = await fetch(`${API_BASE}/api/bookings/my`, { headers: mobileAuthHeaders() });
+        if (myRes.status === 401 && mobileServerDemoMode) {
+          await ensureMobileSession(true);
+          myRes = await fetch(`${API_BASE}/api/bookings/my`, { headers: mobileAuthHeaders() });
+        }
         if (myRes.ok) {
           const myBookings = await myRes.json();
           const active = (myBookings || []).find((b) => b.status === 'HELD' || b.status === 'CONFIRMED');
@@ -1750,18 +1971,20 @@
           return;
         }
         activeRelayId = data.relay.id;
-        if (socket) socket.emit('relay:join', { relayId: activeRelayId, accessToken: mobileJwtToken });
+        activeRelayMessages = Array.isArray(data.messages) ? data.messages : [];
+        if (socket && socket.connected) socket.emit('relay:join', { relayId: activeRelayId, accessToken: mobileJwtToken });
         document.getElementById('relaySubName').textContent =
           `${data.substitute.fullName} (${data.substitute.position})`;
         document.getElementById('relayProxyInfo').textContent =
           `Central VoIP: ${data.relay.proxyNumber} · Celular protegido (${data.substitute.phoneMasked})`;
-        renderRelayMessages(data.messages);
+        renderRelayMessages(activeRelayMessages);
       } catch {
         document.getElementById('relaySubName').textContent = 'Renzo Valdivia (ARQUERO)';
         document.getElementById('relayProxyInfo').textContent = 'Central VoIP: +51 (054) 647-101 · Celular protegido';
-        renderRelayMessages([
+        activeRelayMessages = [
           { senderName: 'Diego Salas', body: 'Hola Renzo, ¿llegas hoy a las 20:00 en El Misti?', wasRedacted: false },
-        ]);
+        ];
+        renderRelayMessages(activeRelayMessages);
       }
 
       const m = document.getElementById('relayModal');
@@ -1770,14 +1993,15 @@
     }
 
     function renderRelayMessages(messages) {
+      activeRelayMessages = Array.isArray(messages) ? messages : [];
       const box = document.getElementById('relayMessagesBox');
-      box.innerHTML = (messages || [])
+      box.innerHTML = activeRelayMessages
         .map(
           (m) => `
           <div class="bg-[#10192d] border border-slate-800 rounded-xl p-2.5">
-            <div class="flex items-center justify-between text-[11px] text-emerald-400 font-bold">
+            <div class="flex items-center justify-between gap-2 text-[11px] text-emerald-400 font-bold">
               <span>${escapeHtml(m.senderName || 'Organizador')}</span>
-              ${(m.wasRedacted || m.redacted) ? '<span class="text-amber-300">Teléfono ocultado por seguridad</span>' : ''}
+              ${(m.wasRedacted || m.redacted) ? '<span class="text-amber-300 text-[10px]">Dato/enlace ocultado por seguridad</span>' : ''}
             </div>
             <p class="text-slate-200 mt-1">${escapeHtml(m.body)}</p>
           </div>`,
@@ -1822,6 +2046,10 @@
     }
 
     function openSubProfileModal() {
+      const videoEl = document.getElementById('subClipPreviewVideo');
+      if (videoEl && !selectedSubClipFile && !(document.getElementById('subClipUrlInput')?.value || '').trim()) {
+        videoEl.src = resolveMediaUrl('/media/clips/mediocampo.mp4');
+      }
       const m = document.getElementById('subProfileModal');
       if (m) {
         m.classList.remove('hidden');
@@ -1863,11 +2091,14 @@
             headers: mobileAuthHeaders(),
             body: fd,
           });
-          if (upRes.ok) {
-            const upData = await upRes.json();
-            clipUrl = upData.clipUrl;
-            clipPublicId = upData.clipPublicId;
+          if (!upRes.ok) {
+            const upErr = await upRes.json().catch(() => ({}));
+            notifyMobile('Error subiendo clip', upErr.message || 'Verifica que el video sea .mp4/.mov menor a 40 MB.', 'amber');
+            return;
           }
+          const upData = await upRes.json();
+          clipUrl = upData.clipUrl;
+          clipPublicId = upData.clipPublicId;
         }
 
         const res = await fetch(`${API_BASE}/api/substitutes/profile`, {
@@ -1889,6 +2120,7 @@
           notifyMobile('Error en perfil', data.message || 'Verifica los datos (clip 15-30s).', 'amber');
           return;
         }
+        selectedSubClipFile = null;
         closeSubProfileModal();
         notifyMobile('Perfil actualizado', `Registrado como ${position} en ${districtCode}`, 'emerald');
         await loadSubstitutes('ALL');
@@ -1996,22 +2228,42 @@
       if (!text) return;
       input.value = '';
       if (!activeRelayId) {
+        const sanitized = text
+          .replace(/https?:\/\/[^\s]+|www\.[^\s]+|(?:wa\.me|t\.me|instagram\.com|facebook\.com)\/[^\s]+/gi, '[enlace oculto 🔒]')
+          .replace(/(?:\+?51[\s.-]?)?\b9(?:[\s.-]?\d){8}\b|\b\d{7,}\b/g, '[número oculto 🔒]');
         renderRelayMessages([
-          { senderName: 'Diego Salas', body: text.replace(/\d{7,}/g, '[NÚMERO OCULTO]'), wasRedacted: /\d{7,}/.test(text) },
+          ...activeRelayMessages,
+          { senderName: 'Diego Salas', body: sanitized, wasRedacted: sanitized !== text },
         ]);
         return;
       }
       await ensureMobileSession();
-      await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
-        method: 'POST',
-        headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ text }),
-      });
-      const r = await fetch(`${API_BASE}/api/relays/${activeRelayId}`, {
-        headers: mobileAuthHeaders(),
-      });
-      const d = await r.json();
-      renderRelayMessages(d.messages);
+      try {
+        let postRes = await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
+          method: 'POST',
+          headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ text }),
+        });
+        if (postRes.status === 401 && mobileServerDemoMode) {
+          await ensureMobileSession(true);
+          postRes = await fetch(`${API_BASE}/api/relays/${activeRelayId}/messages`, {
+            method: 'POST',
+            headers: mobileAuthHeaders({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify({ text }),
+          });
+        }
+        if (!postRes.ok) {
+          const err = await postRes.json().catch(() => ({}));
+          notifyMobile('Mensaje no enviado', err.message || 'El canal seguro no está disponible.', 'amber');
+          return;
+        }
+        const sentMsg = await postRes.json();
+        if (sentMsg && !activeRelayMessages.some((m) => m.id && m.id === sentMsg.id)) {
+          renderRelayMessages([...activeRelayMessages, sentMsg]);
+        }
+      } catch {
+        notifyMobile('Error de conexión', 'No se pudo enviar el mensaje al chat seguro.', 'amber');
+      }
     }
 
     function closeRelayModal() {
@@ -2097,6 +2349,7 @@
         const data = await res.json();
         if (res.ok) {
           mobileJwtToken = data.accessToken;
+          mobileSessionVerified = true;
           localStorage.setItem('pichangabook_mobile_jwt', mobileJwtToken);
           document.getElementById('userChipBtn').textContent =
             `${data.user.fullName.split(' ')[0]}`;
@@ -2123,60 +2376,143 @@
     // Conexión Socket.io en tiempo real
     // -------------------------------------------------------------------------
     let socket = null;
+    let mobileAvailTimer = null;
+
+    function setMobileWsStatus(connected) {
+      const badge = document.getElementById('mobileWsBadge');
+      if (!badge) return;
+      if (connected) {
+        badge.className =
+          'inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> En vivo';
+      } else {
+        badge.className =
+          'inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/25';
+        badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span> Reconectando';
+      }
+    }
+
+    function scheduleMobileCourtRefresh(courtId) {
+      if (!courtId) return;
+      if (mobileAvailTimer) clearTimeout(mobileAvailTimer);
+      mobileAvailTimer = setTimeout(() => {
+        if (currentCourt && currentCourt.id === courtId) {
+          loadCourtAvailability(courtId);
+        }
+      }, 140);
+    }
+
     try {
-      socket = io(API_BASE, { query: { complexId: '00000000-0000-4000-b000-00000000c001' } });
+      socket = io(API_BASE, { query: { complexId: joinedComplexId } });
+
+      socket.on('connect', () => {
+        setMobileWsStatus(true);
+        if (joinedComplexId) {
+          socket.emit('complex:join', { complexId: joinedComplexId, accessToken: mobileJwtToken || undefined });
+        }
+        if (activeSplitToken) {
+          socket.emit('split:join', { token: activeSplitToken });
+          joinedSplitToken = activeSplitToken;
+        }
+        if (activeRelayId && mobileJwtToken) {
+          socket.emit('relay:join', { relayId: activeRelayId, accessToken: mobileJwtToken });
+        }
+      });
+
+      socket.on('disconnect', () => setMobileWsStatus(false));
+      socket.on('connect_error', () => setMobileWsStatus(false));
 
       socket.on('slot:updated', (payload) => {
         lastFlashedSlot = `${payload.courtId}:${payload.hour}`;
-        notifyMobile(
-          payload.status === 'BLOCKED'
-            ? `Turno ${payload.label} bloqueado en Recepción`
-            : payload.status === 'FREE'
-            ? `Turno ${payload.label} liberado`
-            : `Turno ${payload.label} actualizado`,
-          `${payload.courtName} · Sincronización en vivo`,
-          payload.status === 'BLOCKED' ? 'amber' : 'emerald',
-        );
+        const isDuplicateSplitEvent = payload.split && Date.now() - lastSplitEventAt < 1000;
+        if (!isDuplicateSplitEvent) {
+          notifyMobile(
+            payload.status === 'BLOCKED'
+              ? `Turno ${payload.label} bloqueado en Recepción`
+              : payload.status === 'FREE'
+              ? `Turno ${payload.label} liberado`
+              : `Turno ${payload.label} actualizado`,
+            `${payload.courtName} · Sincronización en vivo`,
+            payload.status === 'BLOCKED' ? 'amber' : 'emerald',
+          );
+        }
         if (currentCourt && currentCourt.id === payload.courtId) {
-          loadCourtAvailability(currentCourt.id);
+          scheduleMobileCourtRefresh(currentCourt.id);
         }
       });
 
       socket.on('split:updated', (payload) => {
+        lastSplitEventAt = Date.now();
         notifyMobile(
           `${payload.progressLabel}`,
           `Abonó ${payload.lastPayer?.name || ''} (${formatMethodClean(payload.lastPayer?.method)})`,
           'sky',
         );
-        loadMobileSplit();
-        if (currentCourt) loadCourtAvailability(currentCourt.id);
+        if (!payload.shareToken || payload.shareToken === activeSplitToken) {
+          loadMobileSplit();
+        }
+        if (currentCourt) scheduleMobileCourtRefresh(currentCourt.id);
       });
 
-      socket.on('demo:reset', () => {
-        if (currentCourt) loadCourtAvailability(currentCourt.id);
-        loadMobileSplit();
+      socket.on('relay:message', (msg) => {
+        if (!activeRelayId || !msg) return;
+        if (msg.id && activeRelayMessages.some((m) => m.id === msg.id)) return;
+        renderRelayMessages([...activeRelayMessages, msg]);
+      });
+
+      socket.on('invitation:updated', (inv) => {
+        if (!inv) return;
+        notifyMobile(
+          inv.status === 'ACCEPTED' ? 'Suplente confirmó asistencia' : 'Convocatoria actualizada',
+          `Estado: ${inv.status}`,
+          inv.status === 'ACCEPTED' ? 'emerald' : 'amber',
+        );
+      });
+
+      socket.on('demo:reset', async () => {
+        activeSplitToken = 'pk4de6demo';
+        activeRelayId = null;
+        activeRelayMessages = [];
+        closeRelayModal();
+        closeBookModal();
+        mobileSessionVerified = false;
+        const payerInput = document.getElementById('payerNameInput');
+        if (payerInput) payerInput.value = 'Rodrigo S. (Jugador 5)';
+        await ensureMobileSession(true);
+        joinComplexRoom('00000000-0000-4000-b000-00000000c001');
+        joinSplitRoom('pk4de6demo');
+        await Promise.all([filterByDistrict(selectedDistrict || 'ALL'), loadMobileSplit()]);
+        if (currentComplex) await loadComplexDetail(currentComplex.id);
+        if (currentMobileTab === 'subs') await loadSubstitutes('ALL');
+        notifyMobile('Demo reiniciada', 'Estado inicial restaurado en vivo.', 'emerald');
       });
     } catch {}
 
-    ensureMobileSession().then(() => initMapAndDistricts()).then(async () => {
-      await loadMobileSplit();
-      const params = new URLSearchParams(window.location.search);
-      const tab = params.get('tab');
-      if (tab && ['map', 'courts', 'split', 'matches', 'subs'].includes(tab)) {
-        if (tab === 'courts' && currentComplex) {
-          await loadComplexDetail(currentComplex.id);
+    ensureMobileSession(true)
+      .then(() => Promise.all([initMapAndDistricts(), loadMobileSplit()]))
+      .then(async () => {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+        const sharedSplit = params.get('split');
+        if (tab && ['map', 'courts', 'split', 'matches', 'subs'].includes(tab)) {
+          if (tab === 'courts' && currentComplex) {
+            await loadComplexDetail(currentComplex.id);
+            switchTab('courts', { skipReload: true });
+          } else {
+            switchTab(tab, { skipReload: tab === 'split' });
+          }
+        } else if (sharedSplit) {
+          switchTab('split', { skipReload: true });
         }
-        switchTab(tab);
-      }
-      if (params.get('modal') === 'otp') {
-        await requestSmsOtp();
-        openOtpModal();
-      } else if (params.get('modal') === 'relay') {
-        switchTab('subs');
-        await loadSubstitutes('ALL');
-        await inviteSubstitute('00000000-0000-4000-9000-000000000501');
-      }
-    });
+        if (params.get('modal') === 'otp') {
+          await requestSmsOtp();
+          openOtpModal();
+        } else if (params.get('modal') === 'relay') {
+          switchTab('subs');
+          await loadSubstitutes('ALL');
+          await inviteSubstitute('00000000-0000-4000-9000-000000000501');
+        }
+      });
   </script>
 </body>
 </html>

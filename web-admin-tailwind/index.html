@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PichangaBook Arequipa · Panel Web Recepción y Dueños</title>
+  <link rel="icon" type="image/png" href="/media/logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -59,7 +60,6 @@
     h1 { font-size: 28px; font-weight: 800; color: #FFFFFF; line-height: 1.2; letter-spacing: -0.025em; }
     h2 { font-size: 20px; font-weight: 700; color: #FFFFFF; line-height: 1.3; letter-spacing: -0.02em; }
     h3 { font-size: 16px; font-weight: 700; color: #F8FAFC; line-height: 1.35; letter-spacing: -0.015em; }
-    p, span, label, dt, dd, th, td, button, select, input, a { color: #E2E8F0; }
     .tabular-nums {
       font-variant-numeric: tabular-nums;
     }
@@ -114,7 +114,7 @@
     <div class="max-w-[1440px] mx-auto px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3.5">
         <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-          <img id="brandLogo" src="../backend-nestjs/public/media/logo.png" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='/media/logo.png';}else{this.style.display='none';this.nextElementSibling.style.display='block';}" alt="Logo PichangaBook" class="w-10 h-10 rounded-xl object-cover" />
+          <img id="brandLogo" src="/media/logo.png" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='../backend-nestjs/public/media/logo.png';}else{this.style.display='none';this.nextElementSibling.style.display='block';}" alt="Logo PichangaBook" class="w-10 h-10 rounded-xl object-cover" />
           <svg style="display:none" aria-hidden="true" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <circle cx="12" cy="12" r="9" />
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 7l3 2.2-1.1 3.5H10.1L9 9.2 12 7z" />
@@ -223,7 +223,7 @@
         <!-- Selector de vista: Agenda Principal vs Configuración / Verificación -->
         <div role="tablist" aria-label="Vistas del panel de administración" class="inline-flex p-1 rounded-xl bg-[#111827] border border-white/[0.07]">
           <button type="button" role="tab" id="tabBtnAgenda" aria-selected="true" onclick="switchAdminView('agenda')"
-            class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
+            class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition">
             <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
@@ -331,7 +331,7 @@
 
             <!-- Selector de filtro de horario -->
             <div class="inline-flex items-center p-1 rounded-xl bg-[#0B0F17] border border-white/[0.07] self-start xl:self-auto">
-              <button onclick="setHourFilter('PRIME')" id="btnFilterPrime" class="cursor-pointer px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs transition">
+              <button onclick="setHourFilter('PRIME')" id="btnFilterPrime" class="cursor-pointer px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs transition">
                 Estelar (16:00 - 23:00)
               </button>
               <button onclick="setHourFilter('ALL')" id="btnFilterAll" class="cursor-pointer px-3 py-1.5 rounded-lg text-slate-300 hover:text-white font-semibold text-xs transition">
@@ -352,22 +352,22 @@
               </div>
             </div>
 
-            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-indigo-400">
-              <svg aria-hidden="true" class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-sky-400">
+              <svg aria-hidden="true" class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               <div>
-                <span class="font-bold text-indigo-300 block leading-tight">Split en curso</span>
+                <span class="font-bold text-sky-300 block leading-tight">Split en curso</span>
                 <span class="text-[11px] text-slate-400">Pagos divididos</span>
               </div>
             </div>
 
-            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-emerald-500">
-              <svg aria-hidden="true" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-purple-400">
+              <svg aria-hidden="true" class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
               </svg>
               <div>
-                <span class="font-bold text-slate-200 block leading-tight">Ocupado (App)</span>
+                <span class="font-bold text-purple-300 block leading-tight">Ocupado (App)</span>
                 <span class="text-[11px] text-slate-400">Reserva confirmada</span>
               </div>
             </div>
@@ -433,11 +433,11 @@
               </div>
             </div>
 
-            <button id="btnSimulateSplit" onclick="simulateSplitPaymentFromAdmin()" class="hidden cursor-pointer w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center gap-2">
-              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <button id="btnSimulateSplit" onclick="simulateSplitPaymentFromAdmin()" class="hidden cursor-pointer w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs transition items-center justify-center gap-2">
+              <svg aria-hidden="true" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              Simular abono Yape de jugador (S/ 15.00)
+              <span id="btnSimulateSplitLabel">Simular abono Yape de jugador (S/ 15.00)</span>
             </button>
           </div>
 
@@ -879,6 +879,11 @@
     const DEFAULT_SPLIT_TOKEN = 'pk4de6demo';
 
     let currentComplexId = localStorage.getItem('pichangabook_owner_complex_id') || '00000000-0000-4000-b000-00000000c001';
+    let joinedAdminComplexId = currentComplexId;
+    let activeMonitorSplitToken = DEFAULT_SPLIT_TOKEN;
+    let activeMonitorSplitStatus = 'OPEN';
+    let lastAdminSplitEventAt = 0;
+    let dashboardRefreshTimer = null;
     let currentDate = null;
     let hourFilter = 'PRIME'; // 'PRIME' (16..22) | 'ALL'
     let activeAdminView = 'agenda'; // 'agenda' | 'settings'
@@ -893,7 +898,12 @@
       const resetBtn = document.getElementById('btnResetDemo');
       const simBtn = document.getElementById('btnSimulateSplit');
       if (resetBtn) resetBtn.classList.toggle('hidden', !serverDemoMode);
-      if (simBtn) simBtn.classList.toggle('hidden', !serverDemoMode);
+      if (simBtn) {
+        const showSim = serverDemoMode && Boolean(activeMonitorSplitToken);
+        simBtn.classList.toggle('hidden', !showSim);
+        simBtn.classList.toggle('flex', showSim);
+        simBtn.disabled = activeMonitorSplitStatus !== 'OPEN';
+      }
       const authLabel = document.getElementById('btnOwnerAuthLabel');
       if (authLabel) {
         authLabel.textContent = ownerJwtToken ? 'Sesión Activa' : 'Iniciar Sesión';
@@ -1678,6 +1688,9 @@
     }
 
     function renderEmptySplitMonitor() {
+      activeMonitorSplitToken = null;
+      activeMonitorSplitStatus = 'NONE';
+      syncDemoButtonsVisibility();
       const subEl = document.getElementById('splitSubtitleText');
       if (subEl) subEl.textContent = 'Sin pagos divididos activos en este momento';
       document.getElementById('splitProgressText').textContent = 'Sin pagos divididos activos en este momento';
@@ -1688,9 +1701,9 @@
         `<div class="text-xs text-slate-400 py-3 text-center">Sin pagos divididos activos en este momento.</div>`;
     }
 
-    async function loadSplitMonitor() {
-      let tokenToLoad = null;
-      if (dashboardData && Array.isArray(dashboardData.courts)) {
+    async function loadSplitMonitor(preferredToken = null) {
+      let tokenToLoad = preferredToken || null;
+      if (!tokenToLoad && dashboardData && Array.isArray(dashboardData.courts)) {
         for (const court of dashboardData.courts) {
           for (const slot of court.slots || []) {
             if (slot.status === 'HELD' && slot.split?.shareToken) {
@@ -1706,7 +1719,12 @@
           renderEmptySplitMonitor();
           return;
         }
-        tokenToLoad = DEFAULT_SPLIT_TOKEN;
+        tokenToLoad = activeMonitorSplitToken || DEFAULT_SPLIT_TOKEN;
+      }
+
+      activeMonitorSplitToken = tokenToLoad;
+      if (socket && socket.connected && tokenToLoad) {
+        socket.emit('split:join', { token: tokenToLoad });
       }
 
       try {
@@ -1719,7 +1737,12 @@
           renderEmptySplitMonitor();
           return;
         }
+        if (tokenToLoad !== DEFAULT_SPLIT_TOKEN) {
+          activeMonitorSplitToken = DEFAULT_SPLIT_TOKEN;
+          return loadSplitMonitor(DEFAULT_SPLIT_TOKEN);
+        }
         renderSplitMonitor({
+          shareToken: DEFAULT_SPLIT_TOKEN,
           courtName: 'Cancha 1 · Fútbol 6',
           organizerName: 'Diego Salas',
           paidSlots: 4,
@@ -1746,7 +1769,13 @@
     }
 
     function renderSplitMonitor(sp) {
-      const pct = Math.min(100, Math.round((sp.paidSlots / sp.totalSlots) * 100));
+      if (sp.shareToken) activeMonitorSplitToken = sp.shareToken;
+      const isCompleted = sp.status === 'COMPLETED' || sp.paidSlots >= sp.totalSlots;
+      const isExpired = sp.status === 'EXPIRED';
+      const isCancelled = sp.status === 'CANCELLED';
+      activeMonitorSplitStatus = isCompleted ? 'COMPLETED' : isExpired ? 'EXPIRED' : isCancelled ? 'CANCELLED' : 'OPEN';
+
+      const pct = Math.min(100, Math.round((sp.paidSlots / Math.max(1, sp.totalSlots)) * 100));
       const subEl = document.getElementById('splitSubtitleText');
       if (subEl) {
         subEl.textContent = `${sp.courtName || 'Cancha activa'} · Organiza: ${sp.organizerName || 'Organizador'}`;
@@ -1754,8 +1783,24 @@
       document.getElementById('splitProgressText').textContent = `Cupos pagados: ${sp.paidSlots} de ${sp.totalSlots}`;
       document.getElementById('splitAmountText').textContent = `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
       document.getElementById('splitProgressBar').style.width = `${pct}%`;
-      document.getElementById('splitStatusBadge').textContent =
-        sp.status === 'COMPLETED' ? 'Confirmado 6/6' : `En curso · ${sp.hourLabel || '20:00'}`;
+      document.getElementById('splitStatusBadge').textContent = isCompleted
+        ? `Confirmado ${sp.paidSlots}/${sp.totalSlots}`
+        : isExpired
+        ? 'Expirado'
+        : isCancelled
+        ? 'Cancelado'
+        : `En curso · ${sp.hourLabel || '20:00'}`;
+
+      const simLabel = document.getElementById('btnSimulateSplitLabel');
+      if (simLabel) {
+        const cuota = (Number(sp.amountPerSlotCents || 1500) / 100).toFixed(2);
+        simLabel.textContent = isCompleted
+          ? `Split completado (${sp.paidSlots}/${sp.totalSlots})`
+          : isExpired || isCancelled
+          ? 'Split no disponible'
+          : `Simular abono Yape de jugador (S/ ${cuota})`;
+      }
+      syncDemoButtonsVisibility();
 
       if (sp.shares) {
         document.getElementById('splitPayersList').innerHTML = sp.shares
@@ -1777,27 +1822,50 @@
     }
 
     async function simulateSplitPaymentFromAdmin() {
+      const token = activeMonitorSplitToken || DEFAULT_SPLIT_TOKEN;
+      const btn = document.getElementById('btnSimulateSplit');
+      if (btn) btn.disabled = true;
       await ensureOwnerSession();
       const names = ['Rodrigo S. (UCSP)', 'Samuel I. (UCSP)', 'Álvaro M.', 'Gonzalo P.'];
       const payerName = names[Math.floor(Math.random() * names.length)];
+      const makeBody = () =>
+        JSON.stringify({
+          payerName,
+          method: 'YAPE',
+          sourceId: `ype_sandbox_admin_${Date.now()}`,
+        });
       try {
-        const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}/pay`, {
+        let res = await fetch(`${API_BASE}/api/split-payments/${token}/pay`, {
           method: 'POST',
           headers: authHeaders({ 'Content-Type': 'application/json' }),
-          body: JSON.stringify({
-            payerName,
-            method: 'YAPE',
-            sourceId: `ype_sandbox_admin_${Date.now()}`,
-          }),
+          body: makeBody(),
         });
-        const data = await res.json();
+        if (res.status === 401 && serverDemoMode) {
+          ownerJwtToken = null;
+          localStorage.removeItem('pichangabook_owner_jwt');
+          await ensureOwnerSession();
+          res = await fetch(`${API_BASE}/api/split-payments/${token}/pay`, {
+            method: 'POST',
+            headers: authHeaders({ 'Content-Type': 'application/json' }),
+            body: makeBody(),
+          });
+        }
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          showToast('Split ya completado', data.message || 'Todos los cupos fueron cubiertos', 'sky');
+          showToast(
+            data.code === 'SPLIT_ALREADY_COMPLETED' ? 'Split ya completado' : 'No se pudo simular el abono',
+            data.message || 'Verifica el estado del pago dividido.',
+            data.code === 'SPLIT_ALREADY_COMPLETED' ? 'sky' : 'amber',
+          );
+          await loadSplitMonitor(token);
           return;
         }
         renderSplitMonitor(data);
+        scheduleDashboardRefresh();
       } catch {
-        showToast('Abono simulado en vista local', `${payerName} abonó S/ 15.00 vía Yape`, 'sky');
+        showToast('Abono simulado en vista local', `${payerName} abonó su cuota vía Yape`, 'sky');
+      } finally {
+        syncDemoButtonsVisibility();
       }
     }
 
@@ -1882,12 +1950,28 @@
       if (!bookingId) return;
       try {
         await ensureOwnerSession();
-        await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+        let res = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
           method: 'DELETE',
           headers: authHeaders(),
         });
+        if (res.status === 401 && serverDemoMode) {
+          ownerJwtToken = null;
+          localStorage.removeItem('pichangabook_owner_jwt');
+          await ensureOwnerSession();
+          res = await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+            method: 'DELETE',
+            headers: authHeaders(),
+          });
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast('No se pudo liberar el turno', err.message || `Error HTTP ${res.status}`, 'rose');
+          return;
+        }
         await loadDashboard();
-      } catch {}
+      } catch {
+        showToast('Error de red', 'No se pudo liberar el turno en el servidor.', 'rose');
+      }
     }
 
     async function openReportModal() {
@@ -1896,10 +1980,23 @@
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       try {
-        const res = await fetch(`${API_BASE}/api/owner/complexes/${currentComplexId}/report`, {
+        let res = await fetch(`${API_BASE}/api/owner/complexes/${currentComplexId}/report`, {
           headers: authHeaders(),
         });
-        if (!res.ok) return;
+        if (res.status === 401 && serverDemoMode) {
+          ownerJwtToken = null;
+          localStorage.removeItem('pichangabook_owner_jwt');
+          await ensureOwnerSession();
+          res = await fetch(`${API_BASE}/api/owner/complexes/${currentComplexId}/report`, {
+            headers: authHeaders(),
+          });
+        }
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          showToast('No se pudo cargar el reporte', err.message || `Error HTTP ${res.status}`, 'rose');
+          closeReportModal();
+          return;
+        }
         lastReportData = await res.json();
       } catch {
         lastReportData = {
@@ -1978,11 +2075,27 @@
       URL.revokeObjectURL(url);
     }
 
+    function isValidRucMod11(ruc) {
+      if (!/^(10|15|17|20)\d{9}$/.test(ruc)) return false;
+      const weights = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
+      const sum = weights.reduce((acc, w, i) => acc + w * Number(ruc[i]), 0);
+      let check = 11 - (sum % 11);
+      if (check === 10) check = 0;
+      if (check === 11) check = 1;
+      return check === Number(ruc[10]);
+    }
+
     async function checkRucValidity() {
       const ruc = document.getElementById('rucCheckInput').value.trim();
       const out = document.getElementById('rucCheckOutput');
+      if (!ruc) {
+        out.className = 'text-xs font-mono text-amber-300 bg-amber-950/35 border border-amber-500/30 rounded-xl px-4 py-2.5';
+        out.textContent = 'Ingresa un número de RUC de 11 dígitos antes de validar.';
+        return;
+      }
       try {
         const res = await fetch(`${API_BASE}/api/ruc/${encodeURIComponent(ruc)}/validate`);
+        if (!res.ok) throw new Error('RUC endpoint error');
         const data = await res.json();
         if (data.valid) {
           out.className = 'text-xs font-mono text-emerald-300 bg-emerald-950/35 border border-emerald-500/30 rounded-xl px-4 py-2.5';
@@ -1992,13 +2105,14 @@
           out.textContent = `✕ RUC ${data.ruc} inválido (dígito verificador módulo 11 no coincide)`;
         }
       } catch {
-        const isEleven = /^\d{11}$/.test(ruc);
-        out.className = isEleven
+        const validLocal = isValidRucMod11(ruc);
+        const typeLocal = ruc.startsWith('20') ? 'PERSONA_JURIDICA' : ruc.startsWith('10') ? 'PERSONA_NATURAL' : 'OTRO';
+        out.className = validLocal
           ? 'text-xs font-mono text-emerald-300 bg-emerald-950/35 border border-emerald-500/30 rounded-xl px-4 py-2.5'
           : 'text-xs font-mono text-rose-300 bg-rose-950/35 border border-rose-500/30 rounded-xl px-4 py-2.5';
-        out.textContent = isEleven
-          ? `✓ RUC ${ruc} válido (PERSONA_JURIDICA · dígito verificador SUNAT OK)`
-          : `✕ RUC ${ruc} inválido (debe contener 11 dígitos numéricos)`;
+        out.textContent = validLocal
+          ? `✓ RUC ${ruc} válido (${typeLocal} · dígito verificador SUNAT OK)`
+          : `✕ RUC ${ruc} inválido (dígito verificador módulo 11 no coincide)`;
       }
     }
 
@@ -2099,19 +2213,70 @@
       }
     }
 
+    function scheduleDashboardRefresh(preferredSplitToken = null) {
+      if (dashboardRefreshTimer) clearTimeout(dashboardRefreshTimer);
+      dashboardRefreshTimer = setTimeout(async () => {
+        await loadDashboard();
+        if (preferredSplitToken) {
+          await loadSplitMonitor(preferredSplitToken);
+        }
+      }, 150);
+    }
+
     async function resetDemoData() {
       if (!serverDemoMode) return;
+      const btn = document.getElementById('btnResetDemo');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Reiniciando...';
+      }
       try {
-        await fetch(`${API_BASE}/api/demo/reset`, { method: 'POST' });
-      } catch {}
-      showToast('Demo reiniciada', 'Datos semilla restaurados correctamente.', 'emerald');
-      await loadDashboard();
+        const res = await fetch(`${API_BASE}/api/demo/reset`, { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast('Error al reiniciar demo', data.message || `Error HTTP ${res.status}`, 'rose');
+          return;
+        }
+        const defaultComplexId = '00000000-0000-4000-b000-00000000c001';
+        if (socket && socket.connected && joinedAdminComplexId && joinedAdminComplexId !== defaultComplexId) {
+          socket.emit('complex:leave', { complexId: joinedAdminComplexId });
+        }
+        currentComplexId = defaultComplexId;
+        joinedAdminComplexId = defaultComplexId;
+        currentDate = null;
+        activeMonitorSplitToken = DEFAULT_SPLIT_TOKEN;
+        localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
+        ownerJwtToken = null;
+        localStorage.removeItem('pichangabook_owner_jwt');
+        await ensureOwnerSession();
+        if (socket && socket.connected) {
+          socket.emit('complex:join', {
+            complexId: currentComplexId,
+            accessToken: ownerJwtToken || undefined,
+          });
+          socket.emit('split:join', { token: DEFAULT_SPLIT_TOKEN });
+        }
+        showToast('Demo reiniciada', 'Datos semilla restaurados correctamente.', 'emerald');
+        await loadDashboard();
+      } catch {
+        showToast('Error de red', 'No se pudo reiniciar la base de datos de demostración.', 'rose');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Reiniciar Demo';
+        }
+      }
     }
 
     document.getElementById('complexSelector').addEventListener('change', (e) => {
+      const prevId = joinedAdminComplexId;
       currentComplexId = e.target.value;
+      joinedAdminComplexId = currentComplexId;
       localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
-      if (socket) {
+      if (socket && socket.connected) {
+        if (prevId && prevId !== currentComplexId) {
+          socket.emit('complex:leave', { complexId: prevId });
+        }
         socket.emit('complex:join', {
           complexId: currentComplexId,
           date: currentDate,
@@ -2127,6 +2292,7 @@
         if (socket) {
           socket.disconnect();
         }
+        joinedAdminComplexId = currentComplexId;
         socket = io(API_BASE, {
           query: { complexId: currentComplexId },
           auth: ownerJwtToken ? { token: ownerJwtToken } : {},
@@ -2140,7 +2306,7 @@
             date: currentDate,
             accessToken: ownerJwtToken || undefined,
           });
-          socket.emit('split:join', { token: DEFAULT_SPLIT_TOKEN });
+          socket.emit('split:join', { token: activeMonitorSplitToken || DEFAULT_SPLIT_TOKEN });
         });
 
         socket.on('disconnect', () => {
@@ -2148,25 +2314,36 @@
           document.getElementById('wsDot').className = 'w-2 h-2 rounded-full bg-amber-400';
         });
 
+        socket.on('connect_error', () => {
+          document.getElementById('wsText').textContent = 'Reconectando';
+          document.getElementById('wsDot').className = 'w-2 h-2 rounded-full bg-amber-400';
+        });
+
         socket.on('slot:updated', (payload) => {
+          if (payload.complexId && payload.complexId !== currentComplexId) return;
           lastChangedKey = `${payload.courtId}:${payload.hour}`;
-          const label =
-            payload.status === 'BLOCKED'
-              ? `Bloqueado en Recepción: ${payload.courtName} (${payload.label})`
-              : payload.status === 'FREE'
-              ? `Turno liberado: ${payload.courtName} (${payload.label})`
-              : `Reserva App sincronizada: ${payload.courtName} (${payload.label})`;
-          showToast(label, `Canal: ${payload.channel || 'OMNICANAL'} · Sincronizado en tiempo real`, payload.status === 'BLOCKED' ? 'amber' : 'emerald');
-          loadDashboard();
+          const isDuplicateSplit = payload.split && Date.now() - lastAdminSplitEventAt < 1000;
+          if (!isDuplicateSplit) {
+            const label =
+              payload.status === 'BLOCKED'
+                ? `Bloqueado en Recepción: ${payload.courtName} (${payload.label})`
+                : payload.status === 'FREE'
+                ? `Turno liberado: ${payload.courtName} (${payload.label})`
+                : `Reserva App sincronizada: ${payload.courtName} (${payload.label})`;
+            showToast(label, `Canal: ${payload.channel || 'OMNICANAL'} · Sincronizado en tiempo real`, payload.status === 'BLOCKED' ? 'amber' : 'emerald');
+          }
+          scheduleDashboardRefresh(payload.split?.shareToken || null);
         });
 
         socket.on('split:updated', (payload) => {
+          lastAdminSplitEventAt = Date.now();
+          if (payload.shareToken) activeMonitorSplitToken = payload.shareToken;
           showToast(
             `${payload.progressLabel}`,
-            `Último pago: ${payload.lastPayer?.name || ''} vía ${payload.lastPayer?.method || 'YAPE'}`,
+            `Último pago: ${payload.lastPayer?.name || ''} vía ${formatMethodLabel(payload.lastPayer?.method)}`,
             'sky',
           );
-          loadDashboard();
+          scheduleDashboardRefresh(payload.shareToken || null);
         });
 
         socket.on('complex:verification', (payload) => {
@@ -2175,11 +2352,13 @@
             payload.verificationNotes || 'Actualización documental en vivo',
             'emerald',
           );
-          loadDashboard();
+          scheduleDashboardRefresh();
         });
 
         socket.on('demo:reset', () => {
-          loadDashboard();
+          activeMonitorSplitToken = DEFAULT_SPLIT_TOKEN;
+          currentDate = null;
+          scheduleDashboardRefresh(DEFAULT_SPLIT_TOKEN);
         });
       } catch {}
     }

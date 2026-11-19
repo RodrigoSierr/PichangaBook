@@ -191,4 +191,9 @@ export class AuthService {
   get provider() {
     return this.cfg.authProvider;
   }
+
+  /** Limpia desafíos y límites OTP en memoria durante `POST /api/demo/reset`. */
+  resetDemoOtpState(): void {
+    this.otp.resetDemoState();
+  }
 }

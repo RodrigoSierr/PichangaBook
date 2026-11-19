@@ -63,6 +63,12 @@ export class CulqiService {
 
   constructor(private readonly cfg: AppConfig) {}
 
+  /** Limpia las cachés de idempotencia sandbox al reiniciar la demo. */
+  resetSandboxCache(): void {
+    this.sandboxIdempotencyCache.clear();
+    this.sandboxRefundCache.clear();
+  }
+
   get live(): boolean {
     return this.cfg.culqiLive;
   }

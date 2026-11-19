@@ -1,9 +1,11 @@
 import { Controller, ForbiddenException, Get, HttpCode, Post } from '@nestjs/common';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { AuthService } from './auth/auth.service';
 import { Public } from './common/auth/auth.guard';
 import { AppConfig } from './config/app.config';
 import { DatabaseService } from './database/database.service';
+import { CulqiService } from './integrations/culqi.service';
 import { RealtimeBus } from './realtime/realtime.bus';
 import { limaToday } from './common/utils/time.util';
 
@@ -13,6 +15,8 @@ export class AppController {
     private readonly db: DatabaseService,
     private readonly cfg: AppConfig,
     private readonly bus: RealtimeBus,
+    private readonly auth: AuthService,
+    private readonly culqi: CulqiService,
   ) {}
 
   @Public()
@@ -47,13 +51,17 @@ export class AppController {
     const root = resolve(__dirname, '..');
     const seed = readFileSync(resolve(root, 'seed.sql'), 'utf8');
     await this.db.exec(`
+      BEGIN;
       TRUNCATE relay_messages, contact_relays, substitute_invitations,
                payment_shares, payment_attempts, split_payments, booking_events, bookings,
                reviews, substitute_profiles, courts, complexes, users
       RESTART IDENTITY CASCADE;
+      ${seed}
+      COMMIT;
     `);
-    await this.db.exec(seed);
-    this.bus.publish('complex:00000000-0000-4000-b000-00000000c001', 'demo:reset', {
+    this.auth.resetDemoOtpState();
+    this.culqi.resetSandboxCache();
+    this.bus.publish('broadcast', 'demo:reset', {
       at: new Date().toISOString(),
     });
     return { ok: true, message: 'Datos semilla restaurados correctamente.' };

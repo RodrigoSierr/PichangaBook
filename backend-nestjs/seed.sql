@@ -87,7 +87,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 7. JLByR (Av. Dolores)
   ('00000000-0000-4000-b000-00000000c007', '00000000-0000-4000-a000-000000000012',
-   'Complejo Deportivo Maracaná Dolores', '20601122331', 'MARACANA SPORT CENTER AQP S.A.C.',
+   'Complejo Deportivo Maracaná Dolores', '20601122333', 'MARACANA SPORT CENTER AQP S.A.C.',
    '/uploads/demo/ruc-maracana.pdf', now() - INTERVAL '45 days', 'VERIFIED', now() - INTERVAL '42 days',
    'JLBYR', 'Av. Dolores 159, José Luis Bustamante y Rivero', -16.421800, -71.523400,
    ARRAY['/media/court-1.jpg','/media/court-4.jpg'],
@@ -95,7 +95,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 8. JLByR (Paseo de la Cultura / Dolores)
   ('00000000-0000-4000-b000-00000000c008', '00000000-0000-4000-a000-000000000013',
-   'Dolores Sport Center', '20602233445', 'DOLORES SPORT CENTER E.I.R.L.',
+   'Dolores Sport Center', '20602233449', 'DOLORES SPORT CENTER E.I.R.L.',
    '/uploads/demo/ruc-dolores-sc.pdf', now() - INTERVAL '35 days', 'VERIFIED', now() - INTERVAL '33 days',
    'JLBYR', 'Av. Paseo de la Cultura 310, J.L. Bustamante y Rivero', -16.426400, -71.519200,
    ARRAY['/media/court-2.jpg','/media/court-3.jpg'],
@@ -103,7 +103,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 9. JLByR (Av. Los Incas / Lambramani)
   ('00000000-0000-4000-b000-00000000c009', '00000000-0000-4000-a000-000000000012',
-   'Complejo Los Incas · Lambramani', '20603344559', 'COMPLEJO DEPORTIVO LOS INCAS S.A.C.',
+   'Complejo Los Incas · Lambramani', '20603344554', 'COMPLEJO DEPORTIVO LOS INCAS S.A.C.',
    '/uploads/demo/ruc-los-incas.pdf', now() - INTERVAL '25 days', 'VERIFIED', now() - INTERVAL '22 days',
    'JLBYR', 'Av. Los Incas 402 (Costado Parque Lambramani), JLByR', -16.415200, -71.521000,
    ARRAY['/media/court-4.jpg','/media/court-2.jpg'],
@@ -111,7 +111,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 10. Yanahuara (Umacollo)
   ('00000000-0000-4000-b000-00000000c010', '00000000-0000-4000-a000-000000000012',
-   'Rinconada Soccer Umacollo', '20604455662', 'RINCONADA SOCCER CLUB S.A.C.',
+   'Rinconada Soccer Umacollo', '20604455660', 'RINCONADA SOCCER CLUB S.A.C.',
    '/uploads/demo/ruc-rinconada.pdf', now() - INTERVAL '50 days', 'VERIFIED', now() - INTERVAL '48 days',
    'YANAHUARA', 'Calle Víctor Lira 210 (Estadio Umacollo), Yanahuara', -16.394100, -71.547500,
    ARRAY['/media/court-3.jpg','/media/court-1.jpg'],
@@ -119,7 +119,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 11. Yanahuara (Av. Bolognesi / La Ibérica)
   ('00000000-0000-4000-b000-00000000c011', '00000000-0000-4000-a000-000000000013',
-   'Complejo Deportivo La Ibérica · Náutico', '20605566776', 'CLUB DEPORTIVO LA IBERICA S.A.C.',
+   'Complejo Deportivo La Ibérica · Náutico', '20605566775', 'CLUB DEPORTIVO LA IBERICA S.A.C.',
    '/uploads/demo/ruc-iberica.pdf', now() - INTERVAL '28 days', 'VERIFIED', now() - INTERVAL '25 days',
    'YANAHUARA', 'Av. Bolognesi 540 (Zona Río Chili), Yanahuara', -16.384500, -71.539800,
    ARRAY['/media/court-1.jpg','/media/court-2.jpg'],
@@ -127,7 +127,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 12. Cayma (Plaza de Cayma)
   ('00000000-0000-4000-b000-00000000c012', '00000000-0000-4000-a000-000000000012',
-   'Villa Deportiva Cayma', '20606677880', 'VILLA DEPORTIVA CAYMA S.R.L.',
+   'Villa Deportiva Cayma', '20606677881', 'VILLA DEPORTIVA CAYMA S.R.L.',
    '/uploads/demo/ruc-villa-cayma.pdf', now() - INTERVAL '19 days', 'VERIFIED', now() - INTERVAL '17 days',
    'CAYMA', 'Calle Melgar 308 (A 2 cuadras Plaza de Cayma), Cayma', -16.366200, -71.549100,
    ARRAY['/media/court-2.jpg','/media/court-4.jpg'],
@@ -135,7 +135,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 13. Cercado (Av. Parra)
   ('00000000-0000-4000-b000-00000000c013', '00000000-0000-4000-a000-000000000013',
-   'Complejo Deportivo DeporPlaza Parra', '20607788993', 'DEPORPLAZA AREQUIPA S.A.C.',
+   'Complejo Deportivo DeporPlaza Parra', '20607788996', 'DEPORPLAZA AREQUIPA S.A.C.',
    '/uploads/demo/ruc-deporplaza.pdf', now() - INTERVAL '32 days', 'VERIFIED', now() - INTERVAL '30 days',
    'AREQUIPA', 'Av. Parra 318, Cercado de Arequipa', -16.410500, -71.544200,
    ARRAY['/media/court-3.jpg','/media/court-4.jpg'],
@@ -151,7 +151,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 15. Cercado / Tingo (Av. Alfonso Ugarte)
   ('00000000-0000-4000-b000-00000000c015', '00000000-0000-4000-a000-000000000013',
-   'Complejo Deportivo Tingo Sport', '20609900110', 'TINGO SPORT CLUB S.A.C.',
+   'Complejo Deportivo Tingo Sport', '20609900114', 'TINGO SPORT CLUB S.A.C.',
    '/uploads/demo/ruc-tingo.pdf', now() - INTERVAL '15 days', 'VERIFIED', now() - INTERVAL '14 days',
    'AREQUIPA', 'Av. Alfonso Ugarte 620 (Sector Tingo), Arequipa', -16.418500, -71.552500,
    ARRAY['/media/court-2.jpg','/media/court-1.jpg'],
@@ -159,7 +159,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 16. Alto Selva Alegre (Chilina)
   ('00000000-0000-4000-b000-00000000c016', '00000000-0000-4000-a000-000000000012',
-   'Complejo Chilina Fútbol Club', '20601234568', 'CHILINA FUTBOL CLUB S.A.C.',
+   'Complejo Chilina Fútbol Club', '20601234565', 'CHILINA FUTBOL CLUB S.A.C.',
    '/uploads/demo/ruc-chilina.pdf', now() - INTERVAL '27 days', 'VERIFIED', now() - INTERVAL '25 days',
    'ALTO_SELVA_ALEGRE', 'Av. Roosevelt 820 (Valle de Chilina), Alto Selva Alegre', -16.376500, -71.522800,
    ARRAY['/media/court-4.jpg','/media/court-3.jpg'],
@@ -175,7 +175,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 18. Paucarpata / Jacobo Hunter (Zona Sur-Este)
   ('00000000-0000-4000-b000-00000000c018', '00000000-0000-4000-a000-000000000012',
-   'Complejo Guardia Civil & Hunter Sport', '20603456785', 'GUARDIA CIVIL HUNTER SPORT S.A.C.',
+   'Complejo Guardia Civil & Hunter Sport', '20603456786', 'GUARDIA CIVIL HUNTER SPORT S.A.C.',
    '/uploads/demo/ruc-guardia-civil.pdf', now() - INTERVAL '12 days', 'VERIFIED', now() - INTERVAL '10 days',
    'PAUCARPATA', 'Av. Jesús 1120 (Urb. Guardia Civil), Paucarpata', -16.427200, -71.504800,
    ARRAY['/media/court-3.jpg','/media/court-4.jpg'],
@@ -183,7 +183,7 @@ INSERT INTO complexes (id, owner_id, name, ruc, business_name, license_doc_url, 
 
   -- 19. Jacobo Hunter (Av. Viña del Mar)
   ('00000000-0000-4000-b000-00000000c019', '00000000-0000-4000-a000-000000000013',
-   'Complejo Hunter Sport Center', '20604567899', 'HUNTER SPORT CENTER AQP S.A.C.',
+   'Complejo Hunter Sport Center', '20604567891', 'HUNTER SPORT CENTER AQP S.A.C.',
    '/uploads/demo/ruc-hunter.pdf', now() - INTERVAL '14 days', 'VERIFIED', now() - INTERVAL '11 days',
    'HUNTER', 'Av. Viña del Mar 450, Jacobo Hunter', -16.441200, -71.558200,
    ARRAY['/media/court-2.jpg','/media/court-1.jpg'],
@@ -256,7 +256,7 @@ INSERT INTO bookings (id, court_id, organizer_id, created_by, channel, status, p
    'APP', 'CONFIRMED', 'FULL_DEPOSIT', pb_lima_slot(0,19), pb_lima_slot(0,20), 9000, 4500, NULL, 'Pichanga ex-alumnos UCSP', NULL),
   -- Split payment en curso: "Cupos pagados: 4 de 6"
   ('00000000-0000-4000-e000-0000000000b2', '00000000-0000-4000-c000-00000000d011', '00000000-0000-4000-a000-000000000021', '00000000-0000-4000-a000-000000000021',
-   'APP', 'HELD', 'SPLIT', pb_lima_slot(0,20), pb_lima_slot(0,21), 9000, 9000, NULL, 'Revancha del jueves', now() + INTERVAL '12 hours'),
+   'APP', 'HELD', 'SPLIT', pb_lima_slot(0,20), pb_lima_slot(0,21), 9000, 9000, NULL, 'Revancha del jueves', now() + INTERVAL '48 hours'),
   ('00000000-0000-4000-e000-0000000000b3', '00000000-0000-4000-c000-00000000d011', NULL, '00000000-0000-4000-a000-000000000011',
    'RECEPTION', 'BLOCKED', NULL, pb_lima_slot(0,21), pb_lima_slot(0,22), 9000, 9000, 'Sr. Málaga (pago en efectivo)', 'Venta en recepción', NULL),
   ('00000000-0000-4000-e000-0000000000b4', '00000000-0000-4000-c000-00000000d012', '00000000-0000-4000-a000-000000000022', '00000000-0000-4000-a000-000000000022',
@@ -281,7 +281,7 @@ INSERT INTO bookings (id, court_id, organizer_id, created_by, channel, status, p
 INSERT INTO split_payments (id, booking_id, organizer_id, mode, total_slots, paid_slots, amount_per_slot_cents,
                             total_cents, share_token, status, expires_at) VALUES
   ('00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-e000-0000000000b2', '00000000-0000-4000-a000-000000000021',
-   'SPLIT', 6, 4, 1500, 9000, 'pk4de6demo', 'OPEN', now() + INTERVAL '12 hours');
+   'SPLIT', 6, 4, 1500, 9000, 'pk4de6demo', 'OPEN', now() + INTERVAL '48 hours');
 
 INSERT INTO payment_shares (split_payment_id, payer_user_id, payer_name, method, provider, provider_charge_id, amount_cents, paid_at) VALUES
   ('00000000-0000-4000-f000-0000000000a1', '00000000-0000-4000-a000-000000000021', 'Diego Salas (organizador)', 'YAPE', 'CULQI', 'chr_demo_0001', 1500, now() - INTERVAL '50 minutes'),
@@ -326,7 +326,16 @@ INSERT INTO reviews (complex_id, user_id, rating, comment, created_at) VALUES
   ('00000000-0000-4000-b000-00000000c009', '00000000-0000-4000-a000-000000000034', 5, 'Súper céntrico al lado del Parque Lambramani.', now() - INTERVAL '6 days'),
   ('00000000-0000-4000-b000-00000000c010', '00000000-0000-4000-a000-000000000031', 5, 'Grass impecable en Umacollo.', now() - INTERVAL '4 days'),
   ('00000000-0000-4000-b000-00000000c013', '00000000-0000-4000-a000-000000000022', 5, 'DeporPlaza en Av. Parra es perfecto para llegar desde cualquier distrito.', now() - INTERVAL '5 days'),
-  ('00000000-0000-4000-b000-00000000c014', '00000000-0000-4000-a000-000000000033', 5, 'Fútbol Plaza Arancota tiene estacionamiento grande y buen grass.', now() - INTERVAL '8 days');
+  ('00000000-0000-4000-b000-00000000c014', '00000000-0000-4000-a000-000000000033', 5, 'Fútbol Plaza Arancota tiene estacionamiento grande y buen grass.', now() - INTERVAL '8 days'),
+  ('00000000-0000-4000-b000-00000000c008', '00000000-0000-4000-a000-000000000021', 5, 'Cancha techada impecable en Paseo de la Cultura y buena atención.', now() - INTERVAL '4 days'),
+  ('00000000-0000-4000-b000-00000000c008', '00000000-0000-4000-a000-000000000032', 4, 'Buen drenaje e iluminación nocturna para fútbol 8.', now() - INTERVAL '9 days'),
+  ('00000000-0000-4000-b000-00000000c011', '00000000-0000-4000-a000-000000000031', 5, 'Excelente zona junto al Río Chili y duchas calientes.', now() - INTERVAL '5 days'),
+  ('00000000-0000-4000-b000-00000000c012', '00000000-0000-4000-a000-000000000022', 5, 'Muy cómoda cerca de la Plaza de Cayma, ideal para pichangas de oficina.', now() - INTERVAL '3 days'),
+  ('00000000-0000-4000-b000-00000000c015', '00000000-0000-4000-a000-000000000035', 5, 'Buen precio en Tingo y siempre respetan el turno reservado.', now() - INTERVAL '6 days'),
+  ('00000000-0000-4000-b000-00000000c016', '00000000-0000-4000-a000-000000000036', 5, 'Vista increíble al Misti desde Chilina y grass bien cuidado.', now() - INTERVAL '7 days'),
+  ('00000000-0000-4000-b000-00000000c017', '00000000-0000-4000-a000-000000000034', 5, 'Alameda Sport en Miraflores tiene techado y tarifa accesible.', now() - INTERVAL '4 days'),
+  ('00000000-0000-4000-b000-00000000c018', '00000000-0000-4000-a000-000000000033', 4, 'Buena cancha en Guardia Civil con vigilancia y estacionamiento.', now() - INTERVAL '5 days'),
+  ('00000000-0000-4000-b000-00000000c019', '00000000-0000-4000-a000-000000000021', 5, 'Hunter Sport Center tiene tribuna y reflectores LED muy potentes.', now() - INTERVAL '3 days');
 
 -- Bitácora inicial (feed de actividad del panel del dueño)
 INSERT INTO booking_events (booking_id, complex_id, event_type, channel, actor_id, payload, created_at) VALUES

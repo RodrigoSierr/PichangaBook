@@ -56,6 +56,11 @@ export class BookingsGateway
     this.sub = this.bus.stream$.subscribe(({ rooms, event, payload }) => {
       if (!this.server) return;
       for (const room of rooms) {
+        if (room === 'broadcast' && event === 'demo:reset') {
+          this.server.emit(event, payload);
+          continue;
+        }
+
         if (room.startsWith('complex:')) {
           const complexId = room.slice('complex:'.length);
           const ownerRoom = Rooms.complexOwner(complexId);
@@ -137,6 +142,18 @@ export class BookingsGateway
       }
     }
     return { ok: true, room: Rooms.complex(body.complexId) };
+  }
+
+  /** Abandona la sala del complejo anterior al cambiar de sede. */
+  @SubscribeMessage('complex:leave')
+  async onLeaveComplex(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: { complexId?: string },
+  ) {
+    if (!body?.complexId) return { ok: false };
+    await client.leave(Rooms.complex(body.complexId));
+    await client.leave(Rooms.complexOwner(body.complexId));
+    return { ok: true };
   }
 
   /** Suscripción a la sala de un Split Payment ("Cupos pagados: 4 de 6"). */

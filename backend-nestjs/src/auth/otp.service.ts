@@ -31,6 +31,13 @@ export class OtpService {
 
   constructor(private readonly cfg: AppConfig) {}
 
+  /** Limpia desafíos y rate-limits OTP en memoria al reiniciar el entorno demo. */
+  resetDemoState(): void {
+    this.challenges.clear();
+    this.requestsLog.clear();
+    this.ipRequestsLog.clear();
+  }
+
   async request(
     phoneE164: string,
     clientIp?: string,

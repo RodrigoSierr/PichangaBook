@@ -12,6 +12,7 @@ import { MediaService } from '../integrations/media.service';
 import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { AuthUser } from '../common/types';
 import { redactContactInfo } from '../common/utils/phone.util';
+import { hourLabel, toLimaSlot } from '../common/utils/time.util';
 import {
   InviteSubstituteDto,
   ListSubstitutesQueryDto,
@@ -112,10 +113,19 @@ export class SubstitutesService {
     let clipUrl: string | null = dto.clipUrl?.trim() || null;
     let clipPosterUrl: string | null = dto.clipPosterUrl?.trim() || null;
 
-    if (clipPublicId) {
+    if (clipPublicId && this.media.cloudinaryEnabled) {
       const derived = this.media.cloudinaryClipUrl(clipPublicId);
       clipUrl = clipUrl || derived.url;
       clipPosterUrl = clipPosterUrl || derived.poster;
+    }
+    if (!clipPosterUrl && (clipUrl || clipPublicId)) {
+      const posPosterMap: Record<string, string> = {
+        ARQUERO: '/media/player-arquero.jpg',
+        DEFENSA: '/media/player-defensa.jpg',
+        MEDIOCAMPO: '/media/player-mediocampo.jpg',
+        DELANTERO: '/media/player-delantero.jpg',
+      };
+      clipPosterUrl = posPosterMap[dto.position] ?? '/media/player-mediocampo.jpg';
     }
 
     const skillLevel = dto.skillLevel ?? 3;
@@ -280,11 +290,18 @@ export class SubstitutesService {
       startsAt: Date;
       endsAt: Date;
       holdExpiresAt: Date | null;
+      complexName: string | null;
+      districtName: string | null;
     }>(
-      `SELECT id, organizer_id AS "organizerId", status,
-              starts_at AS "startsAt", ends_at AS "endsAt",
-              hold_expires_at AS "holdExpiresAt"
-         FROM bookings WHERE id = $1`,
+      `SELECT b.id, b.organizer_id AS "organizerId", b.status,
+              b.starts_at AS "startsAt", b.ends_at AS "endsAt",
+              b.hold_expires_at AS "holdExpiresAt",
+              x.name AS "complexName", d.name AS "districtName"
+         FROM bookings b
+         LEFT JOIN courts c ON c.id = b.court_id
+         LEFT JOIN complexes x ON x.id = c.complex_id
+         LEFT JOIN districts d ON d.code = x.district_code
+        WHERE b.id = $1`,
       [bookingId],
     );
     if (!booking) {
@@ -332,9 +349,13 @@ export class SubstitutesService {
     }
 
     const proxyNumber = `+51 (054) 64${randomInt(10, 99)}-${randomInt(100, 999)}`;
+    const slotInfo = toLimaSlot(booking.startsAt);
+    const venueLabel = booking.complexName
+      ? `${booking.complexName}${booking.districtName ? ` (${booking.districtName})` : ''}`
+      : 'El Misti (Cayma)';
     const initialText =
       body.message?.trim() ||
-      `¡Hola ${sub.fullName.split(' ')[0]}! Nos falta un ${sub.position.toLowerCase()} hoy a las 20:00 en El Misti (Cayma). ¿Confirmas llegada?`;
+      `¡Hola ${sub.fullName.split(' ')[0]}! Nos falta un ${sub.position.toLowerCase()} hoy a las ${hourLabel(slotInfo.hour)} en ${venueLabel}. ¿Confirmas llegada?`;
     const sanitized = redactContactInfo(initialText);
 
     const { invitation, relay, firstMessage } = await this.db.transaction(async (tx) => {

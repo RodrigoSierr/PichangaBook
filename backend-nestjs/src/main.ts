@@ -53,6 +53,12 @@ async function bootstrap() {
     ? resolve(monorepoRoot, 'mobile-flutter')
     : resolve(backendRoot, 'mobile-flutter');
 
+  app.getHttpAdapter()
+    .getInstance()
+    .get('/', (_req: Request, res: Response) => {
+      res.redirect(302, '/mobile/');
+    });
+
   app.useStaticAssets(resolve(backendRoot, 'public'), { prefix: '/' });
   app.useStaticAssets(adminDir, { prefix: '/admin' });
   app.useStaticAssets(mobileDir, {

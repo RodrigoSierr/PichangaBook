@@ -5,15 +5,29 @@ const DEFAULT_DEV_JWT_SECRET = 'pichangabook-dev-secret';
 const DEFAULT_DEMO_WEBHOOK_SECRET = 'pichangabook-webhook-demo';
 
 /**
+ * Sanitiza URLs públicas configuradas por entorno (elimina barras finales y
+ * corrige enlaces pegados accidentalmente en formato Markdown `[url](url)`).
+ */
+export function sanitizePublicUrl(raw: string, fallback: string): string {
+  const trimmed = (raw ?? '').trim();
+  if (!trimmed) return fallback.replace(/\/$/, '');
+  const mdMatch = trimmed.match(/\[[^\]]*\]\((https?:\/\/[^\s)]+)\)/i);
+  const extracted = mdMatch ? mdMatch[1] : trimmed.replace(/^<(.+)>$/, '$1');
+  const urlMatch = extracted.match(/https?:\/\/[^\s"'<>)\]]+/i);
+  return (urlMatch ? urlMatch[0] : extracted).trim().replace(/\/$/, '');
+}
+
+/**
  * Resuelve los orígenes permitidos para CORS a partir de variables de entorno.
  * En producción jamás permite comodín `*`: exige `CORS_ORIGINS` o restringe a `PUBLIC_URL`.
  */
 export function resolveCorsOriginFromEnv(): string[] | boolean {
   const isProd = (process.env.NODE_ENV ?? 'development').trim().toLowerCase() === 'production';
   const raw = (process.env.CORS_ORIGINS ?? '').trim();
-  const publicUrl = (process.env.PUBLIC_URL ?? `http://localhost:${process.env.PORT ?? '3000'}`)
-    .trim()
-    .replace(/\/$/, '');
+  const publicUrl = sanitizePublicUrl(
+    process.env.PUBLIC_URL ?? '',
+    `http://localhost:${process.env.PORT ?? '3000'}`,
+  );
 
   if (!raw || raw === '*') {
     return isProd ? [publicUrl] : true;
@@ -81,7 +95,7 @@ export class AppConfig implements OnModuleInit {
   }
 
   get publicUrl(): string {
-    return this.str('PUBLIC_URL', `http://localhost:${this.port}`).replace(/\/$/, '');
+    return sanitizePublicUrl(this.str('PUBLIC_URL'), `http://localhost:${this.port}`);
   }
 
   get jwtSecret(): string {
