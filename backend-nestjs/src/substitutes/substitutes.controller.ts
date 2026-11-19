@@ -1,6 +1,27 @@
-import { Body, Controller, Get, HttpCode, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentUser, Public, Roles } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
+import { MAX_SUBSTITUTE_CLIP_BYTES } from '../integrations/media.service';
+import {
+  InviteSubstituteDto,
+  ListSubstitutesQueryDto,
+  RespondInvitationDto,
+  SendRelayMessageDto,
+  UpsertSubstituteProfileDto,
+} from './dto/substitutes.dto';
 import { SubstitutesService } from './substitutes.service';
 
 @Controller()
@@ -9,12 +30,8 @@ export class SubstitutesController {
 
   @Public()
   @Get('substitutes')
-  list(
-    @Query('position') position?: string,
-    @Query('district') district?: string,
-    @Query('onlyVerified') onlyVerified?: string,
-  ) {
-    return this.substitutes.list({ position, district, onlyVerified });
+  list(@Query() query: ListSubstitutesQueryDto) {
+    return this.substitutes.list(query);
   }
 
   @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
@@ -25,14 +42,50 @@ export class SubstitutesController {
   }
 
   @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Post('substitutes/clip-upload')
+  @UseInterceptors(
+    FileInterceptor('clip', {
+      limits: {
+        fileSize: MAX_SUBSTITUTE_CLIP_BYTES,
+        files: 1,
+      },
+    }),
+  )
+  uploadClip(@CurrentUser() user: AuthUser, @UploadedFile() file: any) {
+    return this.substitutes.uploadClipFile(user, file);
+  }
+
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Post('substitutes/profile')
+  upsertProfile(@CurrentUser() user: AuthUser, @Body() dto: UpsertSubstituteProfileDto) {
+    return this.substitutes.upsertProfile(user, dto);
+  }
+
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
   @Post('substitutes/:id/invite')
   @HttpCode(200)
   invite(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { bookingId?: string; message?: string },
+    @Body() dto: InviteSubstituteDto,
     @CurrentUser() user: AuthUser,
   ) {
-    return this.substitutes.inviteSubstitute(id, body ?? {}, user);
+    return this.substitutes.inviteSubstitute(id, dto, user);
+  }
+
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Get('substitutes/invitations')
+  myInvitations(@CurrentUser() user: AuthUser) {
+    return this.substitutes.myInvitations(user);
+  }
+
+  @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
+  @Patch('substitutes/invitations/:id')
+  respondInvitation(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RespondInvitationDto,
+    @CurrentUser() user: AuthUser,
+  ) {
+    return this.substitutes.respondInvitation(id, dto, user);
   }
 
   @Roles('ORGANIZER', 'PLAYER', 'OWNER', 'ADMIN')
@@ -52,9 +105,9 @@ export class SubstitutesController {
   @HttpCode(200)
   sendMessage(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { text: string },
+    @Body() dto: SendRelayMessageDto,
     @CurrentUser() user: AuthUser,
   ) {
-    return this.substitutes.sendRelayMessage(id, body.text, user);
+    return this.substitutes.sendRelayMessage(id, dto.text, user);
   }
 }

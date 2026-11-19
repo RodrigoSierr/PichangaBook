@@ -1,26 +1,61 @@
-# Despliegue Cloud con HTTPS/SSL automático en Render.com
+# =============================================================================
+#  PichangaBook Arequipa · Render Blueprint 100% Gratuito (Free Web Service)
+#  Base de datos externa gratuita: Neon.tech o Supabase (PostgreSQL Serverless)
+# =============================================================================
 services:
   - type: web
     name: pichangabook-arequipa-api
-    runtime: node
-    rootDir: backend-nestjs
-    buildCommand: npm ci && npm run build
-    startCommand: npm run start:prod
+    plan: free
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: ALLOW_DEMO_FALLBACK
+        value: 'false'
+      - key: DB_SEED_DEMO
+        value: 'false'
+      - key: DB_AUTO_MIGRATE
+        value: 'true'
+      - key: AUTH_PROVIDER
+        value: FIREBASE
       - key: DATABASE_URL
-        fromDatabase:
-          name: pichangabook-db
-          property: connectionString
+        sync: false
+      - key: DB_SSL
+        value: 'true'
       - key: DATABASE_SSL
         value: 'true'
       - key: JWT_SECRET
         generateValue: true
-
-databases:
-  - name: pichangabook-db
-    plan: basic-256mb
-    databaseName: pichangabook
-    user: pichanga
+      - key: MEDIA_SIGNING_SECRET
+        generateValue: true
+      - key: CULQI_WEBHOOK_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      - key: SMS_GATEWAY_URL
+        sync: false
+      - key: SMS_GATEWAY_TOKEN
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PUBLIC_KEY
+        sync: false
+      - key: CULQI_PUBLIC_KEY
+        sync: false
+      - key: CULQI_SECRET_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false

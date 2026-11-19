@@ -79,9 +79,101 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
+   * Ejecuta el reembolso en Culqi de todas las cuotas pagadas (`payment_shares.status = 'PAID'`)
+   * asociadas a una reserva cuando expira su hold o se cancela dentro de la ventana de reembolso,
+   * actualizando `payment_shares` y `payment_attempts` a `'REFUNDED'`.
+   */
+  private async refundPaidSharesForBooking(
+    bookingId: string,
+    reasonCode: string,
+  ): Promise<{ refundedCount: number; refundedCents: number }> {
+    const paidShares = await this.db.query<{
+      shareId: string;
+      splitPaymentId: string;
+      attemptId: string | null;
+      providerChargeId: string | null;
+      amountCents: number;
+    }>(
+      `SELECT ps.id AS "shareId",
+              ps.split_payment_id AS "splitPaymentId",
+              ps.attempt_id AS "attemptId",
+              ps.provider_charge_id AS "providerChargeId",
+              ps.amount_cents AS "amountCents"
+         FROM payment_shares ps
+         JOIN split_payments sp ON sp.id = ps.split_payment_id
+        WHERE sp.booking_id = $1
+          AND ps.status = 'PAID'`,
+      [bookingId],
+    );
+
+    if (!paidShares.length) {
+      return { refundedCount: 0, refundedCents: 0 };
+    }
+
+    let refundedCount = 0;
+    let refundedCents = 0;
+
+    for (const share of paidShares) {
+      const chargeId = share.providerChargeId || `chr_sandbox_share_${share.shareId.slice(0, 8)}`;
+      const refund = await this.culqi.refundCharge({
+        chargeId,
+        amountCents: share.amountCents,
+        reason: 'solicitud_comprador',
+        idempotencyKey: `refund:${reasonCode}:${share.shareId}`,
+      });
+
+      const refundSucceeded = refund.status === 'succeeded';
+      const refundId = refund.id ?? `ref_pending_${share.shareId.slice(0, 8)}`;
+
+      await this.db.transaction(async (tx) => {
+        await tx.query(
+          `UPDATE payment_shares
+              SET status = 'REFUNDED'::share_status,
+                  refund_id = $2,
+                  refund_reason = $3,
+                  refunded_at = now()
+            WHERE id = $1 AND status = 'PAID'`,
+          [share.shareId, refundId, reasonCode],
+        );
+
+        await tx.query(
+          `UPDATE payment_attempts
+              SET status = $3,
+                  refund_id = $4,
+                  refund_reason = $5,
+                  refunded_at = now(),
+                  updated_at = now()
+            WHERE (id = $1 OR provider_charge_id = $2)
+              AND status = 'SUCCEEDED'`,
+          [
+            share.attemptId,
+            share.providerChargeId,
+            refundSucceeded ? 'REFUNDED' : 'COMPENSATION_FAILED',
+            refund.id,
+            reasonCode,
+          ],
+        );
+      });
+
+      refundedCount += 1;
+      refundedCents += share.amountCents;
+    }
+
+    await this.db.query(
+      `UPDATE split_payments
+          SET paid_slots = 0,
+              reserved_slots = 0
+        WHERE booking_id = $1`,
+      [bookingId],
+    );
+
+    return { refundedCount, refundedCents };
+  }
+
+  /**
    * Libera automáticamente cualquier reserva temporal (`HELD` / `PENDING_PAYMENT`)
    * cuyo `hold_expires_at` haya vencido, actualizando `bookings.status = 'EXPIRED'`,
-   * `split_payments.status = 'EXPIRED'` y liberando el turno en tiempo real.
+   * `split_payments.status = 'EXPIRED'`, reembolsando cuotas parciales pagadas y liberando el turno.
    */
   async expireStaleHolds(): Promise<number> {
     const stale = await this.db.query<{
@@ -107,6 +199,8 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
 
     for (const item of stale) {
       const { date, hour } = toLimaSlot(item.startsAt);
+      const refundStats = await this.refundPaidSharesForBooking(item.id, 'HOLD_EXPIRED');
+
       await this.db.transaction(async (tx) => {
         await tx.query(
           `UPDATE bookings
@@ -118,6 +212,7 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
         await tx.query(
           `UPDATE split_payments
               SET status = 'EXPIRED'::split_status,
+                  paid_slots = 0,
                   reserved_slots = 0
             WHERE booking_id = $1 AND status = 'OPEN'`,
           [item.id],
@@ -137,7 +232,14 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
           [
             item.id,
             item.complexId,
-            JSON.stringify({ hour, date, courtId: item.courtId, court: item.courtName }),
+            JSON.stringify({
+              hour,
+              date,
+              courtId: item.courtId,
+              court: item.courtName,
+              refundedCount: refundStats.refundedCount,
+              refundedCents: refundStats.refundedCents,
+            }),
           ],
         );
       });
@@ -900,17 +1002,19 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
 
     const existing = await this.db.one<{
       id: string;
+      status: string;
       organizerId: string | null;
       ownerId: string;
       courtId: string;
       courtName: string;
       complexId: string;
       startsAt: Date;
+      createdAt: Date;
       priceCents: number;
     }>(
-      `SELECT b.id, b.organizer_id AS "organizerId", x.owner_id AS "ownerId",
+      `SELECT b.id, b.status, b.organizer_id AS "organizerId", x.owner_id AS "ownerId",
               b.court_id AS "courtId", c.name AS "courtName", c.complex_id AS "complexId",
-              b.starts_at AS "startsAt", b.total_cents AS "priceCents"
+              b.starts_at AS "startsAt", b.created_at AS "createdAt", b.total_cents AS "priceCents"
          FROM bookings b
          JOIN courts c ON c.id = b.court_id
          JOIN complexes x ON x.id = c.complex_id
@@ -926,6 +1030,13 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
     }
 
     const { date, hour } = toLimaSlot(existing.startsAt);
+    const withinRefundWindow =
+      existing.status !== 'BLOCKED' &&
+      (new Date(existing.startsAt).getTime() > Date.now() ||
+        Date.now() - new Date(existing.createdAt).getTime() < 30 * 60_000);
+    const refundStats = withinRefundWindow
+      ? await this.refundPaidSharesForBooking(bookingId, 'BOOKING_CANCELLED')
+      : { refundedCount: 0, refundedCents: 0 };
 
     await this.db.transaction(async (tx) => {
       await tx.query(
@@ -933,7 +1044,7 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
         [bookingId],
       );
       await tx.query(
-        `UPDATE split_payments SET status = 'CANCELLED', reserved_slots = 0 WHERE booking_id = $1 AND status = 'OPEN'`,
+        `UPDATE split_payments SET status = 'CANCELLED', reserved_slots = 0 WHERE booking_id = $1 AND status IN ('OPEN', 'COMPLETED')`,
         [bookingId],
       );
       await tx.query(
@@ -944,7 +1055,14 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
           existing.complexId,
           isOwner ? 'RECEPTION' : 'APP',
           user.sub,
-          JSON.stringify({ hour, date, courtId: existing.courtId, court: existing.courtName }),
+          JSON.stringify({
+            hour,
+            date,
+            courtId: existing.courtId,
+            court: existing.courtName,
+            refundedCount: refundStats.refundedCount,
+            refundedCents: refundStats.refundedCents,
+          }),
         ],
       );
     });
@@ -959,6 +1077,8 @@ export class BookingsService implements OnModuleInit, OnModuleDestroy {
       status: 'FREE',
       bookingId: undefined,
       priceCents: existing.priceCents,
+      refundedCount: refundStats.refundedCount,
+      refundedCents: refundStats.refundedCents,
     };
 
     this.bus.publish(Rooms.complex(existing.complexId), 'slot:updated', slotPayload);

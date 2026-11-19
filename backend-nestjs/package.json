@@ -7,9 +7,10 @@
   "scripts": {
     "build": "nest build",
     "start": "nest start",
-    "start:dev": "ALLOW_DEMO_FALLBACK=true nest start --watch",
+    "start:dev": "node -e \"const {spawn}=require('node:child_process');const p=spawn(process.execPath,['./node_modules/@nestjs/cli/bin/nest.js','start','--watch'],{stdio:'inherit',env:{...process.env,ALLOW_DEMO_FALLBACK:'true'}});p.on('exit',c=>process.exit(c??0));\"",
     "start:prod": "node dist/main.js",
-    "start:demo": "ALLOW_DEMO_FALLBACK=true node dist/main.js",
+    "start:demo": "node -e \"process.env.ALLOW_DEMO_FALLBACK='true';require('./dist/main.js');\"",
+    "db:migrate": "node scripts/db-migrate.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:realtime": "node scripts/realtime-smoke-test.mjs",
     "test:concurrency": "node scripts/concurrency-test.mjs",

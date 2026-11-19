@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { CurrentUser, Public } from '../common/auth/auth.guard';
 import { AuthUser } from '../common/types';
 import { AuthService } from './auth.service';
@@ -12,8 +13,12 @@ export class AuthController {
   @Public()
   @Post('otp/request')
   @HttpCode(200)
-  requestOtp(@Body() dto: RequestOtpDto) {
-    return this.auth.requestOtp(dto.phone);
+  requestOtp(@Body() dto: RequestOtpDto, @Req() req: Request) {
+    const forwarded = req?.headers?.['x-forwarded-for'];
+    const clientIp = typeof forwarded === 'string'
+      ? forwarded.split(',')[0].trim()
+      : req?.ip || req?.socket?.remoteAddress;
+    return this.auth.requestOtp(dto.phone, clientIp);
   }
 
   /** Paso 2: validar OTP → login o registro diferenciado (ORGANIZER / OWNER / PLAYER). */

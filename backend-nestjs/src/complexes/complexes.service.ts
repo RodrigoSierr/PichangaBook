@@ -15,7 +15,14 @@ import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { AuthUser } from '../common/types';
 import { isValidRuc } from '../common/utils/ruc.util';
 import { isPgError, PG_UNIQUE_VIOLATION } from '../common/utils/pg-errors';
-import { CreateComplexDto, ListComplexesQuery, ReviewDto, VerificationDto } from './dto/complexes.dto';
+import {
+  CreateComplexDto,
+  CreateCourtDto,
+  ListComplexesQuery,
+  ReviewDto,
+  UpdateCourtDto,
+  VerificationDto,
+} from './dto/complexes.dto';
 import { AvailabilityService } from './availability.service';
 
 const COMPLEX_COLUMNS = `x.id, x.name, x.district_code AS "districtCode", d.name AS "districtName",
@@ -117,6 +124,28 @@ export class ComplexesService {
   // ---------------------------------------------------------------------------
   // Dueños: alta de complejo + validación documental privada (RUC / licencia)
   // ---------------------------------------------------------------------------
+  async listByOwner(user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión como propietario.');
+    if (user.role === 'ADMIN') {
+      return this.db.query(
+        `SELECT x.id, x.name, x.ruc, x.district_code AS "districtCode", d.name AS "districtName",
+                x.verification_status AS "verificationStatus", x.license_doc_url AS "licenseDocUrl"
+           FROM complexes x
+           JOIN districts d ON d.code = x.district_code
+          ORDER BY x.created_at ASC`,
+      );
+    }
+    return this.db.query(
+      `SELECT x.id, x.name, x.ruc, x.district_code AS "districtCode", d.name AS "districtName",
+              x.verification_status AS "verificationStatus", x.license_doc_url AS "licenseDocUrl"
+         FROM complexes x
+         JOIN districts d ON d.code = x.district_code
+        WHERE x.owner_id = $1
+        ORDER BY x.created_at ASC`,
+      [user.sub],
+    );
+  }
+
   async create(owner: AuthUser, dto: CreateComplexDto) {
     if (!isValidRuc(dto.ruc)) {
       throw new BadRequestException({ code: 'INVALID_RUC', message: 'RUC inválido (dígito verificador SUNAT no coincide).' });
@@ -140,6 +169,109 @@ export class ComplexesService {
       );
     } catch (e) {
       if (isPgError(e, PG_UNIQUE_VIOLATION)) throw new ConflictException('Este RUC ya está registrado en PichangaBook');
+      throw e;
+    }
+  }
+
+  async createCourt(complexId: string, user: AuthUser, dto: CreateCourtDto) {
+    await this.assertOwner(complexId, user);
+
+    const openHour = dto.openHour ?? 7;
+    const closeHour = dto.closeHour ?? 23;
+    if (closeHour <= openHour) {
+      throw new BadRequestException('closeHour debe ser mayor que openHour');
+    }
+
+    const surface = (dto.surface ?? 'SINTETICO').trim().toUpperCase();
+    const playersPerSide = dto.playersPerSide ?? 6;
+    const priceCents = dto.priceCents;
+    const pricePeakCents = dto.pricePeakCents ?? priceCents;
+    const isActive = dto.isActive ?? true;
+
+    try {
+      return await this.db.one(
+        `INSERT INTO courts (complex_id, name, surface, players_per_side, price_cents, price_peak_cents, open_hour, close_hour, is_active)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id, complex_id AS "complexId", name, surface,
+                   players_per_side AS "playersPerSide",
+                   price_cents AS "priceCents", price_peak_cents AS "pricePeakCents",
+                   open_hour AS "openHour", close_hour AS "closeHour",
+                   is_active AS "isActive"`,
+        [complexId, dto.name.trim(), surface, playersPerSide, priceCents, pricePeakCents, openHour, closeHour, isActive],
+      );
+    } catch (e) {
+      if (isPgError(e, PG_UNIQUE_VIOLATION)) {
+        throw new ConflictException('Ya existe una cancha con ese nombre en este complejo');
+      }
+      throw e;
+    }
+  }
+
+  async updateCourt(courtId: string, user: AuthUser, dto: UpdateCourtDto) {
+    const existing = await this.db.one<{
+      id: string;
+      complexId: string;
+      ownerId: string;
+      name: string;
+      surface: string;
+      playersPerSide: number;
+      priceCents: number;
+      pricePeakCents: number;
+      openHour: number;
+      closeHour: number;
+      isActive: boolean;
+    }>(
+      `SELECT c.id, c.complex_id AS "complexId", x.owner_id AS "ownerId",
+              c.name, c.surface, c.players_per_side AS "playersPerSide",
+              c.price_cents AS "priceCents", c.price_peak_cents AS "pricePeakCents",
+              c.open_hour AS "openHour", c.close_hour AS "closeHour",
+              c.is_active AS "isActive"
+         FROM courts c
+         JOIN complexes x ON x.id = c.complex_id
+        WHERE c.id = $1`,
+      [courtId],
+    );
+    if (!existing) throw new NotFoundException('Cancha no encontrada');
+    if (existing.ownerId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException('No eres dueño del complejo al que pertenece esta cancha');
+    }
+
+    const name = dto.name !== undefined ? dto.name.trim() : existing.name;
+    const surface = dto.surface !== undefined ? dto.surface.trim().toUpperCase() : existing.surface;
+    const playersPerSide = dto.playersPerSide ?? existing.playersPerSide;
+    const priceCents = dto.priceCents ?? existing.priceCents;
+    const pricePeakCents = dto.pricePeakCents ?? existing.pricePeakCents;
+    const openHour = dto.openHour ?? existing.openHour;
+    const closeHour = dto.closeHour ?? existing.closeHour;
+    const isActive = dto.isActive ?? existing.isActive;
+
+    if (closeHour <= openHour) {
+      throw new BadRequestException('closeHour debe ser mayor que openHour');
+    }
+
+    try {
+      return await this.db.one(
+        `UPDATE courts
+            SET name = $2,
+                surface = $3,
+                players_per_side = $4,
+                price_cents = $5,
+                price_peak_cents = $6,
+                open_hour = $7,
+                close_hour = $8,
+                is_active = $9
+          WHERE id = $1
+          RETURNING id, complex_id AS "complexId", name, surface,
+                    players_per_side AS "playersPerSide",
+                    price_cents AS "priceCents", price_peak_cents AS "pricePeakCents",
+                    open_hour AS "openHour", close_hour AS "closeHour",
+                    is_active AS "isActive"`,
+        [courtId, name, surface, playersPerSide, priceCents, pricePeakCents, openHour, closeHour, isActive],
+      );
+    } catch (e) {
+      if (isPgError(e, PG_UNIQUE_VIOLATION)) {
+        throw new ConflictException('Ya existe otra cancha con ese nombre en este complejo');
+      }
       throw e;
     }
   }
@@ -183,11 +315,16 @@ export class ComplexesService {
       verificationStatus: string;
       licenseDocUrl: string;
     }>(
-      `UPDATE complexes SET license_doc_url = $2, license_doc_uploaded_at = now(),
-              verification_status = 'IN_REVIEW', verification_notes = NULL
+      `UPDATE complexes
+          SET license_doc_url = $2,
+              license_doc_mime = $3,
+              license_doc_base64 = $4,
+              license_doc_uploaded_at = now(),
+              verification_status = 'IN_REVIEW',
+              verification_notes = NULL
         WHERE id = $1
         RETURNING id, verification_status AS "verificationStatus", license_doc_url AS "licenseDocUrl"`,
-      [complexId, saved.storageKey],
+      [complexId, saved.storageKey, saved.contentType, saved.base64Data],
     );
     const signed = this.media.createSignedDocumentUrl(complexId, saved.fileName);
     const payload = {
@@ -233,8 +370,12 @@ export class ComplexesService {
       id: string;
       ownerId: string;
       licenseDocUrl: string | null;
+      licenseDocMime: string | null;
+      licenseDocBase64: string | null;
     }>(
-      `SELECT id, owner_id AS "ownerId", license_doc_url AS "licenseDocUrl" FROM complexes WHERE id = $1`,
+      `SELECT id, owner_id AS "ownerId", license_doc_url AS "licenseDocUrl",
+              license_doc_mime AS "licenseDocMime", license_doc_base64 AS "licenseDocBase64"
+         FROM complexes WHERE id = $1`,
       [complexId],
     );
     if (!row) throw new NotFoundException('Complejo no encontrado');
@@ -257,7 +398,10 @@ export class ComplexesService {
       }
     }
 
-    return this.media.readPrivateVerificationDocument(complexId, storedFileName);
+    return this.media.readPrivateVerificationDocument(complexId, storedFileName, {
+      base64Data: row.licenseDocBase64,
+      mimeType: row.licenseDocMime,
+    });
   }
 
   /**

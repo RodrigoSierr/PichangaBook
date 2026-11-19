@@ -34,7 +34,7 @@ class RealtimeApiService extends ChangeNotifier {
   String? _accessToken;
   UserProfile? _currentUser;
   bool _socketConnected = false;
-  bool _demoModeAvailable = true;
+  bool _demoModeAvailable = AppEnvironmentConfig.demoMode;
   String _limaDate = '';
 
   RealtimeApiService({
@@ -452,6 +452,89 @@ class RealtimeApiService extends ChangeNotifier {
         'bookingId': bookingId,
         'message': message.trim(),
       }),
+    );
+    return Map<String, dynamic>.from(_decodeResponse(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> upsertSubstituteProfile({
+    required String position,
+    int? skillLevel,
+    String? districtCode,
+    String? bio,
+    String? clipPublicId,
+    int? clipDurationSeconds,
+    String? clipUrl,
+    String? clipPosterUrl,
+    bool? isAvailable,
+  }) async {
+    final res = await _http.post(
+      Uri.parse('$baseUrl/api/substitutes/profile'),
+      headers: _headers(jsonBody: true),
+      body: jsonEncode({
+        'position': position,
+        if (skillLevel != null) 'skillLevel': skillLevel,
+        if (districtCode != null && districtCode.trim().isNotEmpty) 'districtCode': districtCode.trim(),
+        if (bio != null && bio.trim().isNotEmpty) 'bio': bio.trim(),
+        if (clipPublicId != null && clipPublicId.trim().isNotEmpty) 'clipPublicId': clipPublicId.trim(),
+        if (clipDurationSeconds != null) 'clipDurationSeconds': clipDurationSeconds,
+        if (clipUrl != null && clipUrl.trim().isNotEmpty) 'clipUrl': clipUrl.trim(),
+        if (clipPosterUrl != null && clipPosterUrl.trim().isNotEmpty) 'clipPosterUrl': clipPosterUrl.trim(),
+        if (isAvailable != null) 'isAvailable': isAvailable,
+      }),
+    );
+    return Map<String, dynamic>.from(_decodeResponse(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> requestClipUploadSignature() async {
+    final res = await _http.post(
+      Uri.parse('$baseUrl/api/substitutes/clip-upload-signature'),
+      headers: _headers(jsonBody: true),
+    );
+    return Map<String, dynamic>.from(_decodeResponse(res) as Map);
+  }
+
+  Future<Map<String, dynamic>> uploadSubstituteClipFile({
+    required String fileName,
+    required List<int> bytes,
+  }) async {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$baseUrl/api/substitutes/clip-upload'),
+    );
+    if (_accessToken != null && _accessToken!.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $_accessToken';
+    }
+    request.files.add(
+      http.MultipartFile.fromBytes(
+        'clip',
+        bytes,
+        filename: fileName,
+      ),
+    );
+    final streamed = await _http.send(request);
+    final res = await http.Response.fromStream(streamed);
+    return Map<String, dynamic>.from(_decodeResponse(res) as Map);
+  }
+
+  Future<List<SubstituteInvitationItem>> fetchMySubstituteInvitations() async {
+    final res = await _http.get(
+      Uri.parse('$baseUrl/api/substitutes/invitations'),
+      headers: _headers(),
+    );
+    final list = _decodeResponse(res) as List<dynamic>;
+    return list
+        .map((e) => SubstituteInvitationItem.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
+  }
+
+  Future<Map<String, dynamic>> respondSubstituteInvitation({
+    required String invitationId,
+    required String status,
+  }) async {
+    final res = await _http.patch(
+      Uri.parse('$baseUrl/api/substitutes/invitations/$invitationId'),
+      headers: _headers(jsonBody: true),
+      body: jsonEncode({'status': status}),
     );
     return Map<String, dynamic>.from(_decodeResponse(res) as Map);
   }

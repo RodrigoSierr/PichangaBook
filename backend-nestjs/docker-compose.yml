@@ -9,18 +9,17 @@ services:
     container_name: pichangabook-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: pichanga
-      POSTGRES_PASSWORD: pichanga_secret_2026
-      POSTGRES_DB: pichangabook
+      POSTGRES_USER: ${POSTGRES_USER:-pichanga}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pichanga_prod_change_me_2026}
+      POSTGRES_DB: ${POSTGRES_DB:-pichangabook}
       TZ: America/Lima
     ports:
-      - '5432:5432'
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U pichanga -d pichangabook']
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-pichanga} -d ${POSTGRES_DB:-pichangabook}']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -35,15 +34,24 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      PORT: 3000
-      PUBLIC_URL: http://localhost:3000
-      DATABASE_URL: postgres://pichanga:pichanga_secret_2026@postgres:5432/pichangabook
-      DATABASE_SSL: 'false'
-      DB_AUTO_MIGRATE: 'true'
-      AUTH_PROVIDER: DEMO
-      JWT_SECRET: pichangabook-ucsp-2026-secret
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-pichanga}:${POSTGRES_PASSWORD:-pichanga_prod_change_me_2026}@postgres:5432/${POSTGRES_DB:-pichangabook}}
+      DATABASE_SSL: ${DATABASE_SSL:-false}
+      DB_AUTO_MIGRATE: ${DB_AUTO_MIGRATE:-true}
+      ALLOW_DEMO_FALLBACK: ${ALLOW_DEMO_FALLBACK:-false}
+      DB_SEED_DEMO: ${DB_SEED_DEMO:-false}
+      AUTH_PROVIDER: ${AUTH_PROVIDER:-FIREBASE}
+      JWT_SECRET: ${JWT_SECRET:-reemplazar-por-secreto-productivo-seguro-2026}
+      MEDIA_SIGNING_SECRET: ${MEDIA_SIGNING_SECRET:-reemplazar-por-secreto-hmac-multimedia-2026}
+      CULQI_WEBHOOK_SECRET: ${CULQI_WEBHOOK_SECRET:-reemplazar-por-secreto-webhook-culqi-2026}
     ports:
-      - '3000:3000'
+      - '${PORT:-3000}:3000'
+    volumes:
+      - private_storage:/app/private-storage
 
 volumes:
   pgdata:
+  private_storage:

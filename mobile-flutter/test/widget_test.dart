@@ -356,7 +356,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('Renzo Valdivia · ARQUERO'), findsOneWidget);
 
-    await tester.tap(find.text('Convocar'));
+    await tester.tap(find.text('Convocar suplente'));
     await tester.pumpAndSettle();
     expect(find.text('Abrir Chat Seguro'), findsOneWidget);
 

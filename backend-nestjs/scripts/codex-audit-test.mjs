@@ -1,5 +1,6 @@
 import { createHmac, createSign, generateKeyPairSync } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { join, resolve } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist';
@@ -43,8 +44,16 @@ async function testPoint14Migrations() {
     join(ROOT_DIR, 'migrations', '002_align_expired_and_payments_reconciliation.sql'),
     'utf8',
   );
+  const mig003Sql = readFileSync(
+    join(ROOT_DIR, 'migrations', '003_seed_arequipa_districts.sql'),
+    'utf8',
+  );
+  const mig004Sql = readFileSync(
+    join(ROOT_DIR, 'migrations', '004_backup_verification_documents_db.sql'),
+    'utf8',
+  );
 
-  // 14.a Instalación limpia sin seed demo
+  // 14.a Instalación limpia sin seed demo (catálogo de distritos presente, 0 complejos/usuarios demo)
   const cleanDb = new PGlite({ extensions: { btree_gist } });
   await cleanDb.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
@@ -58,11 +67,21 @@ async function testPoint14Migrations() {
   await cleanDb.query(
     `INSERT INTO schema_migrations (version) VALUES ('002_align_expired_and_payments_reconciliation.sql')`,
   );
+  await cleanDb.exec(mig003Sql);
+  await cleanDb.query(
+    `INSERT INTO schema_migrations (version) VALUES ('003_seed_arequipa_districts.sql')`,
+  );
+  await cleanDb.exec(mig004Sql);
+  await cleanDb.query(
+    `INSERT INTO schema_migrations (version) VALUES ('004_backup_verification_documents_db.sql')`,
+  );
 
   const migsClean = await cleanDb.query(`SELECT version FROM schema_migrations ORDER BY version ASC`);
   const districtsClean = await cleanDb.query(`SELECT COUNT(*)::int AS c FROM districts`);
-  assert(migsClean.rows.length === 2, 'Instalación limpia debe registrar 2 migraciones');
-  assert(districtsClean.rows[0].c === 0, 'Sin seedDemo no deben cargarse datos de demostración');
+  const complexesClean = await cleanDb.query(`SELECT COUNT(*)::int AS c FROM complexes`);
+  assert(migsClean.rows.length === 4, 'Instalación limpia debe registrar 4 migraciones');
+  assert(districtsClean.rows[0].c === 10, 'El catálogo maestro de distritos de Arequipa debe existir siempre en producción');
+  assert(complexesClean.rows[0].c === 0, 'Sin seedDemo no deben cargarse complejos ni datos de demostración');
 
   // 14.b Actualización no destructiva de base de datos preexistente (sin EXPIRED ni payment_attempts)
   const legacyDb = new PGlite({ extensions: { btree_gist } });
@@ -75,9 +94,11 @@ async function testPoint14Migrations() {
     );
   await legacyDb.exec(legacySchema);
   await legacyDb.query(
-    `INSERT INTO districts (code, name, lat, lng, is_key_zone) VALUES ('CAYMA', 'Cayma', -16.3615, -71.5468, TRUE)`,
+    `INSERT INTO districts (code, name, lat, lng, is_key_zone) VALUES ('CAYMA', 'Cayma', -16.3615, -71.5468, TRUE) ON CONFLICT (code) DO NOTHING`,
   );
   await legacyDb.exec(mig002Sql);
+  await legacyDb.exec(mig003Sql);
+  await legacyDb.exec(mig004Sql);
 
   const enumLabels = await legacyDb.query(
     `SELECT e.enumlabel FROM pg_enum e JOIN pg_type t ON t.oid = e.enumtypid WHERE t.typname = 'booking_status'`,
@@ -95,7 +116,24 @@ async function testPoint14Migrations() {
 async function testPoint5ProductionAndNonDemoMode() {
   console.log('\n=== [Punto 5] Modo demo opt-in y validación de configuración productiva ===');
   const { ConfigService } = await import('@nestjs/config');
-  const { AppConfig } = await import('../dist/config/app.config.js');
+  const { AppConfig, shouldEnableDatabaseSsl } = await import('../dist/config/app.config.js');
+
+  assert(
+    shouldEnableDatabaseSsl('postgresql://user:pass@ep-cool-sky.us-east-2.aws.neon.tech/neondb?sslmode=require') === true,
+    'shouldEnableDatabaseSsl debe activar SSL para Neon.tech',
+  );
+  assert(
+    shouldEnableDatabaseSsl('postgresql://postgres.ref:pass@aws-0-sa-east-1.pooler.supabase.com:6543/postgres') === true,
+    'shouldEnableDatabaseSsl debe activar SSL para Supabase',
+  );
+  assert(
+    shouldEnableDatabaseSsl('postgres://user:pass@dpg-xyz.oregon-postgres.render.com/db') === true,
+    'shouldEnableDatabaseSsl debe activar SSL para Render Postgres',
+  );
+  assert(
+    shouldEnableDatabaseSsl('postgres://pichanga:pass@localhost:5432/pichangabook', 'false') === false,
+    'shouldEnableDatabaseSsl debe mantener SSL desactivado en conexiones locales sin SSL',
+  );
 
   const defaultCfg = new AppConfig(new ConfigService({ NODE_ENV: 'development' }));
   assert(defaultCfg.allowDemoFallback === false, 'allowDemoFallback debe ser false por defecto');
@@ -129,16 +167,42 @@ async function testPoint5ProductionAndNonDemoMode() {
   }
   assert(weakJwtRejected, 'validateStartupConfig debe rechazar JWT_SECRET por defecto en producción');
 
-  // Levantar instancia en modo no-demo (ALLOW_DEMO_FALLBACK=false)
+  // Levantar pasarela SMS HTTP mock para verificar el envío real de OTP fuera de modo demo
+  let capturedSmsPayload = null;
+  let capturedSmsAuth = null;
+  const smsMockServer = createServer((req, res) => {
+    capturedSmsAuth = req.headers.authorization;
+    let body = '';
+    req.on('data', (chunk) => {
+      body += chunk;
+    });
+    req.on('end', () => {
+      capturedSmsPayload = JSON.parse(body || '{}');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, messageId: 'sms-audit-1' }));
+    });
+  });
+  await new Promise((r) => smsMockServer.listen(0, '127.0.0.1', r));
+  const smsMockPort = smsMockServer.address().port;
+
+  // Levantar instancia en modo no-demo (ALLOW_DEMO_FALLBACK=false) con SMS_GATEWAY_URL activo
   const prevAllow = process.env.ALLOW_DEMO_FALLBACK;
   const prevNodeEnv = process.env.NODE_ENV;
+  const prevSmsUrl = process.env.SMS_GATEWAY_URL;
+  const prevSmsToken = process.env.SMS_GATEWAY_TOKEN;
   process.env.NODE_ENV = 'development';
   process.env.ALLOW_DEMO_FALLBACK = 'false';
   process.env.DB_SEED_DEMO = 'false';
+  process.env.SMS_GATEWAY_URL = `http://127.0.0.1:${smsMockPort}/send`;
+  process.env.SMS_GATEWAY_TOKEN = 'sms-secret-audit-token';
+
   const { AppModule } = await import('../dist/app.module.js');
+  const { AllExceptionsFilter } = await import('../dist/common/filters/all-exceptions.filter.js');
+  const { DatabaseService } = await import('../dist/database/database.service.js');
   const prodLikeApp = await NestFactory.create(AppModule, { logger: false, rawBody: true });
   prodLikeApp.setGlobalPrefix('api');
-  prodLikeApp.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  prodLikeApp.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+  prodLikeApp.useGlobalFilters(new AllExceptionsFilter());
   await prodLikeApp.listen(0);
   const url = (await prodLikeApp.getUrl()).replace('[::1]', '127.0.0.1');
 
@@ -150,6 +214,34 @@ async function testPoint5ProductionAndNonDemoMode() {
   const otpData = await otpRes.json();
   assert(otpRes.ok, `Solicitud OTP debe responder 200/201, devolvió ${otpRes.status}`);
   assert(otpData.devCode === undefined && otpData.demoOtp === undefined, 'No debe exponer devCode/demoOtp fuera de demo');
+  assert(otpData.deliveredVia === 'SMS_GATEWAY', 'Debe despachar el OTP mediante SMS_GATEWAY fuera de demo');
+  assert(
+    capturedSmsAuth === 'Bearer sms-secret-audit-token' &&
+      capturedSmsPayload?.to === '+51958222333' &&
+      /^\d{6}$/.test(capturedSmsPayload?.code ?? ''),
+    'El gateway SMS HTTP debe recibir el código OTP de 6 dígitos y el token Bearer',
+  );
+
+  // Verificar que al autenticar por OTP fuera de demo se persiste auth_provider = 'OTP_SMS' (no 'DEMO')
+  const verifyProdOtpRes = await fetch(`${url}/api/auth/otp/verify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      phone: '+51958222333',
+      code: capturedSmsPayload.code,
+      fullName: 'Diego Producción SMS',
+      role: 'ORGANIZER',
+    }),
+  });
+  assert(verifyProdOtpRes.ok, 'Verificación OTP despachado por SMS gateway debe responder 200');
+  const prodLikeDb = prodLikeApp.get(DatabaseService);
+  const [prodUserRow] = await prodLikeDb.query(
+    `SELECT auth_provider AS "authProvider" FROM users WHERE phone_e164 = '+51958222333'`,
+  );
+  assert(
+    prodUserRow?.authProvider === 'OTP_SMS',
+    `En modo no-demo users.auth_provider debe ser OTP_SMS, fue ${prodUserRow?.authProvider}`,
+  );
 
   const demoSessionRes = await fetch(`${url}/api/auth/demo-session`, {
     method: 'POST',
@@ -162,9 +254,16 @@ async function testPoint5ProductionAndNonDemoMode() {
   assert(demoResetRes.status === 403, `demo/reset fuera de demo debe devolver 403, devolvió ${demoResetRes.status}`);
 
   await prodLikeApp.close();
+  await new Promise((r) => smsMockServer.close(r));
   if (prevAllow !== undefined) process.env.ALLOW_DEMO_FALLBACK = prevAllow;
+  else delete process.env.ALLOW_DEMO_FALLBACK;
   if (prevNodeEnv !== undefined) process.env.NODE_ENV = prevNodeEnv;
-  console.log('✓ [Punto 5] Respuesta OTP sin código expuesto y bloqueo 403 de rutas demo verificados.');
+  else delete process.env.NODE_ENV;
+  if (prevSmsUrl !== undefined) process.env.SMS_GATEWAY_URL = prevSmsUrl;
+  else delete process.env.SMS_GATEWAY_URL;
+  if (prevSmsToken !== undefined) process.env.SMS_GATEWAY_TOKEN = prevSmsToken;
+  else delete process.env.SMS_GATEWAY_TOKEN;
+  console.log('✓ [Punto 5] Despacho SMS HTTP real, auth_provider OTP_SMS y bloqueo 403 de rutas demo verificados.');
 }
 
 async function main() {
@@ -364,6 +463,22 @@ async function main() {
     const signedDownloadRes = await fetch(`${BASE}${uploadDocData.temporaryDownloadUrl}`);
     assert(signedDownloadRes.status === 200, 'URL firmada HMAC debe permitir descarga autorizada (200)');
 
+    // Simular borrado del disco efímero (Render Free Tier) eliminando el archivo físico local
+    // y verificar que la descarga sigue respondiendo 200 gracias al respaldo automático en PostgreSQL
+    const uploadedFileName = uploadDocData.licenseDocUrl.split('/').pop();
+    const localDocPath = join(ROOT_DIR, 'private-storage', 'complex-docs', COMPLEX_ID, uploadedFileName);
+    if (existsSync(localDocPath)) {
+      unlinkSync(localDocPath);
+    }
+    assert(!existsSync(localDocPath), 'El archivo local debe haberse eliminado para simular el disco efímero');
+
+    const restoredDownloadRes = await fetch(`${BASE}${uploadDocData.temporaryDownloadUrl}`);
+    const restoredBytes = Buffer.from(await restoredDownloadRes.arrayBuffer());
+    assert(
+      restoredDownloadRes.status === 200 && restoredBytes.equals(pdfBytes),
+      'Tras reinicio de disco efímero, el PDF debe recuperarse intacto desde el respaldo en PostgreSQL (200)',
+    );
+
     // Verificar que el OWNER NO puede auto-aprobar su complejo a VERIFIED (403)
     const ownerSelfVerifyRes = await fetch(`${BASE}/api/complexes/${COMPLEX_ID}/verification`, {
       method: 'PATCH',
@@ -433,12 +548,33 @@ async function main() {
     const dbExpiredRow = await db.query(`SELECT status FROM bookings WHERE id = $1`, [holdBooking.id]);
     assert(dbExpiredRow[0].status === 'EXPIRED', `Estado en BD debe ser EXPIRED, fue ${dbExpiredRow[0].status}`);
 
+    // Verificar que la cuota parcial pagada de la vaca expirada fue reembolsada automáticamente (REFUNDED)
+    const expiredShares = await db.query(
+      `SELECT ps.status, ps.refund_id AS "refundId"
+         FROM payment_shares ps
+         JOIN split_payments sp ON sp.id = ps.split_payment_id
+        WHERE sp.booking_id = $1`,
+      [holdBooking.id],
+    );
+    assert(
+      expiredShares.length === 1 && expiredShares[0].status === 'REFUNDED' && Boolean(expiredShares[0].refundId),
+      'La cuota pagada de una vaca expirada debe quedar automáticamente en REFUNDED con refund_id',
+    );
+    const expiredAttempts = await db.query(
+      `SELECT status, refund_id AS "refundId" FROM payment_attempts WHERE booking_id = $1`,
+      [holdBooking.id],
+    );
+    assert(
+      expiredAttempts.length === 1 && expiredAttempts[0].status === 'REFUNDED' && Boolean(expiredAttempts[0].refundId),
+      'El intento de pago de la vaca expirada debe quedar en REFUNDED',
+    );
+
     const availAfterExpire = await (
       await fetch(`${BASE}/api/courts/${COURT_3_ID}/availability?date=${futureDate}`)
     ).json();
     const slot18Future = availAfterExpire.slots.find((s) => s.hour === 18);
     assert(slot18Future.status === 'FREE', `El turno tras expirar el hold debe quedar FREE, quedó ${slot18Future.status}`);
-    console.log('✓ [Punto 1] Hold vencido transicionado a EXPIRED y liberado como FREE en parrilla.');
+    console.log('✓ [Punto 1] Hold vencido transicionado a EXPIRED, cuota reembolsada (REFUNDED) y liberado como FREE.');
 
     // =========================================================================
     // [Puntos 11 y 2] Validación de invitaciones a suplentes y aislamiento de chat WebSocket
@@ -860,15 +996,147 @@ async function main() {
         partialSplitRow.pendingBalanceCents === partialSplitRow.totalCents - expectedSlotCents * 2,
       'Reserva con split parcial (2/6) debe reportar exactamente 2 cuotas cobradas y 4 pendientes',
     );
-    // Verificar que la reserva cancelada tiene pendingBalanceCents = 0
+    // Verificar que la reserva cancelada tiene pendingBalanceCents = 0 y refundedCents conciliado
     const cancelledRow = report.bookings.find((b) => b.id === toCancelBooking.id);
     assert(
-      cancelledRow && cancelledRow.status === 'CANCELLED' && cancelledRow.pendingBalanceCents === 0,
-      'Reserva CANCELLED no debe sumar saldo pendiente activo',
+      cancelledRow &&
+        cancelledRow.status === 'CANCELLED' &&
+        cancelledRow.pendingBalanceCents === 0 &&
+        cancelledRow.refundedCents === cancelledRow.depositCents,
+      'Reserva CANCELLED debe tener pendingBalanceCents = 0 y reembolso automático registrado en refundedCents',
     );
     console.log(
       `✓ [Punto 12] Reporte conciliado verificado: Recaudado S/ ${report.summary.reconciledPaidSoles} | Señas S/ ${(report.summary.depositCollectedCents / 100).toFixed(2)} | Split S/ ${(report.summary.splitCollectedCents / 100).toFixed(2)} | Pendiente S/ ${report.summary.pendingBalanceSoles}`,
     );
+
+    // =========================================================================
+    // [Nuevos Endpoints] CRUD de Canchas y Perfil / Respuesta de Suplentes
+    // =========================================================================
+    console.log('\n=== [Endpoints Nuevos] Gestión de Canchas (POST/PATCH) y Bolsa de Suplentes (Perfil + Invitaciones) ===');
+    // 1. PLAYER no puede crear cancha -> 403
+    const playerCreateCourtRes = await fetch(`${BASE}/api/complexes/${COMPLEX_ID}/courts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${playerToken}` },
+      body: JSON.stringify({
+        name: 'Cancha Intrusa',
+        playersPerSide: 6,
+        surface: 'SINTETICO',
+        priceCents: 9000,
+      }),
+    });
+    assert(playerCreateCourtRes.status === 403, 'PLAYER no debe poder crear canchas (403)');
+
+    // 2. OWNER crea nueva cancha -> 201
+    const ownerCreateCourtRes = await fetch(`${BASE}/api/complexes/${COMPLEX_ID}/courts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+      body: JSON.stringify({
+        name: 'Cancha 4 · Los Volcanes (7v7)',
+        playersPerSide: 7,
+        surface: 'SINTETICO',
+        priceCents: 11000,
+        pricePeakCents: 14000,
+        openHour: 8,
+        closeHour: 23,
+      }),
+    });
+    const createdCourt = await ownerCreateCourtRes.json();
+    assert(ownerCreateCourtRes.status === 201 && Boolean(createdCourt.id), 'OWNER debe poder crear cancha (201)');
+
+    // 3. OWNER actualiza cancha -> 200
+    const ownerPatchCourtRes = await fetch(`${BASE}/api/courts/${createdCourt.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ownerToken}` },
+      body: JSON.stringify({
+        name: 'Cancha 4 · Los Volcanes Pro (7v7)',
+        priceCents: 11500,
+      }),
+    });
+    const patchedCourt = await ownerPatchCourtRes.json();
+    assert(
+      ownerPatchCourtRes.status === 200 && patchedCourt.priceCents === 11500,
+      'OWNER debe poder actualizar precio/nombre de su cancha (200)',
+    );
+
+    // 4. Suplente actualiza perfil con duración de clip fuera de rango (10s) -> 400
+    const badSubProfileRes = await fetch(`${BASE}/api/substitutes/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${playerToken}` },
+      body: JSON.stringify({
+        position: 'DELANTERO',
+        skillLevel: 4,
+        districtCode: 'CAYMA',
+        bio: 'Delantero rápido por banda.',
+        clipDurationSeconds: 10,
+      }),
+    });
+    assert(badSubProfileRes.status === 400, 'Clip <15s debe ser rechazado con 400');
+
+    // 5. Subida directa de archivo de video .mp4 y registro de perfil válido (clip 22s) -> 201/200
+    const clipForm = new FormData();
+    clipForm.append('clip', new Blob([Buffer.from('00000018667479706d703432', 'hex')], { type: 'video/mp4' }), 'jugada-delantero.mp4');
+    const clipUpRes = await fetch(`${BASE}/api/substitutes/clip-upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${playerToken}` },
+      body: clipForm,
+    });
+    const clipUpData = await clipUpRes.json();
+    assert(
+      (clipUpRes.status === 200 || clipUpRes.status === 201) && clipUpData.clipUrl?.startsWith('/media/clips/'),
+      'POST /api/substitutes/clip-upload debe guardar el video .mp4 y devolver clipUrl',
+    );
+    const uploadedClipLocalPath = join(ROOT_DIR, 'public', clipUpData.clipUrl);
+    if (existsSync(uploadedClipLocalPath)) {
+      unlinkSync(uploadedClipLocalPath);
+    }
+
+    const okSubProfileRes = await fetch(`${BASE}/api/substitutes/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${playerToken}` },
+      body: JSON.stringify({
+        position: 'DELANTERO',
+        skillLevel: 4,
+        districtCode: 'CAYMA',
+        bio: 'Delantero rápido por banda disponible noches.',
+        clipDurationSeconds: 22,
+        clipUrl: clipUpData.clipUrl,
+      }),
+    });
+    const okSubProfile = await okSubProfileRes.json();
+    assert(
+      (okSubProfileRes.status === 200 || okSubProfileRes.status === 201) &&
+        okSubProfile.position === 'DELANTERO' &&
+        okSubProfile.clipUrl === clipUpData.clipUrl,
+      'Registro/actualización de perfil de suplente con clip de 22s debe responder 200/201',
+    );
+
+    // Verificar catálogo de 18 complejos deportivos reales verificados en Arequipa
+    const allComplexesRes = await fetch(`${BASE}/api/complexes`);
+    const allComplexes = await allComplexesRes.json();
+    assert(
+      allComplexesRes.status === 200 && Array.isArray(allComplexes) && allComplexes.length >= 18,
+      `El catálogo de Arequipa debe exponer al menos 18 complejos verificados, devolvió ${allComplexes?.length}`,
+    );
+
+    // 6. Suplente convocado (Renzo Valdivia) consulta sus invitaciones y acepta la invitación de Punto 11 -> 200
+    const subInvsRes = await fetch(`${BASE}/api/substitutes/invitations`, {
+      headers: { Authorization: `Bearer ${subToken}` },
+    });
+    const subInvs = await subInvsRes.json();
+    assert(subInvsRes.status === 200 && Array.isArray(subInvs) && subInvs.length >= 1, 'Suplente debe listar sus invitaciones');
+
+    const invitationIdToAccept = invValid.invitation?.id ?? subInvs[0].id;
+    const acceptInvRes = await fetch(`${BASE}/api/substitutes/invitations/${invitationIdToAccept}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${subToken}` },
+      body: JSON.stringify({ status: 'ACCEPTED' }),
+    });
+    const acceptInvData = await acceptInvRes.json();
+    assert(
+      acceptInvRes.status === 200 && acceptInvData.status === 'ACCEPTED',
+      'Suplente convocado debe poder aceptar la invitación (ACCEPTED)',
+    );
+    console.log('✓ [Endpoints Nuevos] CRUD de canchas, perfil de suplente (15-30s) y aceptación de convocatoria verificados.');
 
     // =========================================================================
     // [Punto 6] Protección XSS en el panel administrativo web

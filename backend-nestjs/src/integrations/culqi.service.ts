@@ -259,14 +259,38 @@ export class CulqiService {
    *  - Sin `CULQI_SECRET_KEY` y con `allowDemoFallback=true`: registra el reembolso simulado en Sandbox.
    *  - Sin `CULQI_SECRET_KEY` y sin modo demo: reporta `unverified_no_credentials` sin fingir éxito.
    */
-  async refundCharge(req: RefundRequest): Promise<RefundResult> {
+  async refundCharge(req: RefundRequest): Promise<RefundResult>;
+  async refundCharge(
+    chargeId: string,
+    amountCents: number,
+    reason?: 'duplicado' | 'fraudulento' | 'solicitud_comprador',
+  ): Promise<RefundResult>;
+  async refundCharge(
+    reqOrChargeId: RefundRequest | string,
+    amountCentsArg?: number,
+    reasonArg?: 'duplicado' | 'fraudulento' | 'solicitud_comprador',
+  ): Promise<RefundResult> {
+    const req: RefundRequest =
+      typeof reqOrChargeId === 'string'
+        ? {
+            chargeId: reqOrChargeId,
+            amountCents: amountCentsArg ?? 0,
+            reason: reasonArg ?? 'solicitud_comprador',
+          }
+        : reqOrChargeId;
+
     const cacheKey = req.idempotencyKey || `refund:${req.chargeId}`;
     if (!this.live && this.sandboxRefundCache.has(cacheKey)) {
       return { ...this.sandboxRefundCache.get(cacheKey)! };
     }
 
-    if (!this.live) {
-      if (!this.cfg.allowDemoFallback) {
+    const isSandboxCharge =
+      req.chargeId.startsWith('chr_sandbox_') ||
+      req.chargeId.startsWith('chr_demo_') ||
+      req.chargeId.startsWith('chr_late_');
+
+    if (!this.live || isSandboxCharge) {
+      if (!this.cfg.allowDemoFallback && !this.live) {
         return {
           id: null,
           chargeId: req.chargeId,

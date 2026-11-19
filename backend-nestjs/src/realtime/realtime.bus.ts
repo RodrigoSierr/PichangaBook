@@ -27,6 +27,7 @@ export class RealtimeBus {
 /** Convenciones de nombres de salas Socket.io. */
 export const Rooms = {
   complex: (complexId: string) => `complex:${complexId}`,
+  complexOwner: (complexId: string) => `complex-owner:${complexId}`,
   split: (token: string) => `split:${token}`,
   relay: (relayId: string) => `relay:${relayId}`,
   user: (userId: string) => `user:${userId}`,

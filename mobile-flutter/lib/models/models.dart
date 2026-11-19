@@ -217,7 +217,7 @@ class ReviewItem {
       id: (json['id'] ?? '').toString(),
       rating: (json['rating'] as num?)?.toInt() ?? 5,
       comment: (json['comment'] ?? '').toString(),
-      authorName: (json['authorName'] ?? 'Jugador').toString(),
+      authorName: (json['author'] ?? json['authorName'] ?? 'Jugador').toString(),
       createdAt: (json['createdAt'] ?? '').toString(),
     );
   }
@@ -466,6 +466,56 @@ class SubstituteProfile {
   }
 }
 
+class SubstituteInvitationItem {
+  final String id;
+  final String substituteId;
+  final String organizerId;
+  final String? bookingId;
+  final String status;
+  final String createdAt;
+  final String substituteUserId;
+  final String position;
+  final String substituteName;
+  final String organizerName;
+  final String? startsAt;
+  final String? courtName;
+  final String? complexName;
+
+  const SubstituteInvitationItem({
+    required this.id,
+    required this.substituteId,
+    required this.organizerId,
+    this.bookingId,
+    required this.status,
+    required this.createdAt,
+    required this.substituteUserId,
+    required this.position,
+    required this.substituteName,
+    required this.organizerName,
+    this.startsAt,
+    this.courtName,
+    this.complexName,
+  });
+
+  factory SubstituteInvitationItem.fromJson(Map<String, dynamic> json) {
+    return SubstituteInvitationItem(
+      id: (json['id'] ?? '').toString(),
+      substituteId: (json['substituteId'] ?? '').toString(),
+      organizerId: (json['organizerId'] ?? '').toString(),
+      bookingId: json['bookingId']?.toString(),
+      status: (json['status'] ?? 'SENT').toString(),
+      createdAt: (json['createdAt'] ?? '').toString(),
+      substituteUserId: (json['substituteUserId'] ?? '').toString(),
+      position: (json['position'] ?? 'ARQUERO').toString(),
+      substituteName: (json['substituteName'] ?? 'Suplente').toString(),
+      organizerName: (json['organizerName'] ?? 'Organizador').toString(),
+      startsAt: json['startsAt']?.toString(),
+      courtName: json['courtName']?.toString(),
+      complexName: json['complexName']?.toString(),
+    );
+  }
+}
+
 class RelayMessageItem {
   final String id;
   final String senderId;
@@ -489,7 +539,7 @@ class RelayMessageItem {
       senderId: (json['senderId'] ?? '').toString(),
       senderName: (json['senderName'] ?? 'Usuario').toString(),
       body: (json['body'] ?? '').toString(),
-      redacted: json['redacted'] == true,
+      redacted: (json['wasRedacted'] ?? json['redacted']) == true,
       createdAt: (json['createdAt'] ?? '').toString(),
     );
   }

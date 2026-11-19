@@ -70,16 +70,26 @@ Copia `backend-nestjs/.env.example` a `backend-nestjs/.env`. Por seguridad, el m
 | :--- | :--- | :--- |
 | `NODE_ENV` | Entorno de ejecución (`development` \| `production`) | `development` |
 | `PORT` | Puerto HTTP y WebSocket | `3000` |
+| `CORS_ORIGINS` | Orígenes CORS permitidos separados por coma (HTTP + Socket.IO) | `http://localhost:3000,http://localhost:8080` |
 | `ALLOW_DEMO_FALLBACK` | Habilita funciones de demostración y sandbox local (solo fuera de producción) | `false` *(opt-in)* |
 | `DATABASE_URL` | Cadena de conexión PostgreSQL 16 (obligatoria en `production`) | *(vacío → PGlite en dev)* |
 | `JWT_SECRET` | Secreto HMAC-SHA256 para firmar tokens JWT (mín. 16 caracteres en producción) | *(requerido en prod)* |
-| `MEDIA_SIGNING_SECRET` | Secreto HMAC-SHA256 para firmar URLs temporales de documentos privados | *(hereda `JWT_SECRET`)* |
+| `MEDIA_SIGNING_SECRET` | Secreto HMAC-SHA256 para firmar URLs temporales de documentos privados | *(requerido en prod; hereda `JWT_SECRET` en dev)* |
 | `CULQI_SECRET_KEY` | Llave privada de Culqi (`sk_test_...` / `sk_live_...`) para cargos y reembolsos reales | *(vacío → requiere `ALLOW_DEMO_FALLBACK=true` para sandbox)* |
-| `CULQI_WEBHOOK_SECRET` | Secreto HMAC-SHA256 para validar `x-culqi-signature` sobre `req.rawBody` | `pichangabook-webhook-demo` |
+| `CULQI_WEBHOOK_SECRET` | Secreto HMAC-SHA256 para validar `x-culqi-signature` sobre `req.rawBody` | *(requerido en prod; `pichangabook-webhook-demo` en dev)* |
+| `SMS_GATEWAY_URL` | Endpoint HTTP POST del proveedor SMS (Twilio / Webhook) para envío real de OTP | *(opcional en dev; activo fuera de modo demo)* |
+| `SMS_GATEWAY_TOKEN` | Token Bearer de autenticación para la pasarela SMS | *(opcional)* |
+| `SMS_SENDER_ID` | Identificador de remitente SMS | `PichangaBook` |
 | `FIREBASE_PROJECT_ID` | ID del proyecto Firebase para verificar tokens RS256 en `POST /api/auth/firebase` | *(opcional)* |
 | `FIREBASE_PUBLIC_KEY` | Certificado/llave pública PEM para verificación local RS256 de Firebase | *(opcional; descarga de Google si no se define)* |
 
-### 2.2 Ejecución del Backend y Paneles Web
+### 2.2 Ejecución del Backend, Migraciones y Paneles Web
+
+#### Ejecutar Migraciones Independientes (CI/CD o Pre-Despliegue)
+```bash
+cd "backend-nestjs"
+npm run db:migrate
+```
 
 #### Modo Demostración Local (con PGlite embebido y datos semilla de Arequipa)
 ```bash
@@ -93,8 +103,14 @@ npm run start:demo
 ```bash
 cd "backend-nestjs"
 npm run build
+npm run db:migrate
 npm run start:prod
 ```
+
+#### Endpoints Principales de Gestión (Propietarios y Bolsa de Suplentes)
+- `POST /api/complexes/:id/courts` y `PATCH /api/courts/:id`: Creación y edición de canchas (`OWNER` / `ADMIN`).
+- `POST /api/substitutes/profile`: Alta y actualización de perfil de suplente con clip validado de `15–30s`.
+- `GET /api/substitutes/invitations` y `PATCH /api/substitutes/invitations/:id`: Bandeja y respuesta (`ACCEPTED` / `DECLINED`) de convocatorias de suplentes.
 
 Una vez iniciado en `http://localhost:3000`:
 1. **Panel Web del Dueño / Recepción (`OWNER`):** `http://localhost:3000/admin/`

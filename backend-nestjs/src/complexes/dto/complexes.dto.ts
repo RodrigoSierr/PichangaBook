@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
   IsInt,
   IsLatitude,
@@ -49,6 +50,58 @@ export class CreateComplexDto {
 
   @IsOptional() @Type(() => Number) @IsNumber()
   lng?: number;
+}
+
+export class CreateCourtDto {
+  @IsString() @Length(2, 60)
+  name: string;
+
+  @IsOptional() @IsString() @MaxLength(30)
+  surface?: string;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(5) @Max(11)
+  playersPerSide?: number;
+
+  @Type(() => Number) @IsInt() @Min(100)
+  priceCents: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(100)
+  pricePeakCents?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(23)
+  openHour?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(24)
+  closeHour?: number;
+
+  @IsOptional() @IsBoolean()
+  isActive?: boolean;
+}
+
+export class UpdateCourtDto {
+  @IsOptional() @IsString() @Length(2, 60)
+  name?: string;
+
+  @IsOptional() @IsString() @MaxLength(30)
+  surface?: string;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(5) @Max(11)
+  playersPerSide?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(100)
+  priceCents?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(100)
+  pricePeakCents?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(0) @Max(23)
+  openHour?: number;
+
+  @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(24)
+  closeHour?: number;
+
+  @IsOptional() @IsBoolean()
+  isActive?: boolean;
 }
 
 export class ReviewDto {

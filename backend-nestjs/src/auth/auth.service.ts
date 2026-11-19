@@ -40,14 +40,15 @@ export class AuthService {
     return e164;
   }
 
-  async requestOtp(rawPhone: string) {
+  async requestOtp(rawPhone: string, clientIp?: string) {
     const phone = this.phoneOrThrow(rawPhone);
     const existing = await this.db.one<{ fullName: string; role: string }>(
       `SELECT full_name AS "fullName", role FROM users WHERE phone_e164 = $1`,
       [phone],
     );
+    const otpResult = await this.otp.request(phone, clientIp);
     return {
-      ...this.otp.request(phone),
+      ...otpResult,
       isRegistered: Boolean(existing),
       existingName: existing?.fullName ?? null,
       role: existing?.role ?? null,
@@ -57,7 +58,10 @@ export class AuthService {
   async verifyOtp(rawPhone: string, code: string, fullName?: string, role?: UserRole) {
     const phone = this.phoneOrThrow(rawPhone);
     this.otp.verify(phone, code);
-    return this.loginOrRegister(phone, 'DEMO', null, fullName, role);
+    const provider = this.cfg.demoMode && !this.cfg.isProduction && this.cfg.authProvider === 'DEMO'
+      ? 'DEMO'
+      : 'OTP_SMS';
+    return this.loginOrRegister(phone, provider, null, fullName, role);
   }
 
   async loginWithFirebase(idToken: string, fullName?: string, role?: UserRole) {
@@ -110,10 +114,11 @@ export class AuthService {
         `UPDATE users
             SET full_name = $2,
                 phone_verified_at = now(),
+                auth_provider = CASE WHEN auth_provider = 'DEMO' AND $3 <> 'DEMO' THEN $3 ELSE auth_provider END,
                 updated_at = now()
           WHERE id = $1
           RETURNING ${USER_COLUMNS}`,
-        [user.id, nextName],
+        [user.id, nextName, provider],
       );
     }
     if (!user) throw new NotFoundException();

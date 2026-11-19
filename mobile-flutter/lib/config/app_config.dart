@@ -12,6 +12,7 @@ class AppEnvironmentConfig {
   static const String _definedApiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: '');
   static const bool useNativeGoogleMap = bool.fromEnvironment('USE_NATIVE_GOOGLE_MAP', defaultValue: false);
   static const bool firebaseAuthEnabled = bool.fromEnvironment('FIREBASE_AUTH_ENABLED', defaultValue: false);
+  static const bool demoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
   static const String defaultComplexId = String.fromEnvironment(
     'DEFAULT_COMPLEX_ID',
     defaultValue: '00000000-0000-4000-b000-00000000c001',

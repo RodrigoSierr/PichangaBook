@@ -300,6 +300,28 @@ MockClient buildMockHttpClient() {
       );
     }
 
+    if (path == '/api/substitutes/invitations') {
+      return jsonUtf8Response(
+        [
+          {
+            'id': '00000000-0000-4000-9000-000000000901',
+            'substituteId': '00000000-0000-4000-9000-000000000501',
+            'organizerId': '00000000-0000-4000-a000-000000000021',
+            'bookingId': '00000000-0000-4000-e000-0000000000b2',
+            'status': 'SENT',
+            'createdAt': '2026-11-06T19:00:00Z',
+            'substituteUserId': '00000000-0000-4000-a000-000000000031',
+            'position': 'ARQUERO',
+            'substituteName': 'Renzo Valdivia',
+            'organizerName': 'Diego Salas',
+            'complexName': 'Complejo Deportivo El Misti',
+            'courtName': 'Cancha 1 · Fútbol 6',
+          },
+        ],
+        200,
+      );
+    }
+
     if (path == '/api/bookings/my') {
       return jsonUtf8Response(
         [
@@ -349,6 +371,25 @@ void main() {
     });
     expect(complex.minPriceSoles, '60');
     expect(complex.rating, closeTo(4.9, 0.01));
+
+    final review = ReviewItem.fromJson({
+      'id': 'r1',
+      'rating': 5,
+      'comment': 'Excelente cancha',
+      'author': 'Carlos Mendoza',
+      'createdAt': '2026-11-06',
+    });
+    expect(review.authorName, 'Carlos Mendoza');
+
+    final relayMsg = RelayMessageItem.fromJson({
+      'id': 'm1',
+      'senderId': 'u1',
+      'senderName': 'Diego',
+      'body': 'Mi número es [OCULTO]',
+      'wasRedacted': true,
+      'createdAt': '2026-11-06',
+    });
+    expect(relayMsg.redacted, isTrue);
   });
 
   test('Unit: RealtimeApiService autentica con OTP, persiste JWT y maneja rechazos de pago', () async {
@@ -406,12 +447,13 @@ void main() {
     await tester.tap(find.byIcon(Icons.sports_soccer).last);
     await tester.pumpAndSettle();
     expect(find.text('Disponible · Reservar'), findsOneWidget);
-    expect(find.text('Split 4/6'), findsWidgets);
+    expect(find.text('Split 4/6'), findsOneWidget);
 
-    // 3. Navegar a pestaña Split Payment y abonar un cupo (4/6 -> 5/6)
-    await tester.tap(find.text('Split 4/6').last);
+    // 3. Navegar a pestaña Mis Partidos (Split Payment) y abonar un cupo (4/6 -> 5/6)
+    await tester.tap(find.text('Mis Partidos').last);
     await tester.pumpAndSettle();
     expect(find.text('Cupos pagados: 4 de 6'), findsOneWidget);
+    expect(find.textContaining('chr_demo_'), findsNothing);
 
     final payBtn = find.text('Abonar YAPE S/ 15.00');
     await tester.ensureVisible(payBtn);

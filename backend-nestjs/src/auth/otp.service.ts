@@ -22,19 +22,33 @@ export class OtpService {
   private readonly logger = new Logger(OtpService.name);
   private readonly challenges = new Map<string, OtpChallenge>();
   private readonly requestsLog = new Map<string, number[]>();
+  private readonly ipRequestsLog = new Map<string, number[]>();
 
   static readonly TTL_MS = 5 * 60_000;
   static readonly MAX_ATTEMPTS = 5;
   static readonly MAX_REQUESTS_PER_10_MIN = 5;
+  static readonly MAX_REQUESTS_PER_IP_10_MIN = 20;
 
   constructor(private readonly cfg: AppConfig) {}
 
-  request(phoneE164: string): { expiresInSeconds: number; devCode?: string; demoOtp?: string; provider: string } {
+  async request(
+    phoneE164: string,
+    clientIp?: string,
+  ): Promise<{ expiresInSeconds: number; devCode?: string; demoOtp?: string; provider: string; deliveredVia?: string }> {
     const now = Date.now();
     const recent = (this.requestsLog.get(phoneE164) ?? []).filter((t) => now - t < 10 * 60_000);
     if (recent.length >= OtpService.MAX_REQUESTS_PER_10_MIN) {
-      throw new HttpException('Demasiados intentos. Espera unos minutos.', HttpStatus.TOO_MANY_REQUESTS);
+      throw new HttpException('Demasiados intentos para este número. Espera unos minutos.', HttpStatus.TOO_MANY_REQUESTS);
     }
+
+    if (clientIp) {
+      const recentIp = (this.ipRequestsLog.get(clientIp) ?? []).filter((t) => now - t < 10 * 60_000);
+      if (recentIp.length >= OtpService.MAX_REQUESTS_PER_IP_10_MIN) {
+        throw new HttpException('Demasiadas solicitudes de OTP desde esta dirección IP. Espera unos minutos.', HttpStatus.TOO_MANY_REQUESTS);
+      }
+      this.ipRequestsLog.set(clientIp, [...recentIp, now]);
+    }
+
     this.requestsLog.set(phoneE164, [...recent, now]);
 
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
@@ -46,15 +60,69 @@ export class OtpService {
       return {
         expiresInSeconds: OtpService.TTL_MS / 1000,
         provider: this.cfg.authProvider,
+        deliveredVia: 'DEMO_INLINE',
         devCode: code,
         demoOtp: code,
       };
     }
 
+    if (this.cfg.smsGatewayConfigured) {
+      await this.dispatchSmsViaGateway(phoneE164, code);
+      return {
+        expiresInSeconds: OtpService.TTL_MS / 1000,
+        provider: 'OTP_SMS',
+        deliveredVia: 'SMS_GATEWAY',
+      };
+    }
+
+    if (this.cfg.isProduction) {
+      this.logger.warn(
+        `[SMS-PROD] Solicitud OTP para ${phoneE164.slice(0, 6)}*** sin SMS_GATEWAY_URL configurado; verifica la configuración del proveedor SMS.`,
+      );
+    }
+
     return {
       expiresInSeconds: OtpService.TTL_MS / 1000,
-      provider: this.cfg.authProvider,
+      provider: this.cfg.authProvider === 'DEMO' ? 'OTP_SMS' : this.cfg.authProvider,
     };
+  }
+
+  private async dispatchSmsViaGateway(phoneE164: string, code: string): Promise<void> {
+    const { url, token, senderId } = this.cfg.smsGateway;
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          to: phoneE164,
+          sender: senderId,
+          code,
+          message: `PichangaBook: Tu código de verificación es ${code}. Válido por 5 minutos.`,
+        }),
+      });
+    } catch (err) {
+      this.logger.error(`Error de red enviando SMS OTP a ${phoneE164.slice(0, 6)}***: ${(err as Error).message}`);
+      throw new HttpException(
+        'No se pudo conectar con la pasarela SMS para enviar el código de verificación.',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
+
+    if (!res.ok) {
+      this.logger.error(`Pasarela SMS devolvió HTTP ${res.status} para ${phoneE164.slice(0, 6)}***`);
+      throw new HttpException(
+        'El proveedor SMS rechazó el despacho del código de verificación.',
+        HttpStatus.BAD_GATEWAY,
+      );
+    }
   }
 
   verify(phoneE164: string, code: string): void {

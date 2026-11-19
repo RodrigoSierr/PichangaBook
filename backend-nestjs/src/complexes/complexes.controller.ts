@@ -21,7 +21,15 @@ import { isValidRuc } from '../common/utils/ruc.util';
 import { MAX_VERIFICATION_DOC_BYTES } from '../integrations/media.service';
 import { AvailabilityService } from './availability.service';
 import { ComplexesService } from './complexes.service';
-import { CreateComplexDto, DateQuery, ListComplexesQuery, ReviewDto, VerificationDto } from './dto/complexes.dto';
+import {
+  CreateComplexDto,
+  CreateCourtDto,
+  DateQuery,
+  ListComplexesQuery,
+  ReviewDto,
+  UpdateCourtDto,
+  VerificationDto,
+} from './dto/complexes.dto';
 
 @Controller()
 export class ComplexesController {
@@ -44,13 +52,13 @@ export class ComplexesController {
 
   @Public()
   @Get('complexes/:id')
-  detail(@Param('id') id: string) {
+  detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.complexes.detail(id);
   }
 
   @Public()
   @Get('courts/:id/availability')
-  courtAvailability(@Param('id') id: string, @Query() q: DateQuery) {
+  courtAvailability(@Param('id', ParseUUIDPipe) id: string, @Query() q: DateQuery) {
     const date = q.date ?? limaToday();
     if (!isValidDate(date)) throw new BadRequestException('Fecha inválida');
     return this.availability.courtGrid(id, date);
@@ -58,7 +66,7 @@ export class ComplexesController {
 
   @Post('complexes/:id/reviews')
   addReview(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthUser,
     @Body() dto: ReviewDto,
   ) {
@@ -66,9 +74,35 @@ export class ComplexesController {
   }
 
   @Roles('OWNER', 'ADMIN')
+  @Get('owner/complexes')
+  myComplexes(@CurrentUser() user: AuthUser) {
+    return this.complexes.listByOwner(user);
+  }
+
+  @Roles('OWNER', 'ADMIN')
   @Post('complexes')
   create(@CurrentUser() user: AuthUser, @Body() dto: CreateComplexDto) {
     return this.complexes.create(user, dto);
+  }
+
+  @Roles('OWNER', 'ADMIN')
+  @Post('complexes/:id/courts')
+  createCourt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateCourtDto,
+  ) {
+    return this.complexes.createCourt(id, user, dto);
+  }
+
+  @Roles('OWNER', 'ADMIN')
+  @Patch('courts/:id')
+  updateCourt(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+    @Body() dto: UpdateCourtDto,
+  ) {
+    return this.complexes.updateCourt(id, user, dto);
   }
 
   /**

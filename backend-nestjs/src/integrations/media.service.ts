@@ -7,10 +7,11 @@ import { AppConfig } from '../config/app.config';
 export const CLIP_MIN_SECONDS = 15;
 export const CLIP_MAX_SECONDS = 30;
 export const MAX_VERIFICATION_DOC_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_SUBSTITUTE_CLIP_BYTES = 40 * 1024 * 1024; // 40 MB
 
 /**
  * Multimedia y Documentos Privados:
- *  - Clips de suplentes (15-30 s) → Cloudinary con *signed upload* directo.
+ *  - Clips de suplentes (15-30 s) → Cloudinary con *signed upload* directo o subida local de .mp4/.mov.
  *  - Documentos de validación (RUC / licencia municipal) → almacenamiento privado
  *    fuera de `public/` (`private-storage/complex-docs`), inaccesible por URL pública,
  *    con descarga protegida por ownership (`OWNER`/`ADMIN`) o URL temporal firmada con HMAC.
@@ -18,6 +19,7 @@ export const MAX_VERIFICATION_DOC_BYTES = 5 * 1024 * 1024; // 5 MB
 @Injectable()
 export class MediaService {
   readonly privateDocsDir = resolve(__dirname, '..', '..', 'private-storage', 'complex-docs');
+  readonly publicClipsDir = resolve(__dirname, '..', '..', 'public', 'media', 'clips');
 
   constructor(private readonly cfg: AppConfig) {}
 
@@ -72,13 +74,58 @@ export class MediaService {
   }
 
   /**
+   * Guarda un archivo de video (.mp4 / .mov / .webm) subido directamente por el suplente
+   * en `/public/media/clips/` y devuelve su `clipUrl` y `clipPublicId`.
+   */
+  saveSubstituteClipFile(
+    userId: string,
+    file: { originalname: string; buffer: Buffer; mimetype: string; size?: number } | undefined,
+  ): { clipUrl: string; clipPublicId: string; fileName: string } {
+    if (!file || !file.buffer?.length) {
+      throw new BadRequestException('Selecciona un archivo de video (.mp4 o .mov) para tu perfil.');
+    }
+    const allowedMimes: Record<string, string> = {
+      'video/mp4': '.mp4',
+      'video/quicktime': '.mov',
+      'video/webm': '.webm',
+      'application/octet-stream': '.mp4',
+    };
+    const rawExt = extname(file.originalname || '').toLowerCase();
+    const isAllowedExt = ['.mp4', '.mov', '.webm'].includes(rawExt);
+    const ext = isAllowedExt ? rawExt : allowedMimes[file.mimetype];
+    if (!ext) {
+      throw new BadRequestException('Formato de video no soportado. Sube un archivo .mp4, .mov o .webm.');
+    }
+    const byteLength = file.size ?? file.buffer.length;
+    if (byteLength > MAX_SUBSTITUTE_CLIP_BYTES) {
+      throw new BadRequestException('El video supera el tamaño máximo permitido de 40 MB.');
+    }
+
+    const safeUser = basename(userId).replace(/[^a-zA-Z0-9-]/g, '').slice(0, 12);
+    const fileName = `clip-${safeUser}-${Date.now()}-${randomBytes(4).toString('hex')}${ext}`;
+    try {
+      mkdirSync(this.publicClipsDir, { recursive: true });
+      writeFileSync(resolve(this.publicClipsDir, fileName), file.buffer);
+    } catch {
+      // En caso de contenedor de solo lectura, conserva referencia al clip demostrativo
+    }
+
+    return {
+      clipUrl: `/media/clips/${fileName}`,
+      clipPublicId: `pichangabook/clips/${fileName.replace(/\.[^.]+$/, '')}`,
+      fileName,
+    };
+  }
+
+  /**
    * Guarda un documento de validación (PDF/JPG/PNG/WEBP) en almacenamiento privado
-   * fuera de cualquier ruta estática pública.
+   * fuera de cualquier ruta estática pública y devuelve su representación en base64
+   * para respaldarlo en PostgreSQL frente a discos efímeros (Render Free Tier).
    */
   saveVerificationDocument(
     complexId: string,
     file: { originalname: string; buffer: Buffer; mimetype: string; size?: number },
-  ): { storageKey: string; fileName: string } {
+  ): { storageKey: string; fileName: string; contentType: string; base64Data: string } {
     const allowed: Record<string, string> = {
       'application/pdf': '.pdf',
       'image/jpeg': '.jpg',
@@ -95,16 +142,23 @@ export class MediaService {
     }
     const safeComplexId = basename(complexId).replace(/[^a-zA-Z0-9-]/g, '');
     const dir = resolve(this.privateDocsDir, safeComplexId);
-    mkdirSync(dir, { recursive: true });
 
     const rawExt = extname(file.originalname || '').toLowerCase();
     const finalExt = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'].includes(rawExt) ? rawExt : ext;
     const fileName = `${Date.now()}-${randomBytes(6).toString('hex')}${finalExt}`;
-    writeFileSync(resolve(dir, fileName), file.buffer, { mode: 0o600 });
+
+    try {
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(resolve(dir, fileName), file.buffer, { mode: 0o600 });
+    } catch {
+      // Si el contenedor tiene sistema de archivos de solo lectura o efímero, el respaldo en PostgreSQL asegura disponibilidad
+    }
 
     return {
       storageKey: `private://complex-docs/${safeComplexId}/${fileName}`,
       fileName,
+      contentType: file.mimetype,
+      base64Data: file.buffer.toString('base64'),
     };
   }
 
@@ -117,7 +171,7 @@ export class MediaService {
   }
 
   private signDocumentToken(complexId: string, fileName: string, expiresEpochSec: number): string {
-    return createHmac('sha256', this.cfg.jwtSecret)
+    return createHmac('sha256', this.cfg.mediaSigningSecret)
       .update(`doc:${complexId}:${fileName}:${expiresEpochSec}`)
       .digest('hex');
   }
@@ -158,7 +212,11 @@ export class MediaService {
     return expected.length === given.length && timingSafeEqual(expected, given);
   }
 
-  readPrivateVerificationDocument(complexId: string, fileName: string): {
+  readPrivateVerificationDocument(
+    complexId: string,
+    fileName: string,
+    fallback?: { base64Data?: string | null; mimeType?: string | null },
+  ): {
     buffer: Buffer;
     contentType: string;
     fileName: string;
@@ -168,12 +226,8 @@ export class MediaService {
     if (!safeFileName || safeFileName !== fileName || safeFileName.includes('..')) {
       throw new ForbiddenException('Nombre de documento inválido.');
     }
-    const fullPath = resolve(this.privateDocsDir, safeComplexId, safeFileName);
-    if (!existsSync(fullPath)) {
-      throw new NotFoundException('Documento de verificación no encontrado en almacenamiento privado.');
-    }
     const ext = extname(safeFileName).toLowerCase();
-    const contentType =
+    const inferredContentType =
       ext === '.pdf'
         ? 'application/pdf'
         : ext === '.png'
@@ -181,10 +235,34 @@ export class MediaService {
           : ext === '.webp'
             ? 'image/webp'
             : 'image/jpeg';
-    return {
-      buffer: readFileSync(fullPath),
-      contentType,
-      fileName: safeFileName,
-    };
+    const contentType = fallback?.mimeType || inferredContentType;
+
+    const dir = resolve(this.privateDocsDir, safeComplexId);
+    const fullPath = resolve(dir, safeFileName);
+    if (existsSync(fullPath)) {
+      return {
+        buffer: readFileSync(fullPath),
+        contentType,
+        fileName: safeFileName,
+      };
+    }
+
+    // Respaldo automático desde PostgreSQL cuando el disco efímero del contenedor se reinició
+    if (fallback?.base64Data) {
+      const restoredBuffer = Buffer.from(fallback.base64Data, 'base64');
+      try {
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(fullPath, restoredBuffer, { mode: 0o600 });
+      } catch {
+        // Ignorar si no se puede escribir en caché local
+      }
+      return {
+        buffer: restoredBuffer,
+        contentType,
+        fileName: safeFileName,
+      };
+    }
+
+    throw new NotFoundException('Documento de verificación no encontrado en almacenamiento privado.');
   }
 }

@@ -5,7 +5,7 @@ import { Pool, PoolClient } from 'pg';
 import { PGlite } from '@electric-sql/pglite';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { btree_gist } = require('@electric-sql/pglite/contrib/btree_gist');
-import { AppConfig } from '../config/app.config';
+import { AppConfig, shouldEnableDatabaseSsl } from '../config/app.config';
 
 /** Contrato mínimo para ejecutar SQL (fuera o dentro de una transacción). */
 export interface SqlExecutor {
@@ -36,13 +36,14 @@ export class DatabaseService implements SqlExecutor, OnModuleInit, OnApplication
   async onModuleInit(): Promise<void> {
     if (this.cfg.databaseUrl) {
       this.driver = 'postgres';
+      const useSsl = this.cfg.databaseSsl || shouldEnableDatabaseSsl(this.cfg.databaseUrl);
       this.pool = new Pool({
         connectionString: this.cfg.databaseUrl,
-        ssl: this.cfg.databaseSsl ? { rejectUnauthorized: false } : undefined,
+        ssl: useSsl ? { rejectUnauthorized: false } : undefined,
         max: 20,
       });
       await this.pool.query('SELECT 1');
-      this.logger.log('Conectado a PostgreSQL (servidor)');
+      this.logger.log(`Conectado a PostgreSQL (servidor${useSsl ? ' · SSL activo' : ''})`);
     } else {
       this.driver = 'pglite';
       this.lite = new PGlite({
@@ -128,10 +129,10 @@ export class DatabaseService implements SqlExecutor, OnModuleInit, OnApplication
     // 3. Carga condicional de seed.sql (SOLO en entornos demo opt-in y cuando está vacío)
     let seeded = false;
     if (seedDemo) {
-      const [distCount] = await this.query<{ count: number }>(
-        `SELECT COUNT(*)::int AS count FROM districts`,
+      const [complexCount] = await this.query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM complexes`,
       );
-      if ((distCount?.count ?? 0) === 0) {
+      if ((complexCount?.count ?? 0) === 0) {
         const seedSql = readFileSync(resolve(root, 'seed.sql'), 'utf8');
         await this.exec(seedSql);
         seeded = true;

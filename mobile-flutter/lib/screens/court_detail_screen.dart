@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/app_config.dart';
 import '../models/models.dart';
 import '../services/realtime_api_service.dart';
 import '../theme/app_theme.dart';
@@ -161,20 +162,21 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
     if (result != null && mounted) {
       await _loadData();
       if (!mounted) return;
-      final split = result['splitPayment'] as Map<String, dynamic>?;
+      final rawSplit = result['split'] ?? result['splitPayment'];
+      final split = rawSplit is Map ? Map<String, dynamic>.from(rawSplit) : null;
       final shareToken = split?['shareToken']?.toString();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: PichangaTheme.turfGreenDark,
           content: Text(
             shareToken != null
-                ? '¡Reserva en espera creada! Link Split: $shareToken'
+                ? '¡Reserva en espera creada! Comparte el pago desde Mis Partidos.'
                 : '¡Reserva confirmada para las ${slot.label}!',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           action: shareToken != null && widget.onOpenSplitToken != null
               ? SnackBarAction(
-                  label: 'Ver Split',
+                  label: 'Mis Partidos',
                   textColor: PichangaTheme.turfGreen,
                   onPressed: () => widget.onOpenSplitToken!(shareToken),
                 )
@@ -400,8 +402,20 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             },
           ),
         ),
-        const SizedBox(height: 14),
-        // Parrilla de horarios
+        const SizedBox(height: 12),
+        // Leyenda de estados de cancha con alto contraste (luz de día)
+        const Wrap(
+          spacing: 14,
+          runSpacing: 6,
+          children: [
+            _SlotLegendItem(color: PichangaTheme.turfGreen, label: 'Disponible'),
+            _SlotLegendItem(color: PichangaTheme.skyAccent, label: 'Split en curso'),
+            _SlotLegendItem(color: PichangaTheme.textSecondary, label: 'Ocupado'),
+            _SlotLegendItem(color: PichangaTheme.warningAmber, label: 'Bloqueado'),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Parrilla de horarios con borde lateral grueso, ícono claro y alto contraste
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -409,72 +423,112 @@ class _CourtDetailScreenState extends State<CourtDetailScreen> {
             crossAxisCount: 3,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
-            childAspectRatio: 1.22,
+            childAspectRatio: 1.18,
           ),
           itemCount: _slots.length,
           itemBuilder: (_, idx) {
             final s = _slots[idx];
             final isFree = s.status == 'FREE';
             final isSplit = s.status == 'HELD';
+            final isBlocked = s.status == 'BLOCKED';
             final bg = isFree
-                ? PichangaTheme.turfGreenDark
+                ? PichangaTheme.turfGreenDark.withValues(alpha: 0.72)
                 : isSplit
-                    ? const Color(0xFF0C4A6E)
-                    : const Color(0xFF1E293B);
-            final borderColor = isFree
+                    ? PichangaTheme.skyDark.withValues(alpha: 0.72)
+                    : isBlocked
+                        ? PichangaTheme.warningAmberDark.withValues(alpha: 0.75)
+                        : const Color(0xFF151F32);
+            final accentColor = isFree
                 ? PichangaTheme.turfGreen
                 : isSplit
                     ? PichangaTheme.skyAccent
-                    : Colors.white24;
+                    : isBlocked
+                        ? PichangaTheme.warningAmber
+                        : PichangaTheme.textSecondary;
+            final stateIcon = isFree
+                ? Icons.check_circle_outline
+                : isSplit
+                    ? Icons.bolt
+                    : isBlocked
+                        ? Icons.block
+                        : Icons.lock_outline;
             return InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: () => _onSlotTap(s),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: borderColor, width: isFree ? 1.4 : 1.0),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            s.label,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            'S/ ${s.priceSoles}',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: isFree ? PichangaTheme.turfGreen : Colors.white70,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: bg,
+                    border: Border(
+                      left: BorderSide(color: accentColor, width: 4.5),
+                      top: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                      right: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                      bottom: BorderSide(color: accentColor.withValues(alpha: 0.35)),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              s.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 13,
+                                fontFeatures: PichangaTheme.tabularNums,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      isFree
-                          ? 'Disponible · Reservar'
-                          : isSplit
-                              ? 'Split ${s.splitPaid ?? 1}/${s.splitTotal ?? 6}'
-                              : 'Ocupado (${s.channel ?? 'RECEP'})',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              'S/ ${s.priceSoles}',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isFree ? PichangaTheme.turfGreen : Colors.white70,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                fontFeatures: PichangaTheme.tabularNums,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(stateIcon, size: 13, color: accentColor),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              isFree
+                                  ? 'Disponible · Reservar'
+                                  : isSplit
+                                      ? 'Split ${s.splitPaid ?? 1}/${s.splitTotal ?? 6}'
+                                      : isBlocked
+                                          ? 'Bloqueado'
+                                          : 'Ocupado (${s.channel ?? 'RECEP'})',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isFree || isSplit || isBlocked ? Colors.white : Colors.white70,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -569,13 +623,14 @@ class _BookingCheckoutSheetState extends State<_BookingCheckoutSheet> {
 
   String _buildSourceId() {
     final prefix = _method == 'CARD' ? 'tok' : _method == 'PLIN' ? 'pln' : 'ype';
-    if (_sandboxScenario == 'DECLINED') {
+    final isDemo = AppEnvironmentConfig.demoMode && widget.api.demoModeAvailable;
+    if (isDemo && _sandboxScenario == 'DECLINED') {
       return '${prefix}_test_declined_card';
     }
-    if (_sandboxScenario == 'PENDING') {
+    if (isDemo && _sandboxScenario == 'PENDING') {
       return '${prefix}_test_pending_wallet';
     }
-    return '${prefix}_sandbox_${DateTime.now().millisecondsSinceEpoch}';
+    return '${prefix}_${isDemo ? 'sandbox' : 'live'}_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<void> _submitBooking() async {
@@ -705,24 +760,26 @@ class _BookingCheckoutSheetState extends State<_BookingCheckoutSheet> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              initialValue: _sandboxScenario,
-              isExpanded: true,
-              dropdownColor: PichangaTheme.bgElevated,
-              decoration: const InputDecoration(
-                labelText: 'Token Culqi Sandbox (Simulación de Cargo)',
-                prefixIcon: Icon(Icons.security, size: 18),
+            if (AppEnvironmentConfig.demoMode && widget.api.demoModeAvailable) ...[
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                initialValue: _sandboxScenario,
+                isExpanded: true,
+                dropdownColor: PichangaTheme.bgElevated,
+                decoration: const InputDecoration(
+                  labelText: 'Estado del pago (Modo Prueba)',
+                  prefixIcon: Icon(Icons.security, size: 18),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'APPROVED', child: Text('Pago aprobado inmediato')),
+                  DropdownMenuItem(value: 'PENDING', child: Text('Pago en verificación')),
+                  DropdownMenuItem(value: 'DECLINED', child: Text('Simular fondos insuficientes')),
+                ],
+                onChanged: (v) {
+                  if (v != null) setState(() => _sandboxScenario = v);
+                },
               ),
-              items: const [
-                DropdownMenuItem(value: 'APPROVED', child: Text('Token Aprobado (ype_sandbox_*)')),
-                DropdownMenuItem(value: 'PENDING', child: Text('Token en Revisión (ype_test_pending)')),
-                DropdownMenuItem(value: 'DECLINED', child: Text('Token Fondos Insuficientes (tok_test_declined)')),
-              ],
-              onChanged: (v) {
-                if (v != null) setState(() => _sandboxScenario = v);
-              },
-            ),
+            ],
             const SizedBox(height: 10),
             TextField(
               controller: _notesCtrl,
@@ -763,6 +820,39 @@ class _BookingCheckoutSheetState extends State<_BookingCheckoutSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SlotLegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _SlotLegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 4,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: PichangaTheme.textSecondary,
+          ),
+        ),
+      ],
     );
   }
 }

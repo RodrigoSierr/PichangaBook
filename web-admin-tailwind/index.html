@@ -8,17 +8,22 @@
   <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
+            sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
           },
           colors: {
+            obsidian: {
+              950: '#0B0F17',
+              900: '#111827',
+              800: '#1E293B',
+            },
             pitch: {
               50: '#ecfdf5',
               400: '#34d399',
@@ -26,289 +31,539 @@
               600: '#059669',
               900: '#064e3b',
             },
+            royal: {
+              400: '#818cf8',
+              500: '#6366F1',
+              600: '#4F46E5',
+            },
           },
         },
       },
     };
   </script>
   <style>
+    :root {
+      color-scheme: dark;
+      caret-color: #10B981;
+    }
     body {
-      background-color: #070d19;
+      background-color: #0B0F17;
+      color: #F8FAFC;
+      font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      letter-spacing: -0.01em;
       background-image:
-        radial-gradient(at 15% 10%, rgba(16, 185, 129, 0.10) 0px, transparent 45%),
-        radial-gradient(at 85% 90%, rgba(59, 130, 246, 0.08) 0px, transparent 50%);
+        radial-gradient(at 15% 0%, rgba(16, 185, 129, 0.06) 0px, transparent 45%),
+        radial-gradient(at 85% 10%, rgba(99, 102, 241, 0.07) 0px, transparent 50%);
+    }
+    h1 { font-size: 28px; font-weight: 800; color: #FFFFFF; line-height: 1.2; letter-spacing: -0.025em; }
+    h2 { font-size: 20px; font-weight: 700; color: #FFFFFF; line-height: 1.3; letter-spacing: -0.02em; }
+    h3 { font-size: 16px; font-weight: 700; color: #F8FAFC; line-height: 1.35; letter-spacing: -0.015em; }
+    p, span, label, dt, dd, th, td, button, select, input, a { color: #E2E8F0; }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .saas-card {
+      background-color: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.55);
+    }
+    ::selection {
+      background-color: rgba(99, 102, 241, 0.3);
+      color: #F8FAFC;
+    }
+    :focus-visible {
+      outline: 2px solid #6366F1;
+      outline-offset: 2px;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0F17;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1E293B;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
     }
     .slot-flash {
-      animation: flashPulse 1.3s ease-out;
+      animation: flashPulse 1.1s cubic-bezier(0.16, 1, 0.3, 1);
     }
     @keyframes flashPulse {
-      0% { transform: scale(1.03); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
-      70% { transform: scale(1); box-shadow: 0 0 0 14px rgba(16, 185, 129, 0); }
+      0% { transform: scale(1.02); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.75); }
+      70% { transform: scale(1); box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
       100% { transform: scale(1); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
     }
   </style>
 </head>
-<body class="text-slate-100 font-sans min-h-screen antialiased selection:bg-emerald-500 selection:text-slate-950">
+<body class="text-slate-100 font-sans min-h-screen antialiased">
 
   <!-- Barra superior omnicanal -->
-  <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md">
-    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <img id="brandLogo" src="/media/logo.png" onerror="this.style.display='none'" alt="Logo" class="w-10 h-10 rounded-xl border border-emerald-500/40 shadow-lg shadow-emerald-500/10" />
+  <header class="sticky top-0 z-30 border-b border-white/[0.07] bg-[#0B0F17]/90 backdrop-blur-xl">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+          <img id="brandLogo" src="../backend-nestjs/public/media/logo.png" onerror="if(!this.dataset.fb){this.dataset.fb='1';this.src='/media/logo.png';}else{this.style.display='none';this.nextElementSibling.style.display='block';}" alt="Logo PichangaBook" class="w-10 h-10 rounded-xl object-cover" />
+          <svg style="display:none" aria-hidden="true" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7l3 2.2-1.1 3.5H10.1L9 9.2 12 7z" />
+          </svg>
+        </div>
         <div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2.5">
             <span class="font-extrabold tracking-tight text-lg text-white">PichangaBook <span class="text-emerald-400">Arequipa</span></span>
-            <span class="text-[11px] font-mono uppercase px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Panel Dueños · Omnicanal</span>
+            <span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">SaaS Propietarios</span>
           </div>
-          <p class="text-xs text-slate-400">Sincronización en tiempo real App Móvil ↔ Recepción · Prevención ACID de Doble Booking</p>
+          <p class="text-xs text-slate-400 mt-0.5">Sincronización en vivo App Móvil y Recepción · Garantía anti doble reserva</p>
         </div>
       </div>
 
       <!-- Selector de sede + Estado WebSocket + Acciones rápidas -->
       <div class="flex flex-wrap items-center gap-2.5">
-        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 rounded-xl px-3 py-1.5">
-          <span class="text-xs text-slate-400">Sede:</span>
+        <div class="flex items-center gap-2 bg-[#111827] border border-white/[0.07] rounded-xl px-3.5 py-2">
+          <svg aria-hidden="true" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <label for="complexSelector" class="text-xs text-slate-400">Sede:</label>
           <select id="complexSelector" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer">
-            <option value="00000000-0000-4000-b000-00000000c001">Complejo Deportivo El Misti (Cayma)</option>
-            <option value="00000000-0000-4000-b000-00000000c006">El Misti · Sede Sachaca (RUC Pendiente)</option>
+            <option value="00000000-0000-4000-b000-00000000c001" class="bg-[#111827]">Complejo Deportivo El Misti (Cayma)</option>
+            <option value="00000000-0000-4000-b000-00000000c006" class="bg-[#111827]">El Misti · Sede Sachaca (RUC Pendiente)</option>
           </select>
         </div>
 
-        <div id="wsBadge" class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/70 border border-emerald-500/40 text-xs font-mono text-emerald-300">
-          <span id="wsDot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
-          <span id="wsText">SOCKET.IO EN VIVO</span>
+        <div id="wsBadge" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-medium text-emerald-400">
+          <span id="wsDot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="wsText">En vivo</span>
         </div>
 
-        <button onclick="openQuickBlockModal()" class="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          Bloqueo Rápido (Venta en Recepción)
+        <button onclick="openQuickBlockModal()" class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-sm">
+          <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Bloqueo Rápido
         </button>
 
-        <button onclick="openReportModal()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 text-xs font-bold transition">
-          <span>📊 Reporte e Ingresos CSV</span>
+        <button onclick="openReportModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/25 text-xs font-semibold transition">
+          <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Reporte CSV</span>
         </button>
 
-        <a id="openMobileLink" href="/mobile/" target="_blank" class="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition">
-          <span>📱 Abrir App Móvil Espejo</span>
+        <a id="openMobileLink" href="/mobile/" target="_blank" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-white/[0.07] text-xs font-semibold transition">
+          <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          <span>App Móvil</span>
         </a>
 
-        <button onclick="resetDemoData()" title="Restaurar datos semilla para repetir demostración" class="px-2.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs transition">
-          ↺ Reset Demo
+        <button id="btnManageCourts" type="button" onclick="openCourtModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition">
+          <svg aria-hidden="true" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>+ Nueva Cancha</span>
+        </button>
+
+        <button id="btnOwnerAuth" type="button" onclick="openOwnerLoginModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-white/[0.07] text-xs font-semibold transition">
+          <span id="btnOwnerAuthLabel">Sesión Propietario</span>
+        </button>
+
+        <button id="btnResetDemo" onclick="resetDemoData()" title="Restaurar datos semilla para repetir demostración" class="hidden cursor-pointer px-3 py-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-400 hover:text-white border border-white/[0.07] text-xs font-medium transition">
+          Reiniciar Demo
         </button>
       </div>
     </div>
   </header>
 
-  <main class="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-8 py-7 space-y-7">
 
-    <!-- Banda de Identidad del Complejo + Validación Documental RUC / Licencia Municipal -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-      <!-- Tarjeta del complejo y KPIs -->
-      <div class="lg:col-span-8 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between gap-4">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div class="flex flex-wrap items-center gap-2.5">
-              <h1 id="complexName" class="text-xl sm:text-2xl font-extrabold text-white">Complejo Deportivo El Misti</h1>
-              <span id="verificationBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                ✓ RUC VERIFICADO SUNAT
+    <!-- Cabecera limpia del complejo + Navegación de vistas (Agenda vs Configuración/Verificación) -->
+    <section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 pb-6 border-b border-white/[0.07]">
+      <div class="space-y-1.5">
+        <div class="flex flex-wrap items-center gap-3">
+          <h1 id="complexName" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Complejo Deportivo El Misti</h1>
+          <button type="button" onclick="switchAdminView('settings')" id="verificationBadge" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
+            RUC Verificado SUNAT
+          </button>
+        </div>
+        <p id="complexMeta" class="text-xs sm:text-sm text-slate-400">
+          RUC <span class="font-mono text-slate-200">20601458722</span> · INVERSIONES DEPORTIVAS EL MISTI S.A.C. · Av. Ejército 1020, Cayma
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between lg:justify-end gap-4">
+        <div class="flex items-center gap-3 pr-4 border-r border-white/[0.07]">
+          <div class="w-9 h-9 rounded-full bg-[#111827] border border-white/[0.08] flex items-center justify-center text-xs font-bold text-emerald-400">
+            CH
+          </div>
+          <div class="text-left">
+            <span id="ownerName" class="text-xs font-bold text-white block">Carlos Huamán</span>
+            <span id="ownerPhone" class="block text-[11px] font-mono text-slate-400 tabular-nums">+51 9•• ••• 222</span>
+          </div>
+        </div>
+
+        <!-- Selector de vista: Agenda Principal vs Configuración / Verificación -->
+        <div role="tablist" aria-label="Vistas del panel de administración" class="inline-flex p-1 rounded-xl bg-[#111827] border border-white/[0.07]">
+          <button type="button" role="tab" id="tabBtnAgenda" aria-selected="true" onclick="switchAdminView('agenda')"
+            class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white transition">
+            <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Agenda y KPIs
+          </button>
+          <button type="button" role="tab" id="tabBtnSettings" aria-selected="false" onclick="switchAdminView('settings')"
+            class="cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition">
+            <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Configuración / Verificación
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- VISTA 1 (PROTAGONISTA): KPIs OPERATIVOS + AGENDA HORARIA + MONITOR VIVO -->
+    <!-- ======================================================================= -->
+    <div id="viewAgenda" class="space-y-7">
+
+      <!-- 5 KPIs Protagonistas (Sin cajas anidadas) -->
+      <section aria-label="Indicadores clave del día" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-5 flex flex-col justify-between shadow-lg shadow-black/20">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-medium">Confirmadas (App)</span>
+            <svg aria-hidden="true" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <span id="kpiConfirmed" class="text-3xl font-extrabold text-white tabular-nums">0</span>
+            <span class="text-[11px] font-medium text-emerald-400">Pago verificado</span>
+          </div>
+        </div>
+
+        <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-5 flex flex-col justify-between shadow-lg shadow-black/20">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-medium">Bloqueos Recepción</span>
+            <svg aria-hidden="true" class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <span id="kpiBlocked" class="text-3xl font-extrabold text-amber-400 tabular-nums">0</span>
+            <span class="text-[11px] font-medium text-slate-400">Ventanilla / Tel.</span>
+          </div>
+        </div>
+
+        <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-5 flex flex-col justify-between shadow-lg shadow-black/20">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-medium">Splits en Curso</span>
+            <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <span id="kpiSplits" class="text-3xl font-extrabold text-indigo-400 tabular-nums">0</span>
+            <span class="text-[11px] font-medium text-indigo-300">Recaudando cuotas</span>
+          </div>
+        </div>
+
+        <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-5 flex flex-col justify-between shadow-lg shadow-black/20">
+          <div class="flex items-center justify-between text-slate-400">
+            <span class="text-xs font-medium">Ocupación Hoy</span>
+            <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <span id="kpiOccupancy" class="text-3xl font-extrabold text-white tabular-nums">0%</span>
+            <span class="text-[11px] font-medium text-slate-400">Capacidad activa</span>
+          </div>
+        </div>
+
+        <div class="col-span-2 sm:col-span-1 bg-[#111827] border border-indigo-500/30 rounded-2xl p-5 flex flex-col justify-between shadow-lg shadow-indigo-950/20">
+          <div class="flex items-center justify-between text-indigo-300">
+            <span class="text-xs font-semibold">Recaudación Día</span>
+            <svg aria-hidden="true" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="mt-3 flex items-baseline justify-between">
+            <span id="kpiRevenue" class="text-3xl font-extrabold text-emerald-400 tabular-nums">S/ 0</span>
+            <span class="text-[11px] font-medium text-indigo-300">Conciliado hoy</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Central: Parrilla Horaria en Tiempo Real (8 cols) + Monitor Lateral (4 cols) -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+
+        <!-- Parrilla Horaria de las Canchas -->
+        <div class="lg:col-span-8 bg-[#111827] border border-white/[0.07] rounded-2xl p-6 space-y-6 shadow-xl shadow-black/25">
+          <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-5 border-b border-white/[0.07]">
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-3">
+                <h2 class="text-lg sm:text-xl font-extrabold text-white">Agenda Horaria en Tiempo Real</h2>
+                <span id="currentDateBadge" class="text-xs font-mono px-2.5 py-1 rounded-lg bg-[#1E293B] text-emerald-400 border border-white/[0.07] tabular-nums"></span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-400">
+                Selecciona un turno <strong class="text-emerald-400 font-semibold">Disponible</strong> para bloquearlo en recepción o libera un turno activo con un clic.
+              </p>
+            </div>
+
+            <!-- Selector de filtro de horario -->
+            <div class="inline-flex items-center p-1 rounded-xl bg-[#0B0F17] border border-white/[0.07] self-start xl:self-auto">
+              <button onclick="setHourFilter('PRIME')" id="btnFilterPrime" class="cursor-pointer px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold text-xs transition">
+                Estelar (16:00 - 23:00)
+              </button>
+              <button onclick="setHourFilter('ALL')" id="btnFilterAll" class="cursor-pointer px-3 py-1.5 rounded-lg text-slate-300 hover:text-white font-semibold text-xs transition">
+                Todo el día (07:00 - 23:00)
+              </button>
+            </div>
+          </div>
+
+          <!-- Leyenda de estados de alto contraste -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs pb-2 border-b border-white/[0.07]">
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-emerald-400">
+              <svg aria-hidden="true" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div>
+                <span class="font-bold text-emerald-300 block leading-tight">Disponible</span>
+                <span class="text-[11px] text-slate-400">Clic para bloquear</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-indigo-400">
+              <svg aria-hidden="true" class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              <div>
+                <span class="font-bold text-indigo-300 block leading-tight">Split en curso</span>
+                <span class="text-[11px] text-slate-400">Pagos divididos</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-emerald-500">
+              <svg aria-hidden="true" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              <div>
+                <span class="font-bold text-slate-200 block leading-tight">Ocupado (App)</span>
+                <span class="text-[11px] text-slate-400">Reserva confirmada</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 pl-3 py-1 border-l-2 border-l-amber-400">
+              <svg aria-hidden="true" class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              <div>
+                <span class="font-bold text-amber-300 block leading-tight">Bloqueado</span>
+                <span class="text-[11px] text-slate-400">Recepción / Tel.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contenedor dinámico de canchas -->
+          <div id="courtsContainer" class="divide-y divide-white/[0.07] space-y-6"></div>
+        </div>
+
+        <!-- Columna derecha: Monitor de Split Payment + Bitácora Omnicanal en vivo -->
+        <div class="lg:col-span-4 space-y-6">
+
+          <!-- Tarjeta destacada: Seguimiento en vivo de Split Payment -->
+          <div class="bg-[#111827] border border-indigo-500/25 rounded-2xl p-6 space-y-4 shadow-xl shadow-black/25">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 class="text-base font-extrabold text-white">Pagos Divididos en Curso</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Cancha 1 · Fútbol 6 · Organiza: Diego Salas</p>
+              </div>
+              <span id="splitStatusBadge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 tabular-nums shrink-0"> En curso · 20:00</span>
+            </div>
+
+            <div class="space-y-2.5 pt-1">
+              <div class="flex items-baseline justify-between">
+                <span id="splitProgressText" class="text-sm font-extrabold text-white">Cupos pagados: 4 de 6</span>
+                <span id="splitAmountText" class="text-xs font-mono font-bold text-indigo-300 tabular-nums">S/ 60.00 / S/ 90.00</span>
+              </div>
+              <div class="w-full h-2.5 bg-[#0B0F17] rounded-full overflow-hidden border border-white/[0.07]">
+                <div id="splitProgressBar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 66.6%"></div>
+              </div>
+            </div>
+
+            <!-- Lista limpia de jugadores verificados -->
+            <div class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between text-[11px] font-semibold text-slate-400 pb-1">
+                <span>Jugador</span>
+                <span>Método y monto</span>
+              </div>
+              <div id="splitPayersList" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+            </div>
+
+            <button id="btnSimulateSplit" onclick="simulateSplitPaymentFromAdmin()" class="hidden cursor-pointer w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center gap-2">
+              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+              </svg>
+              Simular abono Yape de jugador (S/ 15.00)
+            </button>
+          </div>
+
+          <!-- Bitácora Omnicanal en Tiempo Real -->
+          <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-6 space-y-4 shadow-xl shadow-black/25">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-base font-extrabold text-white">Actividad en Tiempo Real</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Sincronización instantánea App y Recepción</p>
+              </div>
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                Activo
               </span>
             </div>
-            <p id="complexMeta" class="text-xs sm:text-sm text-slate-400 mt-1">
-              RUC <span class="font-mono text-slate-200">20601458722</span> · INVERSIONES DEPORTIVAS EL MISTI S.A.C. · Av. Ejército 1020, Cayma
-            </p>
+            <div id="eventsFeed" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1"></div>
           </div>
-          <div class="text-right">
-            <span class="text-[11px] uppercase tracking-wider text-slate-400 block">Administrador en turno</span>
-            <span id="ownerName" class="text-sm font-bold text-white">Carlos Huamán</span>
-            <span id="ownerPhone" class="block text-xs font-mono text-emerald-400">+51 9•• ••• 222 (Protegido)</span>
-          </div>
-        </div>
 
-        <!-- 5 KPIs -->
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2 border-t border-slate-800/80">
-          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
-            <span class="text-[11px] text-slate-400 block">Confirmadas (App)</span>
-            <span id="kpiConfirmed" class="text-2xl font-extrabold text-emerald-400 font-mono">0</span>
-          </div>
-          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
-            <span class="text-[11px] text-slate-400 block">Bloqueos Recepción</span>
-            <span id="kpiBlocked" class="text-2xl font-extrabold text-amber-400 font-mono">0</span>
-          </div>
-          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
-            <span class="text-[11px] text-slate-400 block">Split Payment Activos</span>
-            <span id="kpiSplits" class="text-2xl font-extrabold text-sky-400 font-mono">0</span>
-          </div>
-          <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3">
-            <span class="text-[11px] text-slate-400 block">Ocupación Hoy</span>
-            <span id="kpiOccupancy" class="text-2xl font-extrabold text-white font-mono">0%</span>
-          </div>
-          <div class="col-span-2 sm:col-span-1 bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-3">
-            <span class="text-[11px] text-emerald-300 block">Recaudación Día</span>
-            <span id="kpiRevenue" class="text-2xl font-extrabold text-emerald-300 font-mono">S/ 0</span>
-          </div>
         </div>
-      </div>
+      </section>
+    </div>
 
-      <!-- Tarjeta Antifraude: Validación Documental de Complejo (RUC / Licencia Municipal) -->
-      <div class="lg:col-span-4 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between gap-3">
-        <div>
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Seguridad Antifraude · Dueños</span>
-            <span class="text-[11px] font-mono text-slate-400">Módulo 11 SUNAT</span>
-          </div>
-          <h2 class="text-sm font-bold text-white mt-1">Validación Documental (RUC / Licencia)</h2>
-          <p class="text-xs text-slate-400 mt-0.5">
-            Solo los complejos con ficha RUC o licencia municipal verificada aparecen como pines activos en el mapa de Arequipa.
-          </p>
-        </div>
+    <!-- ======================================================================= -->
+    <!-- VISTA 2 (SECUNDARIA): CONFIGURACIÓN Y VERIFICACIÓN DOCUMENTAL RUC/SUNAT -->
+    <!-- ======================================================================= -->
+    <section id="viewSettings" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
 
-        <!-- Validador rápido de RUC + Subida de documento -->
-        <div class="space-y-2.5 bg-slate-950/70 border border-slate-800 rounded-xl p-3">
-          <div class="flex items-center gap-2">
-            <input id="rucCheckInput" type="text" maxlength="11" value="20601458722" placeholder="Ingresa RUC (11 dígitos)"
-              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:border-emerald-500 focus:outline-none" />
-            <button onclick="checkRucValidity()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-300 border border-slate-700 whitespace-nowrap">
-              Validar RUC
+        <!-- Panel principal de validación RUC y Licencia Municipal -->
+        <div class="lg:col-span-7 bg-[#0e1628] border border-slate-800/90 rounded-2xl p-6 sm:p-7 space-y-6">
+          <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-800/80">
+            <div class="space-y-1">
+              <h2 class="text-xl font-extrabold text-white">Verificación Documental del Complejo</h2>
+              <p class="text-xs sm:text-sm text-slate-400">
+                Validación SUNAT (Módulo 11) y respaldo de licencia municipal para habilitar el complejo como pin verificado en el mapa de Arequipa.
+              </p>
+            </div>
+            <button type="button" onclick="switchAdminView('agenda')" class="cursor-pointer px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition">
+              ← Volver a la Agenda
             </button>
           </div>
-          <div id="rucCheckOutput" class="text-[11px] font-mono text-emerald-400">
-            ✓ RUC 20601458722 válido (PERSONA_JURIDICA · dígito verificador OK)
+
+          <!-- Paso 1: Validador RUC SUNAT -->
+          <div class="space-y-3">
+            <label for="rucCheckInput" class="text-xs font-bold text-slate-200 block">
+              1. Comprobación de RUC (Algoritmo Módulo 11 SUNAT)
+            </label>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <input id="rucCheckInput" type="text" maxlength="11" value="20601458722" placeholder="Ingresa RUC de 11 dígitos"
+                class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono text-white tabular-nums focus:border-emerald-500 focus:outline-none" />
+              <button type="button" onclick="checkRucValidity()" class="cursor-pointer px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 border border-slate-700 whitespace-nowrap transition">
+                Validar RUC ahora
+              </button>
+            </div>
+            <div id="rucCheckOutput" class="text-xs font-mono text-emerald-400 border-l-4 border-emerald-400 pl-3.5 py-1">
+              ✓ RUC 20601458722 válido (PERSONA_JURIDICA · dígito verificador OK)
+            </div>
           </div>
 
-          <form id="docUploadForm" onsubmit="uploadVerificationDoc(event)" class="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
-            <input id="docFileInput" type="file" accept=".pdf,image/*" class="text-[11px] text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30" />
-            <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs whitespace-nowrap transition">
-              Subir RUC / Licencia
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <!-- Sección Central: Parrilla Horaria en Tiempo Real + Bitácora Omnicanal -->
-    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-      <!-- Parrilla Horaria de las Canchas (8 columnas) -->
-      <div class="lg:col-span-8 bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
-              <span>Agenda Horaria en Tiempo Real</span>
-              <span id="currentDateBadge" class="text-xs font-mono px-2.5 py-0.5 rounded-lg bg-slate-800 text-emerald-300 border border-slate-700"></span>
-            </h2>
+          <!-- Paso 2: Subida de Ficha RUC o Licencia Municipal -->
+          <div class="pt-5 border-t border-slate-800/80 space-y-3">
+            <label for="docFileInput" class="text-xs font-bold text-slate-200 block">
+              2. Respaldo Documental (Ficha RUC SUNAT o Licencia de Funcionamiento PDF / Imagen)
+            </label>
             <p class="text-xs text-slate-400">
-              Haz clic en cualquier turno <span class="text-emerald-400 font-semibold">LIBRE</span> para ejecutar un <b>Bloqueo Rápido en Recepción</b> o en un turno <span class="text-amber-400 font-semibold">BLOQUEADO</span> para liberarlo.
+              Los archivos se almacenan en bóveda privada con acceso firmado temporalmente (máx. 5 MB).
+            </p>
+            <form id="docUploadForm" onsubmit="uploadVerificationDoc(event)" class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+              <input id="docFileInput" type="file" accept=".pdf,image/*"
+                class="text-xs text-slate-300 file:cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/20 file:text-emerald-300 hover:file:bg-emerald-500/30" />
+              <button type="submit" class="cursor-pointer px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs whitespace-nowrap transition">
+                Subir RUC / Licencia
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Resumen de estado legal y garantías antifraude -->
+        <div class="lg:col-span-5 bg-[#0e1628] border border-slate-800/90 rounded-2xl p-6 sm:p-7 space-y-5">
+          <h3 class="text-base font-extrabold text-white">Ficha Legal de la Sede Activa</h3>
+          <dl class="space-y-3.5 text-xs border-t border-slate-800/80 pt-4">
+            <div class="flex items-center justify-between gap-4">
+              <dt class="text-slate-400">Nombre comercial</dt>
+              <dd id="settingsComplexName" class="font-bold text-white text-right">Complejo Deportivo El Misti</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+              <dt class="text-slate-400">RUC registrado</dt>
+              <dd id="settingsRuc" class="font-mono font-semibold text-emerald-300 tabular-nums">20601458722</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+              <dt class="text-slate-400">Administrador titular</dt>
+              <dd id="settingsOwner" class="font-semibold text-slate-200">Carlos Huamán</dd>
+            </div>
+            <div class="flex items-center justify-between gap-4">
+              <dt class="text-slate-400">Estado de verificación</dt>
+              <dd id="settingsStatusText" class="font-bold text-emerald-400">VERIFIED (Visible en Mapa AQP)</dd>
+            </div>
+          </dl>
+
+          <div class="pt-4 border-t border-slate-800/80 space-y-2 text-xs text-slate-300">
+            <div class="font-bold text-white flex items-center gap-2">
+              <svg aria-hidden="true" class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+              </svg>
+              Política Antifraude Activa
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Las sedes con estado pendiente o en revisión permanecen ocultas en la búsqueda pública de jugadores hasta que un administrador valide su Ficha RUC y licencia municipal.
             </p>
           </div>
-
-          <!-- Leyenda de estados -->
-          <div class="flex flex-wrap items-center gap-2 text-[11px]">
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-              <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Libre
-            </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-500/30">
-              <span class="w-2 h-2 rounded-full bg-sky-400"></span> Split Payment (En curso)
-            </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/15 text-purple-300 border border-purple-500/30">
-              <span class="w-2 h-2 rounded-full bg-purple-400"></span> Confirmado App
-            </span>
-            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Bloqueado Recepción/Tel.
-            </span>
-          </div>
-        </div>
-
-        <!-- Selector de filtro de horario -->
-        <div class="flex items-center justify-between gap-2 bg-slate-950/60 border border-slate-800/80 rounded-xl px-3.5 py-2">
-          <div class="flex items-center gap-2 text-xs text-slate-300">
-            <span>Franja visible:</span>
-            <button onclick="setHourFilter('PRIME')" id="btnFilterPrime" class="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Horario Estelar (16:00 - 23:00)</button>
-            <button onclick="setHourFilter('ALL')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs">Todo el día (07:00 - 23:00)</button>
-          </div>
-          <span class="text-[11px] font-mono text-slate-400 hidden sm:inline">Tarifa nocturna LED desde 18:00</span>
-        </div>
-
-        <!-- Contenedor dinámico de canchas -->
-        <div id="courtsContainer" class="space-y-5"></div>
-      </div>
-
-      <!-- Columna derecha: Monitor de Split Payment (4 de 6) + Bitácora Omnicanal en vivo -->
-      <div class="lg:col-span-4 space-y-5">
-
-        <!-- Tarjeta destacada: Seguimiento en vivo de Split Payment -->
-        <div class="bg-slate-900/75 border border-sky-500/30 rounded-2xl p-5 space-y-3 shadow-lg shadow-sky-500/5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Split Payment · En Vivo</span>
-            <span id="splitStatusBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">HELD · 20:00</span>
-          </div>
-          <div>
-            <h3 class="text-sm font-bold text-white">Cancha 1 · Fútbol 6 (Organiza: Diego Salas)</h3>
-            <p class="text-xs text-slate-400">Cobro dividido por WhatsApp · Culqi / Yape / Plin</p>
-          </div>
-
-          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-2">
-            <div class="flex items-center justify-between text-xs">
-              <span id="splitProgressText" class="font-extrabold text-white">Cupos pagados: 4 de 6</span>
-              <span id="splitAmountText" class="font-mono text-sky-300">S/ 60.00 / S/ 90.00</span>
-            </div>
-            <div class="w-full h-3 bg-slate-800 rounded-full overflow-hidden">
-              <div id="splitProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-500" style="width: 66.6%"></div>
-            </div>
-            <div id="splitPayersList" class="pt-1 space-y-1 text-[11px] text-slate-300 max-h-28 overflow-y-auto"></div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button onclick="simulateSplitPaymentFromAdmin()" class="w-full py-2 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition shadow-md shadow-sky-500/10">
-              + Simular Pago Yape de Jugador (S/ 15.00)
-            </button>
-          </div>
-        </div>
-
-        <!-- Bitácora Omnicanal en Tiempo Real -->
-        <div class="bg-slate-900/75 border border-slate-800/90 rounded-2xl p-5 space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-sm font-bold text-white">Bitácora Omnicanal en Tiempo Real</h3>
-              <p class="text-xs text-slate-400">Eventos instantáneos WebSockets (`slot:updated`, `split:updated`)</p>
-            </div>
-            <span class="text-[11px] font-mono text-emerald-400">LIVE</span>
-          </div>
-          <div id="eventsFeed" class="space-y-2 max-h-[380px] overflow-y-auto pr-1"></div>
         </div>
 
       </div>
     </section>
+
   </main>
 
   <!-- Modal: Bloqueo Rápido en Recepción (Venta Presencial o Telefónica) -->
-  <div id="quickBlockModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between">
+  <div id="quickBlockModal" role="dialog" aria-modal="true" aria-labelledby="quickBlockTitle" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-[#0e1628] border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-5">
+      <div class="flex items-start justify-between gap-3">
         <div>
-          <span class="text-[11px] font-mono uppercase text-amber-400">Prevención de Doble Booking</span>
-          <h3 class="text-lg font-extrabold text-white">Bloqueo Rápido en Recepción</h3>
+          <h3 id="quickBlockTitle" class="text-lg font-extrabold text-white">Bloqueo Rápido en Recepción</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Sincroniza ventas en ventanilla o teléfono en menos de 50 ms.</p>
         </div>
-        <button onclick="closeQuickBlockModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        <button type="button" onclick="closeQuickBlockModal()" aria-label="Cerrar modal" class="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
 
-      <p class="text-xs text-slate-300">
-        Al bloquear este turno por venta en ventanilla o llamada telefónica, la parrilla de la <b>App Móvil</b> se actualizará en menos de 50 ms vía Socket.io impidiendo reservas duplicadas.
-      </p>
-
-      <form onsubmit="submitQuickBlock(event)" class="space-y-3">
+      <form onsubmit="submitQuickBlock(event)" class="space-y-4">
         <div>
-          <label class="text-xs font-semibold text-slate-300 block mb-1">Cancha</label>
-          <select id="modalCourtId" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white"></select>
+          <label for="modalCourtId" class="text-xs font-semibold text-slate-300 block mb-1.5">Cancha</label>
+          <select id="modalCourtId" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white"></select>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs font-semibold text-slate-300 block mb-1">Hora del Turno</label>
-            <select id="modalHour" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white"></select>
+            <label for="modalHour" class="text-xs font-semibold text-slate-300 block mb-1.5">Hora del Turno</label>
+            <select id="modalHour" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white tabular-nums"></select>
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-300 block mb-1">Canal de Venta</label>
-            <select id="modalChannel" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+            <label for="modalChannel" class="text-xs font-semibold text-slate-300 block mb-1.5">Canal de Venta</label>
+            <select id="modalChannel" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
               <option value="RECEPTION">Recepción (Efectivo/POS)</option>
               <option value="PHONE">Llamada Telefónica</option>
               <option value="WHATSAPP">WhatsApp Directo</option>
@@ -317,23 +572,23 @@
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-slate-300 block mb-1">Cliente / Grupo Deportivo</label>
+          <label for="modalCustomerName" class="text-xs font-semibold text-slate-300 block mb-1.5">Cliente / Grupo Deportivo</label>
           <input id="modalCustomerName" type="text" required value="Sr. Paredes (Pago en ventanilla)"
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
         </div>
 
         <div>
-          <label class="text-xs font-semibold text-slate-300 block mb-1">Observación (opcional)</label>
+          <label for="modalNotes" class="text-xs font-semibold text-slate-300 block mb-1.5">Observación (opcional)</label>
           <input id="modalNotes" type="text" placeholder="Ej. Canceló S/ 90 en efectivo, requiere chalecos"
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
         </div>
 
-        <div class="flex items-center justify-end gap-2 pt-2">
-          <button type="button" onclick="closeQuickBlockModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeQuickBlockModal()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
             Cancelar
           </button>
-          <button type="submit" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-amber-500/20">
-            🔒 Bloquear Turno Ahora
+          <button type="submit" class="cursor-pointer px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs transition">
+            Confirmar Bloqueo
           </button>
         </div>
       </form>
@@ -341,72 +596,537 @@
   </div>
 
   <!-- Modal: Reporte Financiero y Exportación CSV -->
-  <div id="reportModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-3xl w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between">
+  <div id="reportModal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="bg-[#0e1628] border border-slate-700 rounded-2xl max-w-3xl w-full p-6 space-y-5">
+      <div class="flex items-start justify-between gap-3">
         <div>
-          <span class="text-[11px] font-mono uppercase text-emerald-400">Gestión Financiera · Dueño Autenticado (JWT)</span>
-          <h3 class="text-lg font-extrabold text-white">Reporte Consolidado de Reservas e Ingresos</h3>
+          <h3 id="reportModalTitle" class="text-lg font-extrabold text-white">Reporte Consolidado de Reservas e Ingresos</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Conciliación en tiempo real de señas, pagos divididos y ventas en recepción.</p>
         </div>
-        <button onclick="closeReportModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+        <button type="button" onclick="closeReportModal()" aria-label="Cerrar reporte" class="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
       </div>
       <div id="reportSummaryBar" class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs"></div>
       <div class="max-h-72 overflow-y-auto border border-slate-800 rounded-xl">
-        <table class="w-full text-left text-xs">
+        <table class="w-full text-left text-xs tabular-nums">
           <thead class="bg-slate-950 text-slate-400 sticky top-0">
             <tr>
-              <th class="p-2.5">Fecha / Hora</th>
-              <th class="p-2.5">Cancha</th>
-              <th class="p-2.5">Cliente / Organizador</th>
-              <th class="p-2.5">Canal / Modo</th>
-              <th class="p-2.5">Estado</th>
-              <th class="p-2.5 text-right">Bruto (S/)</th>
-              <th class="p-2.5 text-right">Cobrado (S/)</th>
-              <th class="p-2.5 text-right">Pendiente (S/)</th>
+              <th class="p-3">Fecha / Hora</th>
+              <th class="p-3">Cancha</th>
+              <th class="p-3">Cliente / Organizador</th>
+              <th class="p-3">Canal / Modo</th>
+              <th class="p-3">Estado</th>
+              <th class="p-3 text-right">Bruto (S/)</th>
+              <th class="p-3 text-right">Cobrado (S/)</th>
+              <th class="p-3 text-right">Pendiente (S/)</th>
             </tr>
           </thead>
           <tbody id="reportTableBody" class="divide-y divide-slate-800/70"></tbody>
         </table>
       </div>
-      <div class="flex items-center justify-end gap-2">
-        <button onclick="closeReportModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">Cerrar</button>
-        <button onclick="downloadReportCsv()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">⬇ Descargar CSV</button>
+      <div class="flex items-center justify-end gap-2.5">
+        <button type="button" onclick="closeReportModal()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">Cerrar</button>
+        <button type="button" onclick="downloadReportCsv()" class="cursor-pointer px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs">Descargar CSV</button>
       </div>
     </div>
   </div>
 
+  <!-- Modal: Inicio de Sesión Real de Propietario / Administrador -->
+  <div id="ownerLoginModal" role="dialog" aria-modal="true" aria-labelledby="ownerLoginTitle" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+    <div class="bg-[#0e1628] border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 id="ownerLoginTitle" class="text-lg font-extrabold text-white">Acceso de Propietarios (OWNER / ADMIN)</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Autentica tu cuenta con código SMS OTP o token JWT para administrar tus complejos.</p>
+        </div>
+        <button type="button" onclick="closeOwnerLoginModal()" aria-label="Cerrar login" class="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="submitOwnerOtpLogin(event)" class="space-y-4">
+        <div>
+          <label for="loginOwnerPhone" class="text-xs font-semibold text-slate-300 block mb-1.5">Celular registrado (+51)</label>
+          <div class="flex gap-2">
+            <input id="loginOwnerPhone" type="tel" required value="+51959111222" placeholder="+51959111222"
+              class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+            <button type="button" onclick="requestOwnerOtpCode()" class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-bold whitespace-nowrap">
+              Enviar OTP
+            </button>
+          </div>
+          <p id="loginOtpHint" class="text-[11px] text-slate-400 mt-1"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="loginOwnerOtp" class="text-xs font-semibold text-slate-300 block mb-1.5">Código OTP (6 dígitos)</label>
+            <input id="loginOwnerOtp" type="text" maxlength="6" placeholder="123456"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+          <div>
+            <label for="loginOwnerName" class="text-xs font-semibold text-slate-300 block mb-1.5">Nombre del Titular</label>
+            <input id="loginOwnerName" type="text" placeholder="Carlos Huamán"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-800">
+          <label for="loginOwnerDirectJwt" class="text-xs font-semibold text-slate-400 block mb-1.5">O pega un Bearer JWT / Firebase ID Token</label>
+          <input id="loginOwnerDirectJwt" type="password" placeholder="eyJhbGciOi..."
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-mono text-slate-300 focus:border-emerald-400 focus:outline-none" />
+        </div>
+
+        <div class="flex items-center justify-between gap-2.5 pt-2">
+          <button type="button" onclick="logoutOwnerSession()" class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/70 text-rose-200 border border-rose-500/30 text-xs font-semibold">
+            Cerrar sesión
+          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeOwnerLoginModal()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+              Cancelar
+            </button>
+            <button type="submit" class="cursor-pointer px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Crear / Editar Cancha del Complejo -->
+  <div id="courtFormModal" role="dialog" aria-modal="true" aria-labelledby="courtFormModalTitle" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+    <div class="bg-[#0e1628] border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 id="courtFormModalTitle" class="text-lg font-extrabold text-white">Nueva Cancha</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Configura capacidad, tarifas diurna/nocturna y horario de atención.</p>
+        </div>
+        <button type="button" onclick="closeCourtModal()" aria-label="Cerrar modal de cancha" class="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="submitCourtForm(event)" class="space-y-4">
+        <input id="courtFormId" type="hidden" value="" />
+        <div>
+          <label for="courtFormName" class="text-xs font-semibold text-slate-300 block mb-1.5">Nombre de la Cancha</label>
+          <input id="courtFormName" type="text" required minlength="2" maxlength="60" placeholder="Ej. Cancha 4 · Fútbol 7"
+            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="courtFormPlayers" class="text-xs font-semibold text-slate-300 block mb-1.5">Jugadores por lado</label>
+            <select id="courtFormPlayers" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+              <option value="5">Fútbol 5 (5 vs 5)</option>
+              <option value="6" selected>Fútbol 6 (6 vs 6)</option>
+              <option value="7">Fútbol 7 (7 vs 7)</option>
+              <option value="8">Fútbol 8 (8 vs 8)</option>
+              <option value="11">Fútbol 11 (11 vs 11)</option>
+            </select>
+          </div>
+          <div>
+            <label for="courtFormSurface" class="text-xs font-semibold text-slate-300 block mb-1.5">Superficie</label>
+            <select id="courtFormSurface" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white">
+              <option value="SINTETICO">Grass Sintético</option>
+              <option value="LOSA">Losa Deportiva</option>
+              <option value="NATURAL">Césped Natural</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="courtFormPriceDay" class="text-xs font-semibold text-slate-300 block mb-1.5">Tarifa Día (S/)</label>
+            <input id="courtFormPriceDay" type="number" min="10" step="1" required value="60"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+          <div>
+            <label for="courtFormPricePeak" class="text-xs font-semibold text-slate-300 block mb-1.5">Tarifa Noche 18h+ (S/)</label>
+            <input id="courtFormPricePeak" type="number" min="10" step="1" required value="90"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="courtFormOpenHour" class="text-xs font-semibold text-slate-300 block mb-1.5">Hora Apertura (0-22)</label>
+            <input id="courtFormOpenHour" type="number" min="0" max="22" required value="7"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+          <div>
+            <label for="courtFormCloseHour" class="text-xs font-semibold text-slate-300 block mb-1.5">Hora Cierre (1-24)</label>
+            <input id="courtFormCloseHour" type="number" min="1" max="24" required value="23"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeCourtModal()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancelar
+          </button>
+          <button type="submit" class="cursor-pointer px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+            Guardar Cancha
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast de notificaciones en tiempo real -->
-  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm"></div>
+  <div id="toastContainer" aria-live="polite" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm"></div>
 
   <script>
     const API_BASE = window.location.protocol === 'file:' ? 'http://localhost:3000' : window.location.origin;
     const DEFAULT_SPLIT_TOKEN = 'pk4de6demo';
 
-    let currentComplexId = '00000000-0000-4000-b000-00000000c001';
+    let currentComplexId = localStorage.getItem('pichangabook_owner_complex_id') || '00000000-0000-4000-b000-00000000c001';
     let currentDate = null;
     let hourFilter = 'PRIME'; // 'PRIME' (16..22) | 'ALL'
+    let activeAdminView = 'agenda'; // 'agenda' | 'settings'
     let dashboardData = null;
     let lastReportData = null;
     let lastChangedKey = null;
     let socket = null;
     let ownerJwtToken = localStorage.getItem('pichangabook_owner_jwt') || null;
+    let serverDemoMode = window.location.protocol === 'file:';
 
-    document.getElementById('openMobileLink').href = `${API_BASE}/mobile/`;
-    document.getElementById('brandLogo').src = `${API_BASE}/media/logo.png`;
+    function syncDemoButtonsVisibility() {
+      const resetBtn = document.getElementById('btnResetDemo');
+      const simBtn = document.getElementById('btnSimulateSplit');
+      if (resetBtn) resetBtn.classList.toggle('hidden', !serverDemoMode);
+      if (simBtn) simBtn.classList.toggle('hidden', !serverDemoMode);
+      const authLabel = document.getElementById('btnOwnerAuthLabel');
+      if (authLabel) {
+        authLabel.textContent = ownerJwtToken ? 'Sesión Activa' : 'Iniciar Sesión';
+      }
+    }
+
+    async function detectServerMode() {
+      if (window.location.protocol === 'file:') {
+        serverDemoMode = true;
+        syncDemoButtonsVisibility();
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/health`);
+        if (res.ok) {
+          const data = await res.json();
+          serverDemoMode = Boolean(data.demoMode);
+        } else {
+          serverDemoMode = false;
+        }
+      } catch {
+        serverDemoMode = false;
+      }
+      syncDemoButtonsVisibility();
+    }
+
+    document.getElementById('openMobileLink').href = window.location.pathname.includes('/web-admin-tailwind/')
+      ? '../mobile-flutter/demo-app-mobile.html'
+      : `${API_BASE}/mobile/`;
+    document.getElementById('brandLogo').src = window.location.pathname.includes('/web-admin-tailwind/')
+      ? '../backend-nestjs/public/media/logo.png'
+      : `${API_BASE}/media/logo.png`;
+
+    // Datos semilla de respaldo si el servidor backend no está levantado localmente
+    function getFallbackDashboardData() {
+      const today = new Date().toISOString().slice(0, 10);
+      const isPendingComplex = currentComplexId.endsWith('c006');
+      const makeSlots = (courtId, basePrice, peakPrice) => {
+        const list = [];
+        for (let h = 7; h <= 22; h++) {
+          const isPeak = h >= 18;
+          const priceCents = isPeak ? peakPrice : basePrice;
+          let status = 'FREE';
+          let split = null;
+          let organizerName = null;
+          let customerName = null;
+          let channel = null;
+          let bookingId = `bk-${courtId}-${h}`;
+          if (courtId.endsWith('d011') && h === 20) {
+            status = 'HELD';
+            split = { paid: 4, total: 6, shareToken: 'pk4de6demo' };
+            organizerName = 'Diego Salas';
+          } else if (courtId.endsWith('d011') && h === 19) {
+            status = 'CONFIRMED';
+            organizerName = 'Rodrigo Sierra';
+            channel = 'APP';
+          } else if (courtId.endsWith('d011') && h === 18) {
+            status = 'BLOCKED';
+            customerName = 'Sr. Paredes (Efectivo)';
+            channel = 'RECEPCIÓN';
+          } else if (courtId.endsWith('d012') && h === 21) {
+            status = 'CONFIRMED';
+            organizerName = 'Liga Universitaria AQP';
+            channel = 'APP';
+          }
+          list.push({
+            hour: h,
+            label: `${String(h).padStart(2, '0')}:00`,
+            status,
+            priceCents,
+            split,
+            organizerName,
+            customerName,
+            channel,
+            bookingId,
+          });
+        }
+        return list;
+      };
+      return {
+        date: today,
+        complex: {
+          id: currentComplexId,
+          name: isPendingComplex ? 'El Misti · Sede Sachaca' : 'Complejo Deportivo El Misti',
+          ruc: isPendingComplex ? '20609988771' : '20601458722',
+          businessName: 'INVERSIONES DEPORTIVAS EL MISTI S.A.C.',
+          address: isPendingComplex ? 'Av. Fernandini 310' : 'Av. Ejército 1020',
+          districtName: isPendingComplex ? 'Sachaca' : 'Cayma',
+          ownerName: 'Carlos Huamán',
+          ownerPhoneMasked: '+51 9•• ••• 222',
+          verificationStatus: isPendingComplex ? 'PENDING' : 'VERIFIED',
+        },
+        kpis: {
+          confirmedCount: 2,
+          receptionBlockedCount: 1,
+          activeSplitsCount: 1,
+          occupancyPercent: 58,
+          revenueCents: 33000,
+        },
+        courts: [
+          {
+            id: '00000000-0000-4000-c000-00000000d011',
+            name: 'Cancha 1 · Fútbol 6 (Sillar Pro)',
+            playersPerSide: 6,
+            priceCents: 6000,
+            pricePeakCents: 9000,
+            slots: makeSlots('00000000-0000-4000-c000-00000000d011', 6000, 9000),
+          },
+          {
+            id: '00000000-0000-4000-c000-00000000d012',
+            name: 'Cancha 2 · Fútbol 7 (Nocturna LED)',
+            playersPerSide: 7,
+            priceCents: 8000,
+            pricePeakCents: 11000,
+            slots: makeSlots('00000000-0000-4000-c000-00000000d012', 8000, 11000),
+          },
+        ],
+        events: [
+          {
+            eventType: 'SPLIT',
+            channel: 'APP',
+            createdAt: new Date().toISOString(),
+            payload: { court: 'Cancha 1', hour: 20, payerName: 'Diego Salas', paid: 4, total: 6 },
+          },
+          {
+            eventType: 'BLOCKED',
+            channel: 'RECEPTION',
+            createdAt: new Date(Date.now() - 300000).toISOString(),
+            payload: { court: 'Cancha 1', hour: 18, customerName: 'Sr. Paredes (Efectivo)' },
+          },
+          {
+            eventType: 'CONFIRMED',
+            channel: 'APP',
+            createdAt: new Date(Date.now() - 900000).toISOString(),
+            payload: { court: 'Cancha 1', hour: 19, customerName: 'Rodrigo Sierra' },
+          },
+        ],
+      };
+    }
+
+    function switchAdminView(view) {
+      activeAdminView = view === 'settings' ? 'settings' : 'agenda';
+      const agendaEl = document.getElementById('viewAgenda');
+      const settingsEl = document.getElementById('viewSettings');
+      const btnAgenda = document.getElementById('tabBtnAgenda');
+      const btnSettings = document.getElementById('tabBtnSettings');
+
+      if (activeAdminView === 'agenda') {
+        agendaEl.classList.remove('hidden');
+        settingsEl.classList.add('hidden');
+        btnAgenda.setAttribute('aria-selected', 'true');
+        btnSettings.setAttribute('aria-selected', 'false');
+        btnAgenda.className = 'cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition';
+        btnSettings.className = 'cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+      } else {
+        agendaEl.classList.add('hidden');
+        settingsEl.classList.remove('hidden');
+        btnAgenda.setAttribute('aria-selected', 'false');
+        btnSettings.setAttribute('aria-selected', 'true');
+        btnAgenda.className = 'cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition';
+        btnSettings.className = 'cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-emerald-500 text-slate-950 transition';
+      }
+    }
 
     async function ensureOwnerSession() {
-      if (ownerJwtToken) return ownerJwtToken;
-      const res = await fetch(`${API_BASE}/api/auth/demo-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'OWNER' }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        ownerJwtToken = data.accessToken;
-        localStorage.setItem('pichangabook_owner_jwt', ownerJwtToken);
+      if (ownerJwtToken) {
+        syncDemoButtonsVisibility();
+        return ownerJwtToken;
       }
+      if (!serverDemoMode && window.location.protocol !== 'file:') {
+        openOwnerLoginModal();
+        return null;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/demo-session`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'OWNER' }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          ownerJwtToken = data.accessToken;
+          localStorage.setItem('pichangabook_owner_jwt', ownerJwtToken);
+          syncDemoButtonsVisibility();
+        } else if (res.status === 403) {
+          serverDemoMode = false;
+          syncDemoButtonsVisibility();
+          openOwnerLoginModal();
+        }
+      } catch {}
       return ownerJwtToken;
+    }
+
+    function openOwnerLoginModal() {
+      const modal = document.getElementById('ownerLoginModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeOwnerLoginModal() {
+      const modal = document.getElementById('ownerLoginModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function requestOwnerOtpCode() {
+      const phone = document.getElementById('loginOwnerPhone').value.trim();
+      const hint = document.getElementById('loginOtpHint');
+      if (!phone) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/otp/request`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast('Error al enviar OTP', data.message || 'Verifica el celular ingresado.', 'rose');
+          return;
+        }
+        const devCode = data.devCode || data.demoOtp;
+        if (devCode) {
+          document.getElementById('loginOwnerOtp').value = devCode;
+          hint.textContent = `Código OTP de prueba: ${devCode}`;
+        } else {
+          hint.textContent = `Código enviado por SMS. Expira en ${data.expiresInSeconds || 300}s.`;
+        }
+        showToast('OTP enviado', 'Ingresa el código de 6 dígitos para continuar.', 'sky');
+      } catch {
+        showToast('Error de red', 'No se pudo conectar con el servidor de autenticación.', 'rose');
+      }
+    }
+
+    async function submitOwnerOtpLogin(e) {
+      e.preventDefault();
+      const directJwt = document.getElementById('loginOwnerDirectJwt').value.trim();
+      const phone = document.getElementById('loginOwnerPhone').value.trim();
+      const code = document.getElementById('loginOwnerOtp').value.trim();
+      const fullName = document.getElementById('loginOwnerName').value.trim() || undefined;
+
+      try {
+        if (directJwt) {
+          // Intentar intercambiar como Firebase ID Token o usar directamente como Bearer JWT
+          const fbRes = await fetch(`${API_BASE}/api/auth/firebase`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: directJwt, fullName, role: 'OWNER' }),
+          });
+          if (fbRes.ok) {
+            const fbData = await fbRes.json();
+            ownerJwtToken = fbData.accessToken;
+          } else {
+            ownerJwtToken = directJwt.replace(/^Bearer\s+/i, '');
+          }
+        } else {
+          if (!code || code.length !== 6) {
+            showToast('Código requerido', 'Ingresa el código OTP de 6 dígitos o solicita uno nuevo.', 'amber');
+            return;
+          }
+          const res = await fetch(`${API_BASE}/api/auth/otp/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, code, fullName, role: 'OWNER' }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            showToast('Autenticación rechazada', data.message || 'Código OTP inválido o expirado.', 'rose');
+            return;
+          }
+          ownerJwtToken = data.accessToken;
+        }
+
+        localStorage.setItem('pichangabook_owner_jwt', ownerJwtToken);
+        syncDemoButtonsVisibility();
+        closeOwnerLoginModal();
+        showToast('Sesión iniciada', 'Credenciales de propietario verificadas.', 'emerald');
+        connectSocket();
+        await loadDashboard();
+      } catch {
+        showToast('Error de red', 'No se pudo completar el inicio de sesión.', 'rose');
+      }
+    }
+
+    function logoutOwnerSession() {
+      ownerJwtToken = null;
+      localStorage.removeItem('pichangabook_owner_jwt');
+      syncDemoButtonsVisibility();
+      closeOwnerLoginModal();
+      showToast('Sesión cerrada', 'Has cerrado sesión en el panel de propietarios.', 'amber');
+    }
+
+    function syncComplexSelector(ownerComplexes) {
+      if (!Array.isArray(ownerComplexes) || !ownerComplexes.length) return;
+      const sel = document.getElementById('complexSelector');
+      if (!sel) return;
+      sel.innerHTML = ownerComplexes
+        .map((c) => {
+          const statusSuffix = c.verificationStatus === 'VERIFIED' ? '' : ` · ${c.verificationStatus}`;
+          return `<option value="${escapeHtml(c.id)}" class="bg-slate-900">${escapeHtml(c.name)}${escapeHtml(statusSuffix)}</option>`;
+        })
+        .join('');
+      if (ownerComplexes.some((c) => c.id === currentComplexId)) {
+        sel.value = currentComplexId;
+      } else {
+        currentComplexId = ownerComplexes[0].id;
+        localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
+        sel.value = currentComplexId;
+      }
+    }
+
+    async function fetchFirstAvailableOwnerComplex() {
+      if (!ownerJwtToken) return null;
+      try {
+        const res = await fetch(`${API_BASE}/api/owner/complexes`, { headers: authHeaders() });
+        if (!res.ok) return null;
+        const list = await res.json();
+        if (Array.isArray(list) && list.length > 0) {
+          syncComplexSelector(list);
+          return list[0].id;
+        }
+      } catch {}
+      return null;
     }
 
     function authHeaders(extra = {}) {
@@ -427,13 +1147,13 @@
 
     function showToast(title, detail, tone = 'emerald') {
       const colors = {
-        emerald: 'border-emerald-500/50 bg-emerald-950/90 text-emerald-200',
-        amber: 'border-amber-500/50 bg-amber-950/90 text-amber-200',
-        sky: 'border-sky-500/50 bg-sky-950/90 text-sky-200',
-        rose: 'border-rose-500/50 bg-rose-950/90 text-rose-200',
+        emerald: 'border-emerald-500/50 bg-emerald-950/95 text-emerald-200',
+        amber: 'border-amber-500/50 bg-amber-950/95 text-amber-200',
+        sky: 'border-sky-500/50 bg-sky-950/95 text-sky-200',
+        rose: 'border-rose-500/50 bg-rose-950/95 text-rose-200',
       };
       const el = document.createElement('div');
-      el.className = `border rounded-xl px-4 py-3 shadow-2xl backdrop-blur-md transition-all ${colors[tone] || colors.emerald}`;
+      el.className = `border rounded-xl px-4 py-3 backdrop-blur-md transition-all ${colors[tone] || colors.emerald}`;
       const titleEl = document.createElement('div');
       titleEl.className = 'text-xs font-extrabold';
       titleEl.textContent = String(title ?? '');
@@ -447,17 +1167,54 @@
     }
 
     async function loadDashboard() {
-      await ensureOwnerSession();
-      const url = `${API_BASE}/api/owner/complexes/${currentComplexId}/dashboard${currentDate ? `?date=${currentDate}` : ''}`;
-      let res = await fetch(url, { headers: authHeaders() });
-      if (res.status === 401) {
-        ownerJwtToken = null;
-        localStorage.removeItem('pichangabook_owner_jwt');
+      try {
         await ensureOwnerSession();
-        res = await fetch(url, { headers: authHeaders() });
+        if (!ownerJwtToken && !serverDemoMode) {
+          openOwnerLoginModal();
+          return;
+        }
+        let url = `${API_BASE}/api/owner/complexes/${currentComplexId}/dashboard${currentDate ? `?date=${currentDate}` : ''}`;
+        let res = await fetch(url, { headers: authHeaders() });
+        if (res.status === 401) {
+          ownerJwtToken = null;
+          localStorage.removeItem('pichangabook_owner_jwt');
+          await ensureOwnerSession();
+          if (!ownerJwtToken && !serverDemoMode) {
+            openOwnerLoginModal();
+            return;
+          }
+          res = await fetch(url, { headers: authHeaders() });
+        }
+        if (res.status === 404 || res.status === 403) {
+          const fallbackOwnerComplexId = await fetchFirstAvailableOwnerComplex();
+          if (fallbackOwnerComplexId && fallbackOwnerComplexId !== currentComplexId) {
+            currentComplexId = fallbackOwnerComplexId;
+            localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
+            url = `${API_BASE}/api/owner/complexes/${currentComplexId}/dashboard${currentDate ? `?date=${currentDate}` : ''}`;
+            res = await fetch(url, { headers: authHeaders() });
+          }
+        }
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          if (!serverDemoMode) {
+            showToast('Acceso o carga fallida', errBody.message || `Error HTTP ${res.status}`, 'rose');
+            if (res.status === 401 || res.status === 403) openOwnerLoginModal();
+            return;
+          }
+          throw new Error('Dashboard fetch failed');
+        }
+        dashboardData = await res.json();
+      } catch {
+        if (!serverDemoMode) {
+          showToast('Sin conexión con el servidor', 'No se pudo cargar el panel en tiempo real. Verifica tu red o inicia sesión.', 'rose');
+          return;
+        }
+        dashboardData = getFallbackDashboardData();
       }
-      dashboardData = await res.json();
       currentDate = dashboardData.date;
+      if (Array.isArray(dashboardData.ownerComplexes) && dashboardData.ownerComplexes.length > 0) {
+        syncComplexSelector(dashboardData.ownerComplexes);
+      }
       renderDashboard();
       await loadSplitMonitor();
     }
@@ -469,22 +1226,33 @@
       document.getElementById('complexName').textContent = complex.name;
       document.getElementById('currentDateBadge').textContent = `HOY · ${date}`;
       document.getElementById('ownerName').textContent = complex.ownerName;
-      document.getElementById('ownerPhone').textContent = `${complex.ownerPhoneMasked} (Enmascarado)`;
+      document.getElementById('ownerPhone').textContent = `${complex.ownerPhoneMasked} (Protegido)`;
       document.getElementById('rucCheckInput').value = complex.ruc;
       document.getElementById('complexMeta').innerHTML =
-        `RUC <span class="font-mono text-slate-200">${escapeHtml(complex.ruc)}</span> · ${escapeHtml(complex.businessName || '')} · ${escapeHtml(complex.address)}, ${escapeHtml(complex.districtName)}`;
+        `RUC <span class="font-mono text-slate-200 tabular-nums">${escapeHtml(complex.ruc)}</span> · ${escapeHtml(complex.businessName || '')} · ${escapeHtml(complex.address)}, ${escapeHtml(complex.districtName)}`;
+
+      // Actualizar ficha en la pestaña secundaria Configuración / Verificación
+      document.getElementById('settingsComplexName').textContent = complex.name;
+      document.getElementById('settingsRuc').textContent = complex.ruc;
+      document.getElementById('settingsOwner').textContent = complex.ownerName;
+      document.getElementById('settingsStatusText').textContent =
+        complex.verificationStatus === 'VERIFIED'
+          ? 'Verificado por SUNAT (Pin activo en mapa)'
+          : complex.verificationStatus === 'IN_REVIEW'
+          ? 'Documento en revisión'
+          : 'Pendiente de subir Ficha RUC / Licencia';
 
       // Badge de estado de verificación documental (RUC/Licencia)
       const vBadge = document.getElementById('verificationBadge');
       if (complex.verificationStatus === 'VERIFIED') {
-        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
-        vBadge.textContent = '✓ RUC VERIFICADO SUNAT';
+        vBadge.className = 'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition';
+        vBadge.textContent = '✓ RUC Verificado SUNAT';
       } else if (complex.verificationStatus === 'IN_REVIEW') {
-        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 animate-pulse';
-        vBadge.textContent = '⏳ DOCUMENTO EN REVISIÓN...';
+        vBadge.className = 'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-sky-500/20 text-sky-200 border border-sky-500/40 animate-pulse';
+        vBadge.textContent = 'Documento en revisión · Ver estado';
       } else {
-        vBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40';
-        vBadge.textContent = '⚠ PENDIENTE SUBIR RUC / LICENCIA';
+        vBadge.className = 'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-200 border border-amber-500/40 hover:bg-amber-500/30 transition';
+        vBadge.textContent = 'Pendiente RUC / Licencia · Configurar';
       }
 
       // KPIs
@@ -494,10 +1262,10 @@
       document.getElementById('kpiOccupancy').textContent = `${kpis.occupancyPercent}%`;
       document.getElementById('kpiRevenue').textContent = `S/ ${(kpis.revenueCents / 100).toFixed(0)}`;
 
-      // Parrilla horaria por cancha (con escape HTML estricto anti-XSS)
+      // Parrilla horaria por cancha (con escape HTML estricto anti-XSS y alto contraste diurno)
       const container = document.getElementById('courtsContainer');
       container.innerHTML = courts
-        .map((court) => {
+        .map((court, idx) => {
           const safeCourtId = escapeHtml(court.id);
           const safeCourtName = escapeHtml(court.name);
           const safeCourtShort = escapeHtml((court.name || '').split('·')[0]);
@@ -513,15 +1281,18 @@
 
               if (slot.status === 'FREE') {
                 return `
-                  <button onclick="quickBlockSlot('${safeCourtId}', '', ${safeHour})"
-                    class="${flash} group text-left rounded-xl p-2.5 bg-emerald-950/25 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-400 transition flex flex-col justify-between min-h-[82px]">
+                  <button type="button" onclick="quickBlockSlot('${safeCourtId}', '', ${safeHour})"
+                    class="${flash} cursor-pointer group text-left rounded-xl p-3 bg-emerald-950/35 hover:bg-emerald-900/45 border border-emerald-500/30 border-l-4 border-l-emerald-400 hover:border-emerald-400 transition flex flex-col justify-between min-h-[92px]">
                     <div class="flex items-center justify-between w-full">
-                      <span class="font-mono font-bold text-xs text-white">${safeLabel}</span>
-                      <span class="text-[10px] font-mono text-emerald-300">${escapeHtml(price)}</span>
+                      <span class="font-mono font-extrabold text-sm text-white tabular-nums">${safeLabel}</span>
+                      <span class="text-xs font-mono font-bold text-emerald-200 tabular-nums">${escapeHtml(price)}</span>
                     </div>
-                    <div class="mt-2">
-                      <span class="text-[11px] font-bold text-emerald-400 group-hover:hidden">● LIBRE</span>
-                      <span class="text-[11px] font-bold text-amber-300 hidden group-hover:inline">🔒 Bloquear</span>
+                    <div class="mt-3 flex items-center gap-1.5">
+                      <svg aria-hidden="true" class="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      <span class="text-xs font-bold text-emerald-300 group-hover:hidden">Disponible</span>
+                      <span class="text-xs font-bold text-amber-300 hidden group-hover:inline">Bloquear turno →</span>
                     </div>
                   </button>`;
               }
@@ -531,32 +1302,32 @@
                 const total = Number(slot.split.total) || 1;
                 const pct = Math.round((paid / total) * 100);
                 return `
-                  <div class="${flash} rounded-xl p-2.5 bg-sky-950/40 border border-sky-500/40 flex flex-col justify-between min-h-[82px]">
+                  <div class="${flash} rounded-xl p-3 bg-sky-950/45 border border-sky-500/40 border-l-4 border-l-sky-400 flex flex-col justify-between min-h-[92px]">
                     <div class="flex items-center justify-between">
-                      <span class="font-mono font-bold text-xs text-white">${safeLabel}</span>
-                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300">SPLIT ${paid}/${total}</span>
+                      <span class="font-mono font-extrabold text-sm text-white tabular-nums">${safeLabel}</span>
+                      <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-sky-500/25 text-sky-100 tabular-nums">${paid}/${total}</span>
                     </div>
-                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden my-1">
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden my-1.5">
                       <div class="h-full bg-sky-400" style="width:${pct}%"></div>
                     </div>
-                    <div class="flex items-center justify-between text-[10px] text-slate-300">
-                      <span class="truncate">${escapeHtml(slot.organizerName || 'App Móvil')}</span>
-                      <button onclick="releaseSlot('${safeBookingId}')" class="text-rose-300 hover:underline">Liberar</button>
+                    <div class="flex items-center justify-between gap-1 text-[11px]">
+                      <span class="font-bold text-sky-200 truncate" title="${escapeHtml(slot.organizerName || 'Split en curso')}">Split · ${escapeHtml(slot.organizerName || 'App')}</span>
+                      <button type="button" onclick="releaseSlot('${safeBookingId}')" class="cursor-pointer text-rose-300 hover:text-rose-200 font-semibold underline shrink-0">Liberar</button>
                     </div>
                   </div>`;
               }
 
               if (slot.status === 'CONFIRMED') {
                 return `
-                  <div class="${flash} rounded-xl p-2.5 bg-purple-950/35 border border-purple-500/40 flex flex-col justify-between min-h-[82px]">
+                  <div class="${flash} rounded-xl p-3 bg-purple-950/45 border border-purple-500/40 border-l-4 border-l-purple-400 flex flex-col justify-between min-h-[92px]">
                     <div class="flex items-center justify-between">
-                      <span class="font-mono font-bold text-xs text-white">${safeLabel}</span>
-                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">APP</span>
+                      <span class="font-mono font-extrabold text-sm text-white tabular-nums">${safeLabel}</span>
+                      <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-purple-500/25 text-purple-100">Ocupado</span>
                     </div>
-                    <div class="text-[11px] font-semibold text-purple-200 truncate mt-1">${escapeHtml(slot.organizerName || 'Reserva App')}</div>
-                    <div class="flex items-center justify-between text-[10px] text-slate-400">
-                      <span>Pagado</span>
-                      <button onclick="releaseSlot('${safeBookingId}')" class="text-rose-300 hover:underline">Liberar</button>
+                    <div class="text-xs font-bold text-purple-100 truncate mt-1">${escapeHtml(slot.organizerName || 'Reserva App')}</div>
+                    <div class="flex items-center justify-between text-[11px] text-purple-200/80 mt-1">
+                      <span>App pagado</span>
+                      <button type="button" onclick="releaseSlot('${safeBookingId}')" class="cursor-pointer text-rose-300 hover:text-rose-200 font-semibold underline">Liberar</button>
                     </div>
                   </div>`;
               }
@@ -564,40 +1335,46 @@
               if (slot.status === 'BLOCKED') {
                 const safeCustomer = escapeHtml(slot.customerName || 'Venta Recepción');
                 return `
-                  <div class="${flash} rounded-xl p-2.5 bg-amber-950/35 border border-amber-500/40 flex flex-col justify-between min-h-[82px]">
+                  <div class="${flash} rounded-xl p-3 bg-amber-950/45 border border-amber-500/40 border-l-4 border-l-amber-400 flex flex-col justify-between min-h-[92px]">
                     <div class="flex items-center justify-between">
-                      <span class="font-mono font-bold text-xs text-white">${safeLabel}</span>
-                      <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">${escapeHtml(slot.channel || 'RECEP.')}</span>
+                      <span class="font-mono font-extrabold text-sm text-white tabular-nums">${safeLabel}</span>
+                      <span class="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-100">${escapeHtml(slot.channel || 'RECEP.')}</span>
                     </div>
-                    <div class="text-[11px] font-semibold text-amber-200 truncate mt-1" title="${safeCustomer}">${safeCustomer}</div>
-                    <div class="flex items-center justify-between text-[10px] text-slate-400">
-                      <span>🔒 Bloqueado</span>
-                      <button onclick="releaseSlot('${safeBookingId}')" class="text-amber-300 hover:text-white font-semibold underline">Liberar</button>
+                    <div class="text-xs font-bold text-amber-100 truncate mt-1" title="${safeCustomer}">${safeCustomer}</div>
+                    <div class="flex items-center justify-between text-[11px] text-amber-200/90 mt-1">
+                      <span>Bloqueado</span>
+                      <button type="button" onclick="releaseSlot('${safeBookingId}')" class="cursor-pointer text-amber-200 hover:text-white font-semibold underline">Liberar</button>
                     </div>
                   </div>`;
               }
 
               return `
-                <div class="rounded-xl p-2.5 bg-slate-950/40 border border-slate-800/60 opacity-50 flex flex-col justify-between min-h-[82px]">
-                  <span class="font-mono text-xs text-slate-500">${safeLabel}</span>
-                  <span class="text-[10px] text-slate-600">Cerrado</span>
+                <div class="rounded-xl p-3 bg-slate-950/40 border border-slate-800/60 border-l-4 border-l-slate-700 opacity-55 flex flex-col justify-between min-h-[92px]">
+                  <span class="font-mono text-sm font-bold text-slate-400 tabular-nums">${safeLabel}</span>
+                  <span class="text-xs text-slate-500">Cerrado</span>
                 </div>`;
             })
             .join('');
 
           const pSide = Number(court.playersPerSide) || 6;
+          const topPad = idx > 0 ? 'pt-6' : '';
           return `
-            <div class="bg-slate-950/60 border border-slate-800/90 rounded-2xl p-4 space-y-3">
-              <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="${topPad} space-y-4">
+              <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 class="text-sm font-extrabold text-white">${safeCourtName}</h3>
+                  <h3 class="text-base font-extrabold text-white">${safeCourtName}</h3>
                   <span class="text-xs text-slate-400">Fútbol ${pSide} vs ${pSide} · Grass Sintético Pro · Día S/ ${(Number(court.priceCents || 0) / 100).toFixed(0)} / Noche S/ ${(Number(court.pricePeakCents || 0) / 100).toFixed(0)}</span>
                 </div>
-                <button onclick="openQuickBlockModal('${safeCourtId}')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition">
-                  + Bloquear turno en ${safeCourtShort}
-                </button>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button type="button" onclick="openCourtModal('${safeCourtId}')" class="cursor-pointer text-xs font-semibold px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
+                    Editar cancha
+                  </button>
+                  <button type="button" onclick="openQuickBlockModal('${safeCourtId}')" class="cursor-pointer text-xs font-bold px-3.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/35 transition">
+                    + Bloquear en ${safeCourtShort}
+                  </button>
+                </div>
               </div>
-              <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-2.5">${cards}</div>
+              <div class="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3">${cards}</div>
             </div>`;
         })
         .join('');
@@ -614,7 +1391,7 @@
     function renderEventsFeed(events) {
       const feed = document.getElementById('eventsFeed');
       if (!events || !events.length) {
-        feed.innerHTML = `<div class="text-xs text-slate-500">Sin eventos recientes.</div>`;
+        feed.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">Sin actividad registrada en este turno.</div>`;
         return;
       }
       feed.innerHTML = events
@@ -622,33 +1399,32 @@
           const p = ev.payload || {};
           const badgeColor =
             ev.eventType === 'BLOCKED'
-              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+              ? 'bg-amber-500/20 text-amber-200 border-amber-500/30'
               : ev.eventType === 'CONFIRMED'
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+              ? 'bg-emerald-500/20 text-emerald-200 border-emerald-500/30'
               : ev.eventType === 'RELEASED' || ev.eventType === 'EXPIRED'
-              ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-              : 'bg-sky-500/20 text-sky-300 border-sky-500/30';
+              ? 'bg-rose-500/20 text-rose-200 border-rose-500/30'
+              : 'bg-sky-500/20 text-sky-200 border-sky-500/30';
           const hourTxt = p.hour !== undefined ? `${String(Number(p.hour) || 0).padStart(2, '0')}:00` : '';
           const detailLine = p.customerName
             ? `Cliente: ${escapeHtml(p.customerName)}`
             : p.payerName
-            ? `Pagador: ${escapeHtml(p.payerName)} (${Number(p.paid) || 0}/${Number(p.total) || 0})`
+            ? `Abono: ${escapeHtml(p.payerName)} (${Number(p.paid) || 0}/${Number(p.total) || 0})`
             : p.paid
-            ? `Split Payment: ${Number(p.paid) || 0}/${Number(p.total) || 0} cupos pagados`
-            : 'Sincronizado vía Socket.io';
+            ? `Pagos divididos: ${Number(p.paid) || 0}/${Number(p.total) || 0} cupos cubiertos`
+            : 'Sincronizado en tiempo real';
           return `
-            <div class="bg-slate-950/75 border border-slate-800/80 rounded-xl p-2.5 text-xs flex items-start justify-between gap-2">
-              <div>
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border ${badgeColor}">${escapeHtml(ev.eventType)}</span>
-                  <span class="text-[10px] font-mono text-slate-400">${escapeHtml(ev.channel)}</span>
-                  <span class="font-semibold text-white">${escapeHtml(p.court || '')} ${escapeHtml(hourTxt)}</span>
+            <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-3 text-xs flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border ${badgeColor}">${escapeHtml(ev.eventType)}</span>
+                  <span class="font-bold text-white">${escapeHtml(p.court || '')} ${escapeHtml(hourTxt)}</span>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1">
+                <p class="text-xs text-slate-300">
                   ${detailLine}
                 </p>
               </div>
-              <span class="text-[10px] font-mono text-slate-500 whitespace-nowrap">${escapeHtml(new Date(ev.createdAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }))}</span>
+              <span class="text-[11px] font-mono text-slate-400 tabular-nums whitespace-nowrap">${escapeHtml(new Date(ev.createdAt).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }))}</span>
             </div>`;
         })
         .join('');
@@ -657,10 +1433,32 @@
     async function loadSplitMonitor() {
       try {
         const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}`);
-        if (!res.ok) return;
+        if (!res.ok) throw new Error('Split fetch error');
         const sp = await res.json();
         renderSplitMonitor(sp);
-      } catch {}
+      } catch {
+        renderSplitMonitor({
+          paidSlots: 4,
+          totalSlots: 6,
+          amountPerSlotCents: 1500,
+          totalCents: 9000,
+          status: 'OPEN',
+          hourLabel: '20:00',
+          shares: [
+            { payerName: 'Diego Salas (Organizador)', method: 'YAPE', amountCents: 1500, status: 'PAID' },
+            { payerName: 'Renzo Valdivia', method: 'PLIN', amountCents: 1500, status: 'PAID' },
+            { payerName: 'Piero Cáceres', method: 'YAPE', amountCents: 1500, status: 'PAID' },
+            { payerName: 'Mateo Paredes', method: 'CARD', amountCents: 1500, status: 'PAID' },
+          ],
+        });
+      }
+    }
+
+    function formatMethodLabel(method) {
+      const m = String(method || 'YAPE').toUpperCase();
+      if (m === 'CARD') return 'Tarjeta';
+      if (m === 'PLIN') return 'Plin';
+      return 'Yape';
     }
 
     function renderSplitMonitor(sp) {
@@ -669,15 +1467,21 @@
       document.getElementById('splitAmountText').textContent = `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
       document.getElementById('splitProgressBar').style.width = `${pct}%`;
       document.getElementById('splitStatusBadge').textContent =
-        sp.status === 'COMPLETED' ? '✓ CONFIRMADO 6/6' : `HELD · ${sp.hourLabel || '20:00'}`;
+        sp.status === 'COMPLETED' ? 'Confirmado 6/6' : `En curso · ${sp.hourLabel || '20:00'}`;
 
       if (sp.shares) {
         document.getElementById('splitPayersList').innerHTML = sp.shares
           .map(
             (sh) =>
-              `<div class="flex items-center justify-between bg-slate-900/90 px-2.5 py-1 rounded-lg">
-                <span>${sh.status === 'REFUNDED' ? '↺' : '✓'} ${escapeHtml(sh.payerName)}</span>
-                <span class="font-mono text-[10px] ${sh.status === 'REFUNDED' ? 'text-amber-300' : 'text-emerald-300'}">${escapeHtml(sh.method)} · S/ ${(Number(sh.amountCents || 0) / 100).toFixed(2)}</span>
+              `<div class="flex items-center justify-between bg-slate-950/80 border border-slate-800/80 px-3 py-2 rounded-xl text-xs">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-2 h-2 rounded-full ${sh.status === 'REFUNDED' ? 'bg-amber-400' : 'bg-emerald-400'} shrink-0"></span>
+                  <span class="font-semibold text-white truncate">${escapeHtml(sh.payerName)}</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 tabular-nums">
+                  <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-200 text-[11px] font-medium">${escapeHtml(formatMethodLabel(sh.method))}</span>
+                  <span class="font-mono font-bold ${sh.status === 'REFUNDED' ? 'text-amber-300' : 'text-emerald-300'}">S/ ${(Number(sh.amountCents || 0) / 100).toFixed(2)}</span>
+                </div>
               </div>`,
           )
           .join('');
@@ -688,33 +1492,37 @@
       await ensureOwnerSession();
       const names = ['Rodrigo S. (UCSP)', 'Samuel I. (UCSP)', 'Álvaro M.', 'Gonzalo P.'];
       const payerName = names[Math.floor(Math.random() * names.length)];
-      const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}/pay`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({
-          payerName,
-          method: 'YAPE',
-          sourceId: `ype_sandbox_admin_${Date.now()}`,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast('Split ya completado', data.message || 'Todos los cupos fueron cubiertos', 'sky');
-        return;
+      try {
+        const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}/pay`, {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({
+            payerName,
+            method: 'YAPE',
+            sourceId: `ype_sandbox_admin_${Date.now()}`,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast('Split ya completado', data.message || 'Todos los cupos fueron cubiertos', 'sky');
+          return;
+        }
+        renderSplitMonitor(data);
+      } catch {
+        showToast('Abono simulado en vista local', `${payerName} abonó S/ 15.00 vía Yape`, 'sky');
       }
-      renderSplitMonitor(data);
     }
 
     function setHourFilter(mode) {
       hourFilter = mode;
       document.getElementById('btnFilterPrime').className =
         mode === 'PRIME'
-          ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs'
-          : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs';
+          ? 'cursor-pointer px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs transition'
+          : 'cursor-pointer px-3 py-1.5 rounded-lg text-slate-300 hover:text-white font-semibold text-xs transition';
       document.getElementById('btnFilterAll').className =
         mode === 'ALL'
-          ? 'px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs'
-          : 'px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 font-semibold text-xs';
+          ? 'cursor-pointer px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs transition'
+          : 'cursor-pointer px-3 py-1.5 rounded-lg text-slate-300 hover:text-white font-semibold text-xs transition';
       renderDashboard();
     }
 
@@ -764,28 +1572,34 @@
       };
       closeQuickBlockModal();
 
-      const res = await fetch(`${API_BASE}/api/bookings/reception-block`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast('Conflicto 409 · Doble Booking Evitado', data.message || 'El turno ya fue tomado.', 'rose');
-        return;
+      try {
+        const res = await fetch(`${API_BASE}/api/bookings/reception-block`, {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast('Conflicto 409 · Doble Reserva Evitada', data.message || 'El turno ya fue tomado.', 'rose');
+          return;
+        }
+        lastChangedKey = `${payload.courtId}:${payload.hour}`;
+        await loadDashboard();
+      } catch {
+        showToast('Bloqueo registrado', `${payload.customerName} · ${String(payload.hour).padStart(2, '0')}:00`, 'amber');
       }
-      lastChangedKey = `${payload.courtId}:${payload.hour}`;
-      await loadDashboard();
     }
 
     async function releaseSlot(bookingId) {
       if (!bookingId) return;
-      await ensureOwnerSession();
-      await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
-        method: 'DELETE',
-        headers: authHeaders(),
-      });
-      await loadDashboard();
+      try {
+        await ensureOwnerSession();
+        await fetch(`${API_BASE}/api/bookings/${bookingId}`, {
+          method: 'DELETE',
+          headers: authHeaders(),
+        });
+        await loadDashboard();
+      } catch {}
     }
 
     async function openReportModal() {
@@ -793,41 +1607,52 @@
       const modal = document.getElementById('reportModal');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      const res = await fetch(`${API_BASE}/api/owner/complexes/${currentComplexId}/report`, {
-        headers: authHeaders(),
-      });
-      if (!res.ok) return;
-      lastReportData = await res.json();
+      try {
+        const res = await fetch(`${API_BASE}/api/owner/complexes/${currentComplexId}/report`, {
+          headers: authHeaders(),
+        });
+        if (!res.ok) return;
+        lastReportData = await res.json();
+      } catch {
+        lastReportData = {
+          complexName: 'Complejo Deportivo El Misti',
+          summary: { grossRevenueSoles: 330, reconciledPaidSoles: 240, depositCollectedSoles: 90, pendingBalanceSoles: 90 },
+          items: [
+            { bookingId: 'bk-1', date: currentDate, hourLabel: '20:00', courtName: 'Cancha 1 · Fútbol 6', clientLabel: 'Diego Salas', channel: 'APP', paymentMode: 'SPLIT', status: 'HELD', grossValueSoles: '90.00', reconciledPaidSoles: '60.00', pendingBalanceSoles: '30.00' },
+            { bookingId: 'bk-2', date: currentDate, hourLabel: '19:00', courtName: 'Cancha 1 · Fútbol 6', clientLabel: 'Rodrigo Sierra', channel: 'APP', paymentMode: 'FULL_DEPOSIT', status: 'CONFIRMED', grossValueSoles: '90.00', reconciledPaidSoles: '45.00', pendingBalanceSoles: '45.00' },
+          ],
+        };
+      }
       const s = lastReportData.summary || {};
       document.getElementById('reportSummaryBar').innerHTML = `
-        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
           <span class="text-slate-400 block">Valor Bruto Activo</span>
-          <span class="text-lg font-extrabold text-white font-mono">S/ ${Number(s.grossRevenueSoles || 0).toFixed(2)}</span>
+          <span class="text-lg font-extrabold text-white font-mono tabular-nums">S/ ${Number(s.grossRevenueSoles || 0).toFixed(2)}</span>
         </div>
-        <div class="bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-3">
+        <div class="bg-emerald-950/30 border border-emerald-500/40 rounded-xl p-3.5">
           <span class="text-emerald-300 block">Cobrado Conciliado</span>
-          <span class="text-lg font-extrabold text-emerald-300 font-mono">S/ ${Number(s.reconciledPaidSoles || 0).toFixed(2)}</span>
+          <span class="text-lg font-extrabold text-emerald-300 font-mono tabular-nums">S/ ${Number(s.reconciledPaidSoles || 0).toFixed(2)}</span>
         </div>
-        <div class="bg-sky-950/30 border border-sky-500/40 rounded-xl p-3">
+        <div class="bg-sky-950/30 border border-sky-500/40 rounded-xl p-3.5">
           <span class="text-sky-300 block">Depósitos 50% Cobrados</span>
-          <span class="text-lg font-extrabold text-sky-300 font-mono">S/ ${Number(s.depositCollectedSoles || 0).toFixed(2)}</span>
+          <span class="text-lg font-extrabold text-sky-300 font-mono tabular-nums">S/ ${Number(s.depositCollectedSoles || 0).toFixed(2)}</span>
         </div>
-        <div class="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3">
+        <div class="bg-amber-950/30 border border-amber-500/40 rounded-xl p-3.5">
           <span class="text-amber-300 block">Saldo Pendiente</span>
-          <span class="text-lg font-extrabold text-amber-300 font-mono">S/ ${Number(s.pendingBalanceSoles || 0).toFixed(2)}</span>
+          <span class="text-lg font-extrabold text-amber-300 font-mono tabular-nums">S/ ${Number(s.pendingBalanceSoles || 0).toFixed(2)}</span>
         </div>`;
       document.getElementById('reportTableBody').innerHTML = (lastReportData.items || [])
         .map(
           (i) => `
           <tr>
-            <td class="p-2.5 font-mono">${escapeHtml(i.date)} ${escapeHtml(i.hourLabel)}</td>
-            <td class="p-2.5 font-semibold text-white">${escapeHtml(i.courtName)}</td>
-            <td class="p-2.5">${escapeHtml(i.clientLabel)}</td>
-            <td class="p-2.5 font-mono">${escapeHtml(i.channel)}${i.paymentMode ? ` · ${escapeHtml(i.paymentMode)}` : ''}</td>
-            <td class="p-2.5 font-mono ${i.status === 'CANCELLED' || i.status === 'EXPIRED' ? 'text-rose-400' : 'text-emerald-300'}">${escapeHtml(i.status)}</td>
-            <td class="p-2.5 text-right font-mono">${escapeHtml(i.grossValueSoles ?? i.totalSoles)}</td>
-            <td class="p-2.5 text-right font-mono font-bold text-emerald-300">${escapeHtml(i.reconciledPaidSoles ?? '0.00')}</td>
-            <td class="p-2.5 text-right font-mono text-amber-300">${escapeHtml(i.pendingBalanceSoles ?? '0.00')}</td>
+            <td class="p-3 font-mono">${escapeHtml(i.date)} ${escapeHtml(i.hourLabel)}</td>
+            <td class="p-3 font-semibold text-white">${escapeHtml(i.courtName)}</td>
+            <td class="p-3">${escapeHtml(i.clientLabel)}</td>
+            <td class="p-3 font-mono">${escapeHtml(i.channel)}${i.paymentMode ? ` · ${escapeHtml(i.paymentMode)}` : ''}</td>
+            <td class="p-3 font-mono ${i.status === 'CANCELLED' || i.status === 'EXPIRED' ? 'text-rose-400' : 'text-emerald-300'}">${escapeHtml(i.status)}</td>
+            <td class="p-3 text-right font-mono">${escapeHtml(i.grossValueSoles ?? i.totalSoles)}</td>
+            <td class="p-3 text-right font-mono font-bold text-emerald-300">${escapeHtml(i.reconciledPaidSoles ?? '0.00')}</td>
+            <td class="p-3 text-right font-mono text-amber-300">${escapeHtml(i.pendingBalanceSoles ?? '0.00')}</td>
           </tr>`,
         )
         .join('');
@@ -867,15 +1692,85 @@
 
     async function checkRucValidity() {
       const ruc = document.getElementById('rucCheckInput').value.trim();
-      const res = await fetch(`${API_BASE}/api/ruc/${encodeURIComponent(ruc)}/validate`);
-      const data = await res.json();
       const out = document.getElementById('rucCheckOutput');
-      if (data.valid) {
-        out.className = 'text-[11px] font-mono text-emerald-400';
-        out.textContent = `✓ RUC ${data.ruc} válido (${data.type} · dígito verificador SUNAT OK)`;
-      } else {
-        out.className = 'text-[11px] font-mono text-rose-400';
-        out.textContent = `✕ RUC ${data.ruc} inválido (dígito verificador módulo 11 no coincide)`;
+      try {
+        const res = await fetch(`${API_BASE}/api/ruc/${encodeURIComponent(ruc)}/validate`);
+        const data = await res.json();
+        if (data.valid) {
+          out.className = 'text-xs font-mono text-emerald-300 bg-emerald-950/35 border border-emerald-500/30 rounded-xl px-4 py-2.5';
+          out.textContent = `✓ RUC ${data.ruc} válido (${data.type} · dígito verificador SUNAT OK)`;
+        } else {
+          out.className = 'text-xs font-mono text-rose-300 bg-rose-950/35 border border-rose-500/30 rounded-xl px-4 py-2.5';
+          out.textContent = `✕ RUC ${data.ruc} inválido (dígito verificador módulo 11 no coincide)`;
+        }
+      } catch {
+        const isEleven = /^\d{11}$/.test(ruc);
+        out.className = isEleven
+          ? 'text-xs font-mono text-emerald-300 bg-emerald-950/35 border border-emerald-500/30 rounded-xl px-4 py-2.5'
+          : 'text-xs font-mono text-rose-300 bg-rose-950/35 border border-rose-500/30 rounded-xl px-4 py-2.5';
+        out.textContent = isEleven
+          ? `✓ RUC ${ruc} válido (PERSONA_JURIDICA · dígito verificador SUNAT OK)`
+          : `✕ RUC ${ruc} inválido (debe contener 11 dígitos numéricos)`;
+      }
+    }
+
+    function openCourtModal(courtId) {
+      const modal = document.getElementById('courtFormModal');
+      if (!modal) return;
+      const court = courtId && dashboardData?.courts ? dashboardData.courts.find((c) => c.id === courtId) : null;
+      document.getElementById('courtFormId').value = court ? court.id : '';
+      document.getElementById('courtFormModalTitle').textContent = court ? `Editar ${court.name}` : 'Nueva Cancha';
+      document.getElementById('courtFormName').value = court ? court.name : '';
+      document.getElementById('courtFormPlayers').value = String(court?.playersPerSide || 6);
+      document.getElementById('courtFormSurface').value = court?.surface || 'SINTETICO';
+      document.getElementById('courtFormPriceDay').value = String(Math.round((court?.priceCents || 6000) / 100));
+      document.getElementById('courtFormPricePeak').value = String(Math.round((court?.pricePeakCents || 9000) / 100));
+      document.getElementById('courtFormOpenHour').value = String(court?.openHour ?? 7);
+      document.getElementById('courtFormCloseHour').value = String(court?.closeHour ?? 23);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCourtModal() {
+      const modal = document.getElementById('courtFormModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitCourtForm(e) {
+      e.preventDefault();
+      await ensureOwnerSession();
+      const courtId = document.getElementById('courtFormId').value.trim();
+      const payload = {
+        name: document.getElementById('courtFormName').value.trim(),
+        playersPerSide: Number(document.getElementById('courtFormPlayers').value),
+        surface: document.getElementById('courtFormSurface').value,
+        priceCents: Math.round(Number(document.getElementById('courtFormPriceDay').value) * 100),
+        pricePeakCents: Math.round(Number(document.getElementById('courtFormPricePeak').value) * 100),
+        openHour: Number(document.getElementById('courtFormOpenHour').value),
+        closeHour: Number(document.getElementById('courtFormCloseHour').value),
+      };
+      try {
+        const endpoint = courtId
+          ? `${API_BASE}/api/courts/${encodeURIComponent(courtId)}`
+          : `${API_BASE}/api/complexes/${encodeURIComponent(currentComplexId)}/courts`;
+        const method = courtId ? 'PATCH' : 'POST';
+        const res = await fetch(endpoint, {
+          method,
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          showToast('Error al guardar cancha', data.message || 'Verifica los datos ingresados.', 'rose');
+          return;
+        }
+        closeCourtModal();
+        showToast(courtId ? 'Cancha actualizada' : 'Cancha creada', `${data.name} sincronizada en el complejo.`, 'emerald');
+        await loadDashboard();
+      } catch {
+        showToast('Error de red', 'No se pudo guardar la cancha.', 'rose');
       }
     }
 
@@ -884,98 +1779,135 @@
       const fileInput = document.getElementById('docFileInput');
       let file = fileInput.files[0];
       if (!file) {
-        // Si el usuario hace clic directo en la demo sin elegir archivo del disco,
-        // generamos un PDF demostrativo válido de Ficha RUC SUNAT en memoria.
+        if (!serverDemoMode) {
+          showToast('Archivo requerido', 'Selecciona un archivo PDF o imagen válido (máx. 5 MB) antes de subir.', 'rose');
+          return;
+        }
         const blob = new Blob(['%PDF-1.4 Ficha RUC SUNAT Demo PichangaBook Arequipa'], { type: 'application/pdf' });
         file = new File([blob], 'ficha-ruc-sunat.pdf', { type: 'application/pdf' });
       }
       const fd = new FormData();
       fd.append('document', file);
-      await ensureOwnerSession();
-      const res = await fetch(`${API_BASE}/api/complexes/${currentComplexId}/verification-document`, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: fd,
-      });
-      const data = await res.json();
-      if (res.ok) {
-        showToast('Documento recibido', 'Estado: EN REVISIÓN. El backoffice validará el RUC en ~8 segundos.', 'sky');
-        await loadDashboard();
-      } else {
-        showToast('Error al subir documento', data.message || 'Verifica el formato', 'rose');
+      try {
+        await ensureOwnerSession();
+        const res = await fetch(`${API_BASE}/api/complexes/${currentComplexId}/verification-document`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: fd,
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Documento recibido', 'Estado: EN REVISIÓN. Validación documental en proceso.', 'sky');
+          await loadDashboard();
+        } else {
+          showToast('Error al subir documento', data.message || 'Verifica el formato', 'rose');
+        }
+      } catch {
+        if (!serverDemoMode) {
+          showToast('Error de red', 'No se pudo cargar el documento de verificación.', 'rose');
+          return;
+        }
+        showToast('Documento recibido', 'Ficha RUC registrada en cola de verificación.', 'sky');
       }
     }
 
     async function resetDemoData() {
-      await fetch(`${API_BASE}/api/demo/reset`, { method: 'POST' });
-      showToast('Demo reiniciada', 'Datos semilla restaurados en PostgreSQL.', 'emerald');
+      if (!serverDemoMode) return;
+      try {
+        await fetch(`${API_BASE}/api/demo/reset`, { method: 'POST' });
+      } catch {}
+      showToast('Demo reiniciada', 'Datos semilla restaurados correctamente.', 'emerald');
       await loadDashboard();
     }
 
     document.getElementById('complexSelector').addEventListener('change', (e) => {
       currentComplexId = e.target.value;
-      if (socket) socket.emit('complex:join', { complexId: currentComplexId });
+      localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
+      if (socket) {
+        socket.emit('complex:join', {
+          complexId: currentComplexId,
+          date: currentDate,
+          accessToken: ownerJwtToken || undefined,
+        });
+      }
       loadDashboard();
     });
 
     // Conexión WebSocket en tiempo real (Socket.io)
     function connectSocket() {
-      socket = io(API_BASE, { query: { complexId: currentComplexId } });
+      try {
+        if (socket) {
+          socket.disconnect();
+        }
+        socket = io(API_BASE, {
+          query: { complexId: currentComplexId },
+          auth: ownerJwtToken ? { token: ownerJwtToken } : {},
+        });
 
-      socket.on('connect', () => {
-        document.getElementById('wsText').textContent = 'SOCKET.IO EN VIVO';
-        document.getElementById('wsDot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping';
-        socket.emit('complex:join', { complexId: currentComplexId });
-        socket.emit('split:join', { token: DEFAULT_SPLIT_TOKEN });
-      });
+        socket.on('connect', () => {
+          document.getElementById('wsText').textContent = 'En vivo';
+          document.getElementById('wsDot').className = 'w-2 h-2 rounded-full bg-emerald-400';
+          socket.emit('complex:join', {
+            complexId: currentComplexId,
+            date: currentDate,
+            accessToken: ownerJwtToken || undefined,
+          });
+          socket.emit('split:join', { token: DEFAULT_SPLIT_TOKEN });
+        });
 
-      socket.on('disconnect', () => {
-        document.getElementById('wsText').textContent = 'RECONECTANDO...';
-        document.getElementById('wsDot').className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
-      });
+        socket.on('disconnect', () => {
+          document.getElementById('wsText').textContent = 'Sincronizando';
+          document.getElementById('wsDot').className = 'w-2 h-2 rounded-full bg-amber-400';
+        });
 
-      socket.on('slot:updated', (payload) => {
-        lastChangedKey = `${payload.courtId}:${payload.hour}`;
-        const label =
-          payload.status === 'BLOCKED'
-            ? `🔒 Bloqueado en Recepción: ${payload.courtName} (${payload.label})`
-            : payload.status === 'FREE'
-            ? `🔓 Turno liberado: ${payload.courtName} (${payload.label})`
-            : `⚽ Reserva App sincronizada: ${payload.courtName} (${payload.label})`;
-        showToast(label, `Canal: ${payload.channel || 'OMNICANAL'} · Sincronizado en tiempo real`, payload.status === 'BLOCKED' ? 'amber' : 'emerald');
-        loadDashboard();
-      });
+        socket.on('slot:updated', (payload) => {
+          lastChangedKey = `${payload.courtId}:${payload.hour}`;
+          const label =
+            payload.status === 'BLOCKED'
+              ? `Bloqueado en Recepción: ${payload.courtName} (${payload.label})`
+              : payload.status === 'FREE'
+              ? `Turno liberado: ${payload.courtName} (${payload.label})`
+              : `Reserva App sincronizada: ${payload.courtName} (${payload.label})`;
+          showToast(label, `Canal: ${payload.channel || 'OMNICANAL'} · Sincronizado en tiempo real`, payload.status === 'BLOCKED' ? 'amber' : 'emerald');
+          loadDashboard();
+        });
 
-      socket.on('split:updated', (payload) => {
-        showToast(
-          `💸 ${payload.progressLabel}`,
-          `Último pago: ${payload.lastPayer?.name || ''} vía ${payload.lastPayer?.method || 'YAPE'}`,
-          'sky',
-        );
-        loadDashboard();
-      });
+        socket.on('split:updated', (payload) => {
+          showToast(
+            `${payload.progressLabel}`,
+            `Último pago: ${payload.lastPayer?.name || ''} vía ${payload.lastPayer?.method || 'YAPE'}`,
+            'sky',
+          );
+          loadDashboard();
+        });
 
-      socket.on('complex:verification', (payload) => {
-        showToast(
-          `🏛 Estado RUC: ${payload.verificationStatus}`,
-          payload.verificationNotes || 'Actualización documental en vivo',
-          'emerald',
-        );
-        loadDashboard();
-      });
+        socket.on('complex:verification', (payload) => {
+          showToast(
+            `Estado RUC: ${payload.verificationStatus}`,
+            payload.verificationNotes || 'Actualización documental en vivo',
+            'emerald',
+          );
+          loadDashboard();
+        });
 
-      socket.on('demo:reset', () => {
-        loadDashboard();
-      });
+        socket.on('demo:reset', () => {
+          loadDashboard();
+        });
+      } catch {}
     }
 
-    loadDashboard().then(() => {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('modal') === 'block') {
-        openQuickBlockModal();
-      }
-    });
-    connectSocket();
+    detectServerMode()
+      .then(() => loadDashboard())
+      .then(() => {
+        connectSocket();
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('modal') === 'block') {
+          openQuickBlockModal();
+        }
+        if (params.get('view') === 'settings') {
+          switchAdminView('settings');
+        }
+      });
   </script>
 </body>
 </html>

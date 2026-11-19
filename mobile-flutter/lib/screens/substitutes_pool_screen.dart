@@ -28,6 +28,7 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
   String _selectedPosition = 'ALL';
   String _selectedDistrict = 'ALL';
   List<SubstituteProfile> _subs = [];
+  List<SubstituteInvitationItem> _invitations = [];
   bool _loading = true;
   String? _error;
 
@@ -47,9 +48,16 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
         position: _selectedPosition,
         district: _selectedDistrict,
       );
+      List<SubstituteInvitationItem> invitations = [];
+      if (widget.api.isAuthenticated) {
+        try {
+          invitations = await widget.api.fetchMySubstituteInvitations();
+        } catch (_) {}
+      }
       if (!mounted) return;
       setState(() {
         _subs = list.map(SubstituteProfile.fromJson).toList();
+        _invitations = invitations;
         _loading = false;
       });
     } catch (e) {
@@ -59,6 +67,62 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _openUpsertProfileSheet() async {
+    if (!widget.api.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para crear o actualizar tu perfil de suplente.')),
+      );
+      return;
+    }
+    final currentUserId = widget.api.currentUser?.id;
+    final existing = _subs.where((s) => s.userId == currentUserId).firstOrNull;
+
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: PichangaTheme.bgSecondary,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) => _UpsertSubstituteProfileSheet(
+        api: widget.api,
+        existing: existing,
+      ),
+    );
+    if (saved == true && mounted) {
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: PichangaTheme.turfGreenDark,
+          content: Text('¡Perfil de suplente actualizado en la Bolsa de Arequipa!'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _openMyInvitationsSheet() async {
+    if (!widget.api.isAuthenticated) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Inicia sesión para consultar tus convocatorias.')),
+      );
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: PichangaTheme.bgSecondary,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (_) => _MySubstituteInvitationsSheet(
+        api: widget.api,
+        initialInvitations: _invitations,
+        onChanged: _load,
+      ),
+    );
   }
 
   Future<void> _inviteAndOpenRelay(SubstituteProfile sub) async {
@@ -192,8 +256,44 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final pendingInvCount = _invitations.where((i) => i.status == 'SENT').length;
     return Column(
       children: [
+        // Barra de acciones rápidas: Postularme / Mi Perfil y Mis Convocatorias
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openUpsertProfileSheet,
+                  icon: const Icon(Icons.person_pin_circle_outlined, size: 16, color: PichangaTheme.turfGreen),
+                  label: const Text(
+                    'Mi Perfil de Suplente',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openMyInvitationsSheet,
+                  icon: Icon(
+                    pendingInvCount > 0 ? Icons.notifications_active : Icons.inbox_outlined,
+                    size: 16,
+                    color: pendingInvCount > 0 ? PichangaTheme.warningAmber : PichangaTheme.skyAccent,
+                  ),
+                  label: Text(
+                    pendingInvCount > 0 ? 'Convocatorias ($pendingInvCount)' : 'Mis Convocatorias',
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         // Filtro por posición
         SizedBox(
           height: 48,
@@ -244,9 +344,14 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
                   DropdownMenuItem(value: 'ALL', child: Text('Todos AQP')),
                   DropdownMenuItem(value: 'CAYMA', child: Text('Cayma')),
                   DropdownMenuItem(value: 'YANAHUARA', child: Text('Yanahuara')),
-                  DropdownMenuItem(value: 'CERRO_COLORADO', child: Text('Cerro Colorado')),
                   DropdownMenuItem(value: 'JLBYR', child: Text('J.L. Bustamante')),
+                  DropdownMenuItem(value: 'CERRO_COLORADO', child: Text('Cerro Colorado')),
                   DropdownMenuItem(value: 'SACHACA', child: Text('Sachaca')),
+                  DropdownMenuItem(value: 'AREQUIPA', child: Text('Cercado')),
+                  DropdownMenuItem(value: 'MIRAFLORES', child: Text('Miraflores')),
+                  DropdownMenuItem(value: 'ALTO_SELVA_ALEGRE', child: Text('Alto Selva Alegre')),
+                  DropdownMenuItem(value: 'PAUCARPATA', child: Text('Paucarpata')),
+                  DropdownMenuItem(value: 'HUNTER', child: Text('Jacobo Hunter')),
                 ],
                 onChanged: (v) {
                   if (v != null) {
@@ -292,7 +397,7 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
                                 side: const BorderSide(color: PichangaTheme.borderSubtle),
                               ),
                               child: Padding(
-                                padding: const EdgeInsets.all(14),
+                                padding: const EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
@@ -301,7 +406,7 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
                                       durationSeconds: s.clipDurationS,
                                       positionLabel: s.position,
                                     ),
-                                    const SizedBox(height: 10),
+                                    const SizedBox(height: 12),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
@@ -321,6 +426,7 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
                                             color: PichangaTheme.turfGreen,
                                             fontWeight: FontWeight.w800,
                                             fontSize: 12,
+                                            fontFeatures: PichangaTheme.tabularNums,
                                           ),
                                         ),
                                       ],
@@ -331,31 +437,31 @@ class _SubstitutesPoolScreenState extends State<SubstitutesPoolScreen> {
                                       style: const TextStyle(color: PichangaTheme.warningAmber, fontSize: 11),
                                     ),
                                     if (s.bio.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 6),
                                       Text(
                                         s.bio,
-                                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                        style: const TextStyle(color: PichangaTheme.textSecondary, fontSize: 12),
                                       ),
                                     ],
-                                    const SizedBox(height: 6),
+                                    const SizedBox(height: 12),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            'Contacto protegido: ${s.phoneMasked} (Chat / VoIP Interno)',
-                                            style: const TextStyle(color: Colors.white60, fontSize: 11),
+                                            'Relay seguro: ${s.phoneMasked}',
+                                            style: const TextStyle(color: PichangaTheme.textSecondary, fontSize: 11),
                                           ),
                                         ),
                                         const SizedBox(width: 8),
                                         ElevatedButton.icon(
                                           onPressed: () => _inviteAndOpenRelay(s),
                                           style: ElevatedButton.styleFrom(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                            minimumSize: const Size(44, 38),
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                            minimumSize: const Size(48, 40),
                                           ),
                                           icon: const Icon(Icons.lock_outline, size: 15),
-                                          label: const Text('Convocar', style: TextStyle(fontSize: 12)),
+                                          label: const Text('Convocar suplente', style: TextStyle(fontSize: 12)),
                                         ),
                                       ],
                                     ),
@@ -673,6 +779,520 @@ class _MaskedRelayChatSheetState extends State<MaskedRelayChatSheet> {
                   icon: const Icon(Icons.send, color: PichangaTheme.bgPrimary),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Hoja modal para registrar o actualizar el perfil de suplente (`POST /api/substitutes/profile`).
+class _UpsertSubstituteProfileSheet extends StatefulWidget {
+  final RealtimeApiService api;
+  final SubstituteProfile? existing;
+
+  const _UpsertSubstituteProfileSheet({
+    required this.api,
+    this.existing,
+  });
+
+  @override
+  State<_UpsertSubstituteProfileSheet> createState() => _UpsertSubstituteProfileSheetState();
+}
+
+class _UpsertSubstituteProfileSheetState extends State<_UpsertSubstituteProfileSheet> {
+  late String _position;
+  late String _districtCode;
+  late int _skillLevel;
+  late int _clipDurationS;
+  late bool _isAvailable;
+  late final TextEditingController _bioCtrl;
+  late final TextEditingController _clipPublicIdCtrl;
+  late final TextEditingController _clipUrlCtrl;
+  String? _selectedClipFileName;
+  bool _saving = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final ex = widget.existing;
+    _position = ex?.position ?? 'MEDIOCAMPO';
+    _districtCode = ex?.districtCode ?? 'CAYMA';
+    _skillLevel = ex?.skillLevel ?? 4;
+    _clipDurationS = (ex?.clipDurationS ?? 20).clamp(15, 30);
+    _isAvailable = ex?.isAvailable ?? true;
+    _bioCtrl = TextEditingController(
+      text: ex?.bio ?? 'Disponible para pichangas nocturnas en Arequipa.',
+    );
+    _clipPublicIdCtrl = TextEditingController(text: '');
+    _clipUrlCtrl = TextEditingController(
+      text: ex?.clipUrl ?? '/media/clips/mediocampo.mp4',
+    );
+  }
+
+  @override
+  void dispose() {
+    _bioCtrl.dispose();
+    _clipPublicIdCtrl.dispose();
+    _clipUrlCtrl.dispose();
+    super.dispose();
+  }
+
+  void _pickPresetDeviceClip(String pos) {
+    final lower = pos.toLowerCase();
+    final clipPath = '/media/clips/$lower.mp4';
+    setState(() {
+      _selectedClipFileName = 'highlight_${lower}_aqp.mp4';
+      _clipUrlCtrl.text = clipPath;
+    });
+  }
+
+  Future<void> _save() async {
+    setState(() {
+      _saving = true;
+      _error = null;
+    });
+    try {
+      await widget.api.upsertSubstituteProfile(
+        position: _position,
+        skillLevel: _skillLevel,
+        districtCode: _districtCode,
+        bio: _bioCtrl.text.trim(),
+        clipPublicId: _clipPublicIdCtrl.text.trim().isNotEmpty ? _clipPublicIdCtrl.text.trim() : null,
+        clipUrl: _clipUrlCtrl.text.trim().isNotEmpty ? _clipUrlCtrl.text.trim() : null,
+        clipDurationSeconds: _clipDurationS,
+        isAvailable: _isAvailable,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _saving = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Mi Perfil de Suplente Verificado',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              initialValue: _position,
+              isExpanded: true,
+              dropdownColor: PichangaTheme.bgElevated,
+              decoration: const InputDecoration(labelText: 'Posición principal'),
+              items: const [
+                DropdownMenuItem(value: 'ARQUERO', child: Text('Arquero')),
+                DropdownMenuItem(value: 'DEFENSA', child: Text('Defensa')),
+                DropdownMenuItem(value: 'MEDIOCAMPO', child: Text('Mediocampo')),
+                DropdownMenuItem(value: 'DELANTERO', child: Text('Delantero')),
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _position = v);
+              },
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              initialValue: _districtCode,
+              isExpanded: true,
+              dropdownColor: PichangaTheme.bgElevated,
+              decoration: const InputDecoration(labelText: 'Distrito base en Arequipa'),
+              items: const [
+                DropdownMenuItem(value: 'CAYMA', child: Text('Cayma')),
+                DropdownMenuItem(value: 'YANAHUARA', child: Text('Yanahuara')),
+                DropdownMenuItem(value: 'JLBYR', child: Text('J.L. Bustamante y Rivero')),
+                DropdownMenuItem(value: 'CERRO_COLORADO', child: Text('Cerro Colorado')),
+                DropdownMenuItem(value: 'SACHACA', child: Text('Sachaca')),
+                DropdownMenuItem(value: 'AREQUIPA', child: Text('Cercado Arequipa')),
+                DropdownMenuItem(value: 'MIRAFLORES', child: Text('Miraflores')),
+                DropdownMenuItem(value: 'ALTO_SELVA_ALEGRE', child: Text('Alto Selva Alegre')),
+                DropdownMenuItem(value: 'PAUCARPATA', child: Text('Paucarpata')),
+                DropdownMenuItem(value: 'HUNTER', child: Text('Jacobo Hunter')),
+              ],
+              onChanged: (v) {
+                if (v != null) setState(() => _districtCode = v);
+              },
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    initialValue: _skillLevel,
+                    isExpanded: true,
+                    dropdownColor: PichangaTheme.bgElevated,
+                    decoration: const InputDecoration(labelText: 'Nivel (1-5 ★)'),
+                    items: const [1, 2, 3, 4, 5]
+                        .map((lvl) => DropdownMenuItem(value: lvl, child: Text('$lvl ★')))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _skillLevel = v);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DropdownButtonFormField<int>(
+                    initialValue: _clipDurationS,
+                    isExpanded: true,
+                    dropdownColor: PichangaTheme.bgElevated,
+                    decoration: const InputDecoration(labelText: 'Duración Clip (15-30s)'),
+                    items: const [15, 18, 20, 22, 25, 28, 30]
+                        .map((sec) => DropdownMenuItem(value: sec, child: Text('${sec}s')))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _clipDurationS = v);
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: PichangaTheme.bgPrimary,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: PichangaTheme.borderSubtle),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Vista previa de tu clip (15-30s)',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _pickPresetDeviceClip(_position),
+                        icon: const Icon(Icons.video_file_outlined, size: 15, color: PichangaTheme.skyAccent),
+                        label: Text(
+                          _selectedClipFileName ?? 'Subir .mp4/.mov',
+                          style: const TextStyle(fontSize: 11, color: PichangaTheme.skyAccent, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SubstituteClipPlayer(
+                    key: ValueKey('${_clipUrlCtrl.text}_$_clipDurationS'),
+                    videoUrl: _clipUrlCtrl.text.startsWith('http')
+                        ? _clipUrlCtrl.text.trim()
+                        : '${widget.api.baseUrl}${_clipUrlCtrl.text.trim()}',
+                    durationSeconds: _clipDurationS,
+                    positionLabel: _position,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _clipUrlCtrl,
+              onChanged: (_) => setState(() {}),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: const InputDecoration(
+                labelText: 'URL o ruta del clip de video (.mp4 / .mov)',
+                hintText: '/media/clips/mediocampo.mp4',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _clipPublicIdCtrl,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: const InputDecoration(
+                labelText: 'ID público de clip Cloudinary (opcional)',
+                hintText: 'pichangabook/clips/mi_jugada',
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _bioCtrl,
+              maxLines: 2,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: const InputDecoration(
+                labelText: 'Presentación técnica y disponibilidad',
+              ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              activeColor: PichangaTheme.turfGreen,
+              title: const Text(
+                'Disponible para convocatorias de emergencia',
+                style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+              value: _isAvailable,
+              onChanged: (v) => setState(() => _isAvailable = v),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                _error!,
+                style: const TextStyle(color: PichangaTheme.dangerRed, fontSize: 12, fontWeight: FontWeight.bold),
+              ),
+            ],
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _saving ? null : _save,
+                icon: const Icon(Icons.save_outlined),
+                label: Text(_saving ? 'Guardando...' : 'Guardar Perfil de Suplente'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Hoja modal para revisar y aceptar/rechazar convocatorias (`PATCH /api/substitutes/invitations/:id`).
+class _MySubstituteInvitationsSheet extends StatefulWidget {
+  final RealtimeApiService api;
+  final List<SubstituteInvitationItem> initialInvitations;
+  final Future<void> Function() onChanged;
+
+  const _MySubstituteInvitationsSheet({
+    required this.api,
+    required this.initialInvitations,
+    required this.onChanged,
+  });
+
+  @override
+  State<_MySubstituteInvitationsSheet> createState() => _MySubstituteInvitationsSheetState();
+}
+
+class _MySubstituteInvitationsSheetState extends State<_MySubstituteInvitationsSheet> {
+  late List<SubstituteInvitationItem> _items;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = List.of(widget.initialInvitations);
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final list = await widget.api.fetchMySubstituteInvitations();
+      if (!mounted) return;
+      setState(() {
+        _items = list;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _respond(SubstituteInvitationItem item, String status) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await widget.api.respondSubstituteInvitation(
+        invitationId: item.id,
+        status: status,
+      );
+      await _refresh();
+      await widget.onChanged();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserId = widget.api.currentUser?.id;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+      child: SizedBox(
+        height: 440,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Mis Convocatorias de Suplente',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: Colors.white),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const Divider(color: PichangaTheme.borderSubtle),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: PichangaTheme.dangerRed, fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            Expanded(
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _items.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aún no tienes convocatorias registradas.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: _items.length,
+                          itemBuilder: (_, idx) {
+                            final inv = _items[idx];
+                            final isTargetSubstitute = inv.substituteUserId == currentUserId;
+                            final canRespond = isTargetSubstitute && inv.status == 'SENT';
+                            return Card(
+                              color: PichangaTheme.bgElevated,
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            '${inv.complexName ?? "Complejo AQP"} · ${inv.courtName ?? inv.position}',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: inv.status == 'ACCEPTED'
+                                                ? PichangaTheme.turfGreenDark
+                                                : inv.status == 'DECLINED'
+                                                    ? PichangaTheme.dangerRed.withValues(alpha: 0.25)
+                                                    : PichangaTheme.bgSecondary,
+                                            borderRadius: BorderRadius.circular(999),
+                                          ),
+                                          child: Text(
+                                            inv.status,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w800,
+                                              color: inv.status == 'ACCEPTED'
+                                                  ? PichangaTheme.turfGreen
+                                                  : inv.status == 'DECLINED'
+                                                      ? PichangaTheme.dangerRed
+                                                      : PichangaTheme.warningAmber,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Organizador: ${inv.organizerName} · Suplente: ${inv.substituteName} (${inv.position})',
+                                      style: const TextStyle(fontSize: 11, color: Colors.white70),
+                                    ),
+                                    if (canRespond) ...[
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: () => _respond(inv, 'ACCEPTED'),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: PichangaTheme.turfGreen,
+                                                minimumSize: const Size(0, 36),
+                                              ),
+                                              icon: const Icon(Icons.check, size: 16, color: PichangaTheme.bgPrimary),
+                                              label: const Text(
+                                                'Aceptar',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: PichangaTheme.bgPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: OutlinedButton.icon(
+                                              onPressed: () => _respond(inv, 'DECLINED'),
+                                              style: OutlinedButton.styleFrom(
+                                                minimumSize: const Size(0, 36),
+                                              ),
+                                              icon: const Icon(Icons.close, size: 16, color: PichangaTheme.dangerRed),
+                                              label: const Text(
+                                                'Rechazar',
+                                                style: TextStyle(fontSize: 12, color: PichangaTheme.dangerRed),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),

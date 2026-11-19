@@ -1,0 +1,16 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.gitignore
+.env
+**/.env
+**/private-storage
+mobile-flutter/build
+mobile-flutter/.dart_tool
+mobile-flutter/android
+mobile-flutter/ios
+mobile-flutter/linux
+mobile-flutter/macos
+mobile-flutter/windows
+mobile-flutter/web

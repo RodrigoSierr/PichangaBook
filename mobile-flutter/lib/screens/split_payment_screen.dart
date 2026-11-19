@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../config/app_config.dart';
 import '../models/models.dart';
 import '../services/realtime_api_service.dart';
 import '../theme/app_theme.dart';
@@ -95,9 +96,10 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
 
   String _generateSourceId() {
     final prefix = _selectedMethod == 'CARD' ? 'tok' : _selectedMethod == 'PLIN' ? 'pln' : 'ype';
-    if (_tokenScenario == 'DECLINED') return '${prefix}_test_declined_card';
-    if (_tokenScenario == 'PENDING') return '${prefix}_test_pending_wallet';
-    return '${prefix}_sandbox_${DateTime.now().millisecondsSinceEpoch}';
+    final isDemo = AppEnvironmentConfig.demoMode && widget.api.demoModeAvailable;
+    if (isDemo && _tokenScenario == 'DECLINED') return '${prefix}_test_declined_card';
+    if (isDemo && _tokenScenario == 'PENDING') return '${prefix}_test_pending_wallet';
+    return '${prefix}_${isDemo ? 'sandbox' : 'live'}_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   Future<void> _payMyShare() async {
@@ -166,9 +168,26 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Tarjeta de resumen del Split Payment
+        // Encabezado de sección Mis Partidos
+        const Padding(
+          padding: EdgeInsets.only(bottom: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Mis Partidos · Pago Dividido',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Colors.white),
+              ),
+              Text(
+                'Sincronizado en vivo',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: PichangaTheme.turfGreen),
+              ),
+            ],
+          ),
+        ),
+        // Tarjeta destacada de resumen del Split Payment
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: PichangaTheme.bgSecondary,
             borderRadius: BorderRadius.circular(18),
@@ -191,7 +210,7 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        isComplete ? 'RESERVA CONFIRMADA (100%)' : 'SPLIT EN CURSO · ${sp.shareToken}',
+                        isComplete ? 'RESERVA CONFIRMADA (100%)' : 'SPLIT EN CURSO',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
@@ -208,31 +227,37 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                       color: PichangaTheme.turfGreen,
+                      fontFeatures: PichangaTheme.tabularNums,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 sp.progressLabel, // "Cupos pagados: 4 de 6"
-                style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  fontFeatures: PichangaTheme.tabularNums,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 '${sp.complexName} · ${sp.courtName} · ${sp.date} (${sp.hourLabel})',
-                style: const TextStyle(fontSize: 12, color: Colors.white70),
+                style: const TextStyle(fontSize: 12, color: PichangaTheme.textSecondary),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
                   value: ratio,
-                  minHeight: 14,
+                  minHeight: 10,
                   backgroundColor: PichangaTheme.bgPrimary,
                   color: PichangaTheme.turfGreen,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
@@ -266,7 +291,7 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
         // Formulario de pago de cuota individual
         if (!isComplete)
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: PichangaTheme.bgSecondary,
               borderRadius: BorderRadius.circular(18),
@@ -279,7 +304,7 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                   'Abonar mi cupo (Yape / Plin / Tarjeta)',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 TextField(
                   controller: _payerCtrl,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -288,13 +313,13 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                     prefixIcon: Icon(Icons.person_outline, size: 18),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
                   children: ['YAPE', 'PLIN', 'CARD'].map((m) {
                     final sel = _selectedMethod == m;
                     return ChoiceChip(
-                      label: Text(m == 'CARD' ? 'Tarjeta' : m),
+                      label: Text(m == 'CARD' ? 'Tarjeta' : m == 'PLIN' ? 'Plin' : 'Yape'),
                       selected: sel,
                       selectedColor: m == 'YAPE' ? PichangaTheme.yapePurple : PichangaTheme.skyAccent,
                       labelStyle: TextStyle(
@@ -305,24 +330,26 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<String>(
-                  initialValue: _tokenScenario,
-                  isExpanded: true,
-                  dropdownColor: PichangaTheme.bgElevated,
-                  decoration: const InputDecoration(
-                    labelText: 'Simulación de respuesta de pasarela (Sandbox)',
-                    prefixIcon: Icon(Icons.verified_user_outlined, size: 18),
+                if (AppEnvironmentConfig.demoMode && widget.api.demoModeAvailable) ...[
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<String>(
+                    initialValue: _tokenScenario,
+                    isExpanded: true,
+                    dropdownColor: PichangaTheme.bgElevated,
+                    decoration: const InputDecoration(
+                      labelText: 'Modo de verificación de pago (Modo Prueba)',
+                      prefixIcon: Icon(Icons.verified_user_outlined, size: 18),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'APPROVED', child: Text('Pago inmediato aprobado')),
+                      DropdownMenuItem(value: 'PENDING', child: Text('Pago en verificación bancaria')),
+                      DropdownMenuItem(value: 'DECLINED', child: Text('Simular fondos insuficientes')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) setState(() => _tokenScenario = v);
+                    },
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'APPROVED', child: Text('Cargo Aprobado (ype_sandbox_*)')),
-                    DropdownMenuItem(value: 'PENDING', child: Text('Cargo Pendiente (ype_test_pending)')),
-                    DropdownMenuItem(value: 'DECLINED', child: Text('Cargo Rechazado (tok_test_declined)')),
-                  ],
-                  onChanged: (v) {
-                    if (v != null) setState(() => _tokenScenario = v);
-                  },
-                ),
+                ],
                 if (_error != null) ...[
                   const SizedBox(height: 10),
                   Text(
@@ -337,7 +364,7 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
                     style: const TextStyle(color: PichangaTheme.turfGreen, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
@@ -353,44 +380,68 @@ class _SplitPaymentScreenState extends State<SplitPaymentScreen> {
               ],
             ),
           ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         Text(
-          'Jugadores verificados (${sp.shares.length}/${sp.totalSlots})',
+          'Jugadores en el partido (${sp.shares.length}/${sp.totalSlots})',
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
         ),
-        const SizedBox(height: 8),
-        ...sp.shares.map(
-          (share) => Card(
+        const SizedBox(height: 10),
+        ...sp.shares.map((share) {
+          final methodLabel = share.method == 'CARD'
+              ? 'Tarjeta'
+              : share.method == 'PLIN'
+                  ? 'Plin'
+                  : 'Yape';
+          return Container(
             margin: const EdgeInsets.only(bottom: 8),
-            child: ListTile(
-              dense: true,
-              leading: CircleAvatar(
-                backgroundColor: share.method == 'YAPE'
-                    ? PichangaTheme.yapePurple.withValues(alpha: 0.25)
-                    : PichangaTheme.turfGreenDark,
-                child: Text(
-                  share.method.substring(0, 1),
-                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
-              title: Text(
-                share.payerName,
-                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-              subtitle: Text(
-                '${share.method} · ID ${share.providerChargeId}',
-                style: const TextStyle(fontSize: 11, color: Colors.white60),
-              ),
-              trailing: Text(
-                'S/ ${(share.amountCents / 100).toStringAsFixed(2)}',
-                style: const TextStyle(
-                  color: PichangaTheme.turfGreen,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: PichangaTheme.bgSecondary,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: PichangaTheme.borderSubtle),
             ),
-          ),
-        ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: share.method == 'YAPE'
+                      ? PichangaTheme.yapePurple.withValues(alpha: 0.22)
+                      : PichangaTheme.turfGreenDark,
+                  child: Text(
+                    methodLabel.substring(0, 1),
+                    style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        share.payerName,
+                        style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$methodLabel · ✓ Confirmado',
+                        style: const TextStyle(fontSize: 11, color: PichangaTheme.turfGreen, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  'S/ ${(share.amountCents / 100).toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    fontFeatures: PichangaTheme.tabularNums,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
       ],
     );
   }

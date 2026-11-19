@@ -271,9 +271,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             final isCancelled = b.status == 'CANCELLED';
             final isConfirmed = b.status == 'CONFIRMED';
             return Card(
-              margin: const EdgeInsets.only(bottom: 10),
+              margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -283,7 +283,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         Expanded(
                           child: Text(
                             '${b.complexName} · ${b.courtName}',
-                            style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
+                            style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14),
                           ),
                         ),
                         Container(
@@ -297,10 +297,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            b.status,
+                            isConfirmed
+                                ? 'CONFIRMADO'
+                                : isCancelled
+                                    ? 'CANCELADO'
+                                    : 'EN ESPERA',
                             style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
                               color: isConfirmed
                                   ? PichangaTheme.turfGreen
                                   : isCancelled
@@ -311,26 +315,37 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       'Fecha: ${b.date} · Hora: ${b.hourLabel} · Total S/ ${(b.totalCents / 100).toStringAsFixed(2)}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: PichangaTheme.textSecondary,
+                        fontFeatures: PichangaTheme.tabularNums,
+                      ),
                     ),
                     if (b.shareToken != null) ...[
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
+                          const Icon(Icons.bolt, size: 15, color: PichangaTheme.skyAccent),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              'Split: ${b.paidSlots ?? 0}/${b.totalSlots ?? 6} pagados (${b.shareToken})',
+                              'Split en curso: ${b.paidSlots ?? 0}/${b.totalSlots ?? 6} cupos pagados',
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 12, color: PichangaTheme.skyAccent),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: PichangaTheme.skyAccent,
+                                fontWeight: FontWeight.w700,
+                                fontFeatures: PichangaTheme.tabularNums,
+                              ),
                             ),
                           ),
                           if (widget.onOpenSplitToken != null)
                             TextButton(
                               onPressed: () => widget.onOpenSplitToken!(b.shareToken!),
-                              child: const Text('Abrir Split →', style: TextStyle(fontSize: 12)),
+                              child: const Text('Ver partido →', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                             ),
                         ],
                       ),

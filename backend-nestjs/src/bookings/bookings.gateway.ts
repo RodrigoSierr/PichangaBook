@@ -12,6 +12,7 @@ import {
 import { Subscription } from 'rxjs';
 import { Server, Socket } from 'socket.io';
 import { AuthUser } from '../common/types';
+import { resolveCorsOriginFromEnv } from '../config/app.config';
 import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { limaToday } from '../common/utils/time.util';
 import { BookingsService } from './bookings.service';
@@ -20,15 +21,20 @@ import { ReceptionBlockDto } from './dto/bookings.dto';
 /**
  * Gateway de sincronización omnicanal en tiempo real (Socket.io).
  *
- *  - Los eventos públicos de disponibilidad (`slot:updated`, `split:updated`, `feed:event`)
- *    se emiten a las salas del complejo/split.
+ *  - Los eventos están estrictamente segmentados por sala (`complex:<id>`, `complex-owner:<id>`,
+ *    `split:<token>`, `relay:<id>`). No existe ningún canal global abierto.
+ *  - En las salas públicas `complex:<id>`, los eventos `slot:updated` se sanitizan para omitir
+ *    datos sensibles de reservas presenciales (`customerName`, `notes`), los cuales sólo se
+ *    entregan a la sala autenticada del propietario `complex-owner:<id>` junto con `feed:event`
+ *    y `complex:verification`.
  *  - Los eventos privados de mensajería (`relay:message`) se emiten EXCLUSIVAMENTE a la sala
- *    aislada `relay:<id>` y jamás se retransmiten a `demo:global`.
- *  - Unirse a `relay:<id>` (`relay:join`) exige un JWT válido y verifica en base de datos
- *    que el usuario autenticado sea participante (`user_a_id`, `user_b_id` o `ADMIN`).
+ *    aislada `relay:<id>`.
  */
 @WebSocketGateway({
-  cors: { origin: '*', credentials: true },
+  cors: {
+    origin: resolveCorsOriginFromEnv(),
+    credentials: true,
+  },
   transports: ['websocket', 'polling'],
 })
 export class BookingsGateway
@@ -50,13 +56,27 @@ export class BookingsGateway
     this.sub = this.bus.stream$.subscribe(({ rooms, event, payload }) => {
       if (!this.server) return;
       for (const room of rooms) {
+        if (room.startsWith('complex:')) {
+          const complexId = room.slice('complex:'.length);
+          const ownerRoom = Rooms.complexOwner(complexId);
+
+          if (event === 'feed:event' || event === 'complex:verification') {
+            this.server.to(ownerRoom).emit(event, payload);
+            continue;
+          }
+
+          if (event === 'slot:updated' && payload && typeof payload === 'object') {
+            const { customerName: _cn, notes: _nt, ...publicSlotPayload } = payload as Record<
+              string,
+              unknown
+            >;
+            this.server.to(room).except(ownerRoom).emit(event, publicSlotPayload);
+            this.server.to(ownerRoom).emit(event, payload);
+            continue;
+          }
+        }
+
         this.server.to(room).emit(event, payload);
-      }
-      // Los eventos de canales privados (relays) NUNCA se retransmiten a demo:global
-      const isPrivateRelay =
-        event.startsWith('relay:') || rooms.some((r) => r.startsWith('relay:'));
-      if (!isPrivateRelay) {
-        this.server.to('demo:global').emit(event, payload);
       }
     });
   }
@@ -80,11 +100,14 @@ export class BookingsGateway
     }
   }
 
-  handleConnection(client: Socket): void {
-    client.join('demo:global');
+  async handleConnection(client: Socket): Promise<void> {
     const complexId = client.handshake.query.complexId;
     if (typeof complexId === 'string' && complexId) {
-      client.join(Rooms.complex(complexId));
+      await client.join(Rooms.complex(complexId));
+      const user = await this.extractUser(client);
+      if (user && (user.role === 'OWNER' || user.role === 'ADMIN')) {
+        await client.join(Rooms.complexOwner(complexId));
+      }
     }
     this.server.emit('clients:count', { connected: this.server.engine.clientsCount });
   }
@@ -107,6 +130,7 @@ export class BookingsGateway
     if (user && (user.role === 'OWNER' || user.role === 'ADMIN')) {
       try {
         const dashboard = await this.bookings.ownerDashboard(body.complexId, body.date ?? limaToday(), user);
+        await client.join(Rooms.complexOwner(body.complexId));
         return { ok: true, room: Rooms.complex(body.complexId), dashboard };
       } catch {
         // Si el OWNER no es propietario de este complejo, sólo se une a la sala pública de disponibilidad

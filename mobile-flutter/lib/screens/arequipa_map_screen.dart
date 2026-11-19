@@ -10,11 +10,13 @@ import '../theme/app_theme.dart';
 class ArequipaMapScreen extends StatefulWidget {
   final RealtimeApiService api;
   final void Function(Map<String, dynamic> complex) onSelectComplex;
+  final VoidCallback? onOpenActiveSplit;
 
   const ArequipaMapScreen({
     super.key,
     required this.api,
     required this.onSelectComplex,
+    this.onOpenActiveSplit,
   });
 
   @override
@@ -31,9 +33,14 @@ class _ArequipaMapScreenState extends State<ArequipaMapScreen> {
     {'code': 'ALL', 'name': 'Todos AQP'},
     {'code': 'CAYMA', 'name': 'Cayma'},
     {'code': 'YANAHUARA', 'name': 'Yanahuara'},
-    {'code': 'CERRO_COLORADO', 'name': 'Cerro Colorado'},
     {'code': 'JLBYR', 'name': 'J.L. Bustamante'},
+    {'code': 'CERRO_COLORADO', 'name': 'Cerro Colorado'},
     {'code': 'SACHACA', 'name': 'Sachaca'},
+    {'code': 'AREQUIPA', 'name': 'Cercado'},
+    {'code': 'MIRAFLORES', 'name': 'Miraflores'},
+    {'code': 'ALTO_SELVA_ALEGRE', 'name': 'Alto Selva Alegre'},
+    {'code': 'PAUCARPATA', 'name': 'Paucarpata'},
+    {'code': 'HUNTER', 'name': 'Jacobo Hunter'},
   ];
 
   final TextEditingController _searchCtrl = TextEditingController();
@@ -106,6 +113,63 @@ class _ArequipaMapScreenState extends State<ArequipaMapScreen> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // Tarjeta destacada de partido activo (Split en curso) integrada en el inicio (solo en modo demo)
+        if (widget.onOpenActiveSplit != null && AppEnvironmentConfig.demoMode && widget.api.demoModeAvailable)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: widget.onOpenActiveSplit,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: PichangaTheme.skyDark.withValues(alpha: 0.38),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: PichangaTheme.skyAccent.withValues(alpha: 0.45)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.bolt, size: 18, color: PichangaTheme.skyAccent),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'PARTIDO ACTIVO · PAGO DIVIDIDO',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.6,
+                              color: PichangaTheme.skyAccent,
+                            ),
+                          ),
+                          SizedBox(height: 1),
+                          Text(
+                            'El Misti · Cancha 1 (20:00) · Ver cupos pagados',
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      'Ir a Mis Partidos →',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: PichangaTheme.skyAccent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         // Buscador y botón de refresco
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
@@ -274,19 +338,19 @@ class _ArequipaMapScreenState extends State<ArequipaMapScreen> {
         final isSelected = c.id == _highlightedId;
         return Card(
           color: isSelected ? PichangaTheme.bgElevated : PichangaTheme.bgSecondary,
-          margin: const EdgeInsets.only(bottom: 10),
+          margin: const EdgeInsets.only(bottom: 12),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             side: BorderSide(
               color: isSelected ? PichangaTheme.turfGreen : PichangaTheme.borderSubtle,
-              width: isSelected ? 1.4 : 1.0,
+              width: isSelected ? 1.5 : 1.0,
             ),
           ),
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             onTap: () => widget.onSelectComplex(raw),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -305,57 +369,51 @@ class _ArequipaMapScreenState extends State<ArequipaMapScreen> {
                                 fontSize: 15,
                               ),
                             ),
-                            const SizedBox(height: 3),
+                            const SizedBox(height: 4),
                             Text(
                               '${c.districtName} · ${c.address}',
-                              style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              style: const TextStyle(color: PichangaTheme.textSecondary, fontSize: 12),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: PichangaTheme.turfGreenDark,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: PichangaTheme.turfGreen),
-                        ),
-                        child: Text(
-                          'S/ ${c.minPriceSoles}/h',
-                          style: const TextStyle(
-                            color: PichangaTheme.turfGreen,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                          ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'S/ ${c.minPriceSoles}/h',
+                        style: const TextStyle(
+                          color: PichangaTheme.turfGreen,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          fontFeatures: PichangaTheme.tabularNums,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Wrap(
-                    spacing: 8,
+                    spacing: 14,
                     runSpacing: 6,
                     children: [
                       _MetaBadge(
-                        icon: Icons.verified,
+                        icon: Icons.verified_outlined,
                         text: 'RUC ${c.ruc}',
                         color: PichangaTheme.turfGreen,
                       ),
                       _MetaBadge(
-                        icon: Icons.star,
+                        icon: Icons.star_rounded,
                         text: '${c.rating.toStringAsFixed(1)} (${c.reviewsCount})',
                         color: PichangaTheme.warningAmber,
                       ),
                       _MetaBadge(
-                        icon: Icons.stadium,
+                        icon: Icons.stadium_outlined,
                         text: '${c.courtsCount} canchas',
                         color: PichangaTheme.skyAccent,
                       ),
                       if (c.distanceKm != null)
                         _MetaBadge(
-                          icon: Icons.near_me,
+                          icon: Icons.near_me_outlined,
                           text: '${c.distanceKm!.toStringAsFixed(1)} km',
-                          color: Colors.white70,
+                          color: PichangaTheme.textSecondary,
                         ),
                     ],
                   ),
@@ -382,23 +440,21 @@ class _MetaBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: PichangaTheme.bgPrimary.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: color),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 11,
+            color: color,
+            fontWeight: FontWeight.w700,
+            fontFeatures: PichangaTheme.tabularNums,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -12,6 +12,12 @@ import { MediaService } from '../integrations/media.service';
 import { RealtimeBus, Rooms } from '../realtime/realtime.bus';
 import { AuthUser } from '../common/types';
 import { redactContactInfo } from '../common/utils/phone.util';
+import {
+  InviteSubstituteDto,
+  ListSubstitutesQueryDto,
+  RespondInvitationDto,
+  UpsertSubstituteProfileDto,
+} from './dto/substitutes.dto';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -23,7 +29,7 @@ export class SubstitutesService {
     private readonly bus: RealtimeBus,
   ) {}
 
-  async list(filters: { position?: string; district?: string; onlyVerified?: string }) {
+  async list(filters: ListSubstitutesQueryDto) {
     const params: unknown[] = [];
     const where = [`sp.is_available = TRUE`];
 
@@ -37,6 +43,10 @@ export class SubstitutesService {
     }
     if (filters.onlyVerified === 'true') {
       where.push(`sp.is_verified = TRUE`);
+    }
+    if (filters.minSkill !== undefined && Number.isFinite(Number(filters.minSkill))) {
+      params.push(Number(filters.minSkill));
+      where.push(`sp.skill_level >= $${params.length}`);
     }
 
     return this.db.query(
@@ -64,6 +74,183 @@ export class SubstitutesService {
     return this.media.signClipUpload(user.sub);
   }
 
+  uploadClipFile(
+    user: AuthUser,
+    file: { originalname: string; buffer: Buffer; mimetype: string; size?: number } | undefined,
+  ) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para subir tu clip de video.');
+    return this.media.saveSubstituteClipFile(user.sub, file);
+  }
+
+  /**
+   * Crea o actualiza el perfil de suplente del usuario autenticado (`POST /api/substitutes/profile`),
+   * validando la duración del clip (15-30s) con `MediaService.assertClipDuration` y generando
+   * las URLs de streaming y póster desde Cloudinary con `MediaService.cloudinaryClipUrl`.
+   */
+  async upsertProfile(user: AuthUser, dto: UpsertSubstituteProfileDto) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para registrar tu perfil de suplente.');
+
+    let districtCode: string | null = null;
+    if (dto.districtCode) {
+      const normalizedDistrict = dto.districtCode.trim().toUpperCase();
+      const dist = await this.db.one<{ code: string }>(
+        `SELECT code FROM districts WHERE code = $1`,
+        [normalizedDistrict],
+      );
+      if (!dist) {
+        throw new BadRequestException('Distrito no soportado en Arequipa');
+      }
+      districtCode = dist.code;
+    }
+
+    if (dto.clipDurationSeconds !== undefined) {
+      this.media.assertClipDuration(dto.clipDurationSeconds);
+    }
+
+    const clipProvider = this.media.cloudinaryEnabled ? 'CLOUDINARY' : 'LOCAL_DEMO';
+    let clipPublicId: string | null = dto.clipPublicId?.trim() || null;
+    let clipUrl: string | null = dto.clipUrl?.trim() || null;
+    let clipPosterUrl: string | null = dto.clipPosterUrl?.trim() || null;
+
+    if (clipPublicId) {
+      const derived = this.media.cloudinaryClipUrl(clipPublicId);
+      clipUrl = clipUrl || derived.url;
+      clipPosterUrl = clipPosterUrl || derived.poster;
+    }
+
+    const skillLevel = dto.skillLevel ?? 3;
+    const bio = dto.bio?.trim() || null;
+    const clipDurationS = dto.clipDurationSeconds ?? null;
+    const isAvailable = dto.isAvailable ?? true;
+
+    return this.db.one(
+      `INSERT INTO substitute_profiles (
+         user_id, position, skill_level, district_code, bio,
+         clip_provider, clip_public_id, clip_url, clip_poster_url, clip_duration_s, is_available
+       )
+       VALUES ($1, $2::player_position, $3, $4, $5, $6::media_provider, $7, $8, $9, $10, $11)
+       ON CONFLICT (user_id) DO UPDATE
+         SET position = EXCLUDED.position,
+             skill_level = EXCLUDED.skill_level,
+             district_code = COALESCE(EXCLUDED.district_code, substitute_profiles.district_code),
+             bio = COALESCE(EXCLUDED.bio, substitute_profiles.bio),
+             clip_provider = CASE WHEN EXCLUDED.clip_public_id IS NOT NULL OR EXCLUDED.clip_url IS NOT NULL
+                                  THEN EXCLUDED.clip_provider
+                                  ELSE substitute_profiles.clip_provider END,
+             clip_public_id = COALESCE(EXCLUDED.clip_public_id, substitute_profiles.clip_public_id),
+             clip_url = COALESCE(EXCLUDED.clip_url, substitute_profiles.clip_url),
+             clip_poster_url = COALESCE(EXCLUDED.clip_poster_url, substitute_profiles.clip_poster_url),
+             clip_duration_s = COALESCE(EXCLUDED.clip_duration_s, substitute_profiles.clip_duration_s),
+             is_available = EXCLUDED.is_available
+       RETURNING id, user_id AS "userId", position, skill_level AS "skillLevel",
+                 punctuality_score::float AS "punctualityScore",
+                 matches_played AS "matchesPlayed", no_shows AS "noShows",
+                 district_code AS "districtCode", bio,
+                 clip_provider AS "clipProvider", clip_public_id AS "clipPublicId",
+                 clip_url AS "clipUrl", clip_poster_url AS "clipPosterUrl",
+                 clip_duration_s AS "clipDurationS",
+                 is_verified AS "isVerified", is_available AS "isAvailable"`,
+      [
+        user.sub,
+        dto.position,
+        skillLevel,
+        districtCode,
+        bio,
+        clipProvider,
+        clipPublicId,
+        clipUrl,
+        clipPosterUrl,
+        clipDurationS,
+        isAvailable,
+      ],
+    );
+  }
+
+  /**
+   * Lista las convocatorias recibidas (como suplente) o enviadas (como organizador) por el usuario autenticado.
+   */
+  async myInvitations(user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para consultar tus convocatorias.');
+    return this.db.query(
+      `SELECT si.id, si.substitute_id AS "substituteId", si.organizer_id AS "organizerId",
+              si.booking_id AS "bookingId", si.status, si.created_at AS "createdAt",
+              sp.user_id AS "substituteUserId", sp.position,
+              u_sub.full_name AS "substituteName",
+              u_org.full_name AS "organizerName",
+              b.starts_at AS "startsAt", c.name AS "courtName", x.name AS "complexName"
+         FROM substitute_invitations si
+         JOIN substitute_profiles sp ON sp.id = si.substitute_id
+         JOIN users u_sub ON u_sub.id = sp.user_id
+         JOIN users u_org ON u_org.id = si.organizer_id
+         LEFT JOIN bookings b ON b.id = si.booking_id
+         LEFT JOIN courts c ON c.id = b.court_id
+         LEFT JOIN complexes x ON x.id = c.complex_id
+        WHERE sp.user_id = $1 OR si.organizer_id = $1
+        ORDER BY si.created_at DESC
+        LIMIT 25`,
+      [user.sub],
+    );
+  }
+
+  /**
+   * Permite al suplente convocado aceptar o rechazar una invitación (`PATCH /api/substitutes/invitations/:id`).
+   */
+  async respondInvitation(invitationId: string, dto: RespondInvitationDto, user: AuthUser) {
+    if (!user?.sub) throw new UnauthorizedException('Inicia sesión para responder a la convocatoria.');
+
+    const existing = await this.db.one<{
+      id: string;
+      substituteId: string;
+      organizerId: string;
+      bookingId: string | null;
+      status: string;
+      substituteUserId: string;
+    }>(
+      `SELECT si.id, si.substitute_id AS "substituteId", si.organizer_id AS "organizerId",
+              si.booking_id AS "bookingId", si.status, sp.user_id AS "substituteUserId"
+         FROM substitute_invitations si
+         JOIN substitute_profiles sp ON sp.id = si.substitute_id
+        WHERE si.id = $1`,
+      [invitationId],
+    );
+    if (!existing) throw new NotFoundException('Convocatoria no encontrada.');
+    if (existing.substituteUserId !== user.sub && user.role !== 'ADMIN') {
+      throw new ForbiddenException('Solo el suplente convocado puede aceptar o rechazar esta invitación.');
+    }
+    if (existing.status === 'EXPIRED') {
+      throw new ConflictException('Esta convocatoria ya ha expirado.');
+    }
+
+    const updated = await this.db.one<{
+      id: string;
+      substituteId: string;
+      organizerId: string;
+      bookingId: string | null;
+      status: string;
+      createdAt: string;
+    }>(
+      `UPDATE substitute_invitations
+          SET status = $2::invitation_status
+        WHERE id = $1
+        RETURNING id, substitute_id AS "substituteId", organizer_id AS "organizerId",
+                  booking_id AS "bookingId", status, created_at AS "createdAt"`,
+      [invitationId, dto.status],
+    );
+
+    const relay = await this.db.one<{ id: string }>(
+      `SELECT id FROM contact_relays
+        WHERE user_a_id = $1 AND user_b_id = $2
+          AND ($3::uuid IS NULL OR booking_id = $3::uuid)
+        ORDER BY created_at DESC LIMIT 1`,
+      [existing.organizerId, existing.substituteUserId, existing.bookingId],
+    );
+    if (relay) {
+      this.bus.publish(Rooms.relay(relay.id), 'invitation:updated', updated);
+    }
+
+    return updated;
+  }
+
   /**
    * Convoca a un suplente de emergencia validando previamente que:
    *  1. Se indique un `bookingId` válido.
@@ -73,7 +260,7 @@ export class SubstitutesService {
    */
   async inviteSubstitute(
     substituteId: string,
-    body: { bookingId?: string; message?: string },
+    body: InviteSubstituteDto,
     user: AuthUser,
   ) {
     if (!user?.sub) throw new UnauthorizedException('Inicia sesión para convocar a un suplente.');

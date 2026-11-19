@@ -106,6 +106,11 @@ export class PaySplitSlotDto {
   @MaxLength(120)
   payerName: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(24)
+  payerPhone?: string;
+
   @IsIn(['CARD', 'YAPE', 'PLIN'])
   method: 'CARD' | 'YAPE' | 'PLIN';
 

@@ -10,6 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { DatabaseService } from '../../database/database.service';
 import { AuthUser, UserRole } from '../types';
 
 export const ROLES_KEY = 'roles';
@@ -26,7 +27,8 @@ export const CurrentUser = createParamDecorator(
 );
 
 /**
- * Guard global: valida el Bearer JWT y aplica control de acceso por rol.
+ * Guard global: valida el Bearer JWT, verifica en base de datos que la cuenta
+ * no esté suspendida (`users.is_banned`) y aplica control de acceso por rol.
  * En endpoints @Public() decodifica el token si viene (opcional).
  */
 @Injectable()
@@ -34,6 +36,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
     private readonly reflector: Reflector,
+    private readonly db: DatabaseService,
   ) {}
 
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
@@ -46,12 +49,30 @@ export class AuthGuard implements CanActivate {
     const token = header.startsWith('Bearer ') ? header.slice(7) : undefined;
 
     if (token) {
+      let decoded: AuthUser | undefined;
       try {
-        req.user = await this.jwt.verifyAsync<AuthUser>(token);
+        decoded = await this.jwt.verifyAsync<AuthUser>(token);
       } catch {
         if (!isPublic) throw new UnauthorizedException('Sesión inválida o expirada');
       }
+
+      if (decoded?.sub) {
+        const dbUser = await this.db.one<{ isBanned: boolean; role: UserRole }>(
+          `SELECT is_banned AS "isBanned", role FROM users WHERE id = $1`,
+          [decoded.sub],
+        );
+        if (dbUser?.isBanned) {
+          throw new ForbiddenException('Tu cuenta ha sido suspendida por incumplir las normas de la comunidad.');
+        }
+        if (dbUser) {
+          decoded.role = dbUser.role;
+          req.user = decoded;
+        } else if (!isPublic) {
+          throw new UnauthorizedException('Sesión inválida o usuario inexistente');
+        }
+      }
     }
+
     if (isPublic) return true;
     if (!req.user) throw new UnauthorizedException('Inicia sesión con tu código SMS');
     if (roles?.length && !roles.includes(req.user.role) && req.user.role !== 'ADMIN') {

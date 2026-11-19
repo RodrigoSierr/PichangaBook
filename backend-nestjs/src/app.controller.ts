@@ -49,7 +49,7 @@ export class AppController {
     await this.db.exec(`
       TRUNCATE relay_messages, contact_relays, substitute_invitations,
                payment_shares, payment_attempts, split_payments, booking_events, bookings,
-               reviews, substitute_profiles, courts, complexes, users, districts
+               reviews, substitute_profiles, courts, complexes, users
       RESTART IDENTITY CASCADE;
     `);
     await this.db.exec(seed);

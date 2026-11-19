@@ -84,6 +84,7 @@ class _PichangaBookAppState extends State<PichangaBookApp> {
     final screens = [
       ArequipaMapScreen(
         api: _api,
+        onOpenActiveSplit: () => _openSplitToken(_activeSplitToken),
         onSelectComplex: (c) {
           final cid = (c['id'] ?? AppEnvironmentConfig.defaultComplexId).toString();
           setState(() {
@@ -207,22 +208,28 @@ class _PichangaBookAppState extends State<PichangaBookApp> {
             ],
           ),
           body: screens[_tabIndex],
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _tabIndex,
-            selectedItemColor: PichangaTheme.turfGreen,
-            unselectedItemColor: Colors.white54,
-            backgroundColor: const Color(0xFF090D16),
-            type: BottomNavigationBarType.fixed,
-            selectedFontSize: 11,
-            unselectedFontSize: 11,
-            onTap: (idx) => setState(() => _tabIndex = idx),
-            items: const [
-              BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Mapa AQP'),
-              BottomNavigationBarItem(icon: Icon(Icons.sports_soccer), label: 'Reservar'),
-              BottomNavigationBarItem(icon: Icon(Icons.group_add_outlined), label: 'Split 4/6'),
-              BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: 'Suplentes'),
-              BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Mis Reservas'),
-            ],
+          bottomNavigationBar: Container(
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: PichangaTheme.borderSubtle)),
+            ),
+            child: BottomNavigationBar(
+              currentIndex: _tabIndex,
+              selectedItemColor: PichangaTheme.turfGreen,
+              unselectedItemColor: PichangaTheme.textSecondary,
+              backgroundColor: PichangaTheme.bgPrimary,
+              elevation: 0,
+              type: BottomNavigationBarType.fixed,
+              selectedFontSize: 11,
+              unselectedFontSize: 11,
+              onTap: (idx) => setState(() => _tabIndex = idx),
+              items: const [
+                BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Mapa AQP'),
+                BottomNavigationBarItem(icon: Icon(Icons.sports_soccer), label: 'Reservar'),
+                BottomNavigationBarItem(icon: Icon(Icons.bolt_outlined), label: 'Mis Partidos'),
+                BottomNavigationBarItem(icon: Icon(Icons.videocam_outlined), label: 'Suplentes'),
+                BottomNavigationBarItem(icon: Icon(Icons.calendar_today_outlined), label: 'Mis Reservas'),
+              ],
+            ),
           ),
         ),
       ),

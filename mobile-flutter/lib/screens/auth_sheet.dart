@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/realtime_api_service.dart';
@@ -23,6 +24,8 @@ class _AuthSheetState extends State<AuthSheet> {
   bool _otpRequested = false;
   bool _loading = false;
   String? _sandboxCodeHint;
+  String? _firebaseVerificationId;
+  int? _firebaseResendToken;
   String? _errorMessage;
 
   @override
@@ -31,6 +34,36 @@ class _AuthSheetState extends State<AuthSheet> {
     _otpCtrl.dispose();
     _nameCtrl.dispose();
     super.dispose();
+  }
+
+  String _normalizePeruPhone(String raw) {
+    final digits = raw.replaceAll(RegExp(r'\s+'), '');
+    if (digits.startsWith('+')) return digits;
+    if (digits.startsWith('51') && digits.length == 11) return '+$digits';
+    return '+51$digits';
+  }
+
+  Future<void> _completeFirebaseCredentialSignIn(PhoneAuthCredential credential) async {
+    try {
+      final userCred = await FirebaseAuth.instance.signInWithCredential(credential);
+      final idToken = await userCred.user?.getIdToken();
+      if (idToken == null || idToken.isEmpty) {
+        throw Exception('No se pudo obtener el ID Token de Firebase Auth.');
+      }
+      await widget.api.loginWithFirebase(
+        idToken: idToken,
+        fullName: _nameCtrl.text.trim(),
+        role: _selectedRole,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _loading = false;
+      });
+    }
   }
 
   Future<void> _handleRequestOtp() async {
@@ -43,6 +76,47 @@ class _AuthSheetState extends State<AuthSheet> {
       _loading = true;
       _errorMessage = null;
     });
+
+    if (AppEnvironmentConfig.firebaseAuthEnabled) {
+      final e164Phone = _normalizePeruPhone(phone);
+      try {
+        await FirebaseAuth.instance.verifyPhoneNumber(
+          phoneNumber: e164Phone,
+          forceResendingToken: _firebaseResendToken,
+          verificationCompleted: (PhoneAuthCredential credential) async {
+            await _completeFirebaseCredentialSignIn(credential);
+          },
+          verificationFailed: (FirebaseAuthException e) {
+            if (!mounted) return;
+            setState(() {
+              _errorMessage = e.message ?? 'Error al enviar SMS con Firebase Auth (${e.code}).';
+              _loading = false;
+            });
+          },
+          codeSent: (String verificationId, int? resendToken) {
+            if (!mounted) return;
+            setState(() {
+              _firebaseVerificationId = verificationId;
+              _firebaseResendToken = resendToken;
+              _otpRequested = true;
+              _sandboxCodeHint = null;
+              _loading = false;
+            });
+          },
+          codeAutoRetrievalTimeout: (String verificationId) {
+            _firebaseVerificationId = verificationId;
+          },
+        );
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _errorMessage = e.toString();
+          _loading = false;
+        });
+      }
+      return;
+    }
+
     try {
       final res = await widget.api.requestOtp(phone);
       if (!mounted) return;
@@ -76,6 +150,23 @@ class _AuthSheetState extends State<AuthSheet> {
       _loading = true;
       _errorMessage = null;
     });
+
+    if (AppEnvironmentConfig.firebaseAuthEnabled) {
+      if (_firebaseVerificationId == null || _firebaseVerificationId!.isEmpty) {
+        setState(() {
+          _errorMessage = 'Primero solicita el código SMS de Firebase Auth.';
+          _loading = false;
+        });
+        return;
+      }
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _firebaseVerificationId!,
+        smsCode: code,
+      );
+      await _completeFirebaseCredentialSignIn(credential);
+      return;
+    }
+
     try {
       await widget.api.verifyOtp(
         phone: _phoneCtrl.text.trim(),

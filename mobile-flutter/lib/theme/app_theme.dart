@@ -1,19 +1,27 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
-/// Sistema de diseño "Night Stadium / Sillares & Cancha" (UI UX Pro Max).
+/// Sistema de diseño SaaS Ejecutivo "Obsidian & Emerald / Royal Indigo"
+/// (Inspirado en Linear / Stripe / Playtomic).
+/// Superficies Deep Slate (#0B0F17, #111827, #1E293B), bordes translúcidos sutiles
+/// y acentos refinados Emerald (#10B981) + Indigo (#6366F1).
 class PichangaTheme {
-  static const Color bgPrimary = Color(0xFF0B111E);
-  static const Color bgSecondary = Color(0xFF151F32);
-  static const Color bgElevated = Color(0xFF1E2B45);
+  static const Color bgPrimary = Color(0xFF0B0F17);
+  static const Color bgSecondary = Color(0xFF111827);
+  static const Color bgElevated = Color(0xFF1E293B);
   static const Color turfGreen = Color(0xFF10B981);
   static const Color turfGreenDark = Color(0xFF064E3B);
-  static const Color skyAccent = Color(0xFF38BDF8);
+  static const Color skyAccent = Color(0xFF6366F1);
+  static const Color skyDark = Color(0xFF312E81);
   static const Color yapePurple = Color(0xFFA855F7);
   static const Color warningAmber = Color(0xFFF59E0B);
-  static const Color dangerRed = Color(0xFFEF4444);
+  static const Color warningAmberDark = Color(0xFF451A03);
+  static const Color dangerRed = Color(0xFFF43F5E);
   static const Color textPrimary = Color(0xFFF8FAFC);
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color borderSubtle = Color(0xFF1E293B);
+
+  static const List<FontFeature> tabularNums = [FontFeature.tabularFigures()];
 
   static ThemeData dark() {
     return ThemeData(
@@ -38,6 +46,7 @@ class PichangaTheme {
       cardTheme: CardThemeData(
         color: bgSecondary,
         elevation: 0,
+        margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: borderSubtle),
@@ -45,18 +54,18 @@ class PichangaTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: bgElevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        fillColor: bgPrimary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: borderSubtle),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: borderSubtle),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: turfGreen, width: 1.5),
         ),
       ),
@@ -64,8 +73,9 @@ class PichangaTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: turfGreen,
           foregroundColor: bgPrimary,
-          minimumSize: const Size(48, 46),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          minimumSize: const Size(48, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           textStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
         ),
       ),
