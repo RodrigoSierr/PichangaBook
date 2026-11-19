@@ -138,8 +138,7 @@
           </svg>
           <label for="complexSelector" class="text-xs text-slate-400">Sede:</label>
           <select id="complexSelector" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer">
-            <option value="00000000-0000-4000-b000-00000000c001" class="bg-[#111827]">Complejo Deportivo El Misti (Cayma)</option>
-            <option value="00000000-0000-4000-b000-00000000c006" class="bg-[#111827]">El Misti · Sede Sachaca (RUC Pendiente)</option>
+            <option value="" class="bg-[#111827]">Sin complejo seleccionado</option>
           </select>
         </div>
 
@@ -169,6 +168,13 @@
           <span>App Móvil</span>
         </a>
 
+        <button id="btnCreateComplex" type="button" onclick="openCreateComplexModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/25 text-xs font-semibold transition">
+          <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+          </svg>
+          <span>+ Nuevo Complejo</span>
+        </button>
+
         <button id="btnManageCourts" type="button" onclick="openCourtModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold transition">
           <svg aria-hidden="true" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
@@ -177,7 +183,7 @@
         </button>
 
         <button id="btnOwnerAuth" type="button" onclick="openOwnerLoginModal()" class="cursor-pointer flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-white/[0.07] text-xs font-semibold transition">
-          <span id="btnOwnerAuthLabel">Sesión Propietario</span>
+          <span id="btnOwnerAuthLabel">Iniciar Sesión</span>
         </button>
 
         <button id="btnResetDemo" onclick="resetDemoData()" title="Restaurar datos semilla para repetir demostración" class="hidden cursor-pointer px-3 py-2 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-400 hover:text-white border border-white/[0.07] text-xs font-medium transition">
@@ -193,24 +199,24 @@
     <section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 pb-6 border-b border-white/[0.07]">
       <div class="space-y-1.5">
         <div class="flex flex-wrap items-center gap-3">
-          <h1 id="complexName" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Complejo Deportivo El Misti</h1>
-          <button type="button" onclick="switchAdminView('settings')" id="verificationBadge" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition">
-            RUC Verificado SUNAT
+          <h1 id="complexName" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Sin complejo seleccionado</h1>
+          <button type="button" onclick="switchAdminView('settings')" id="verificationBadge" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-white/[0.08] hover:bg-slate-700 transition">
+            Inicia sesión como propietario
           </button>
         </div>
         <p id="complexMeta" class="text-xs sm:text-sm text-slate-400">
-          RUC <span class="font-mono text-slate-200">20601458722</span> · INVERSIONES DEPORTIVAS EL MISTI S.A.C. · Av. Ejército 1020, Cayma
+          Inicia sesión con tu cuenta de propietario o registra tu complejo deportivo para gestionar canchas, tarifas y reservas.
         </p>
       </div>
 
       <div class="flex flex-wrap items-center justify-between lg:justify-end gap-4">
         <div class="flex items-center gap-3 pr-4 border-r border-white/[0.07]">
-          <div class="w-9 h-9 rounded-full bg-[#111827] border border-white/[0.08] flex items-center justify-center text-xs font-bold text-emerald-400">
-            CH
+          <div id="ownerAvatarInitials" class="w-9 h-9 rounded-full bg-[#111827] border border-white/[0.08] flex items-center justify-center text-xs font-bold text-emerald-400">
+            --
           </div>
           <div class="text-left">
-            <span id="ownerName" class="text-xs font-bold text-white block">Carlos Huamán</span>
-            <span id="ownerPhone" class="block text-[11px] font-mono text-slate-400 tabular-nums">+51 9•• ••• 222</span>
+            <span id="ownerName" class="text-xs font-bold text-white block">Inicia sesión como propietario</span>
+            <span id="ownerPhone" class="block text-[11px] font-mono text-slate-400 tabular-nums">Sesión no iniciada</span>
           </div>
         </div>
 
@@ -378,7 +384,19 @@
           </div>
 
           <!-- Contenedor dinámico de canchas -->
-          <div id="courtsContainer" class="divide-y divide-white/[0.07] space-y-6"></div>
+          <div id="courtsContainer" class="divide-y divide-white/[0.07] space-y-6">
+            <div class="py-10 text-center space-y-3">
+              <p class="text-sm font-semibold text-slate-300">Inicia sesión como propietario o selecciona una sede para ver la agenda horaria.</p>
+              <div class="flex flex-wrap items-center justify-center gap-3">
+                <button type="button" onclick="openOwnerLoginModal()" class="cursor-pointer px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+                  Iniciar Sesión
+                </button>
+                <button type="button" onclick="openCreateComplexModal()" class="cursor-pointer px-4 py-2 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/30 font-bold text-xs transition">
+                  + Registrar mi primer complejo deportivo
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Columna derecha: Monitor de Split Payment + Bitácora Omnicanal en vivo -->
@@ -389,18 +407,18 @@
             <div class="flex items-start justify-between gap-2">
               <div>
                 <h3 class="text-base font-extrabold text-white">Pagos Divididos en Curso</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Cancha 1 · Fútbol 6 · Organiza: Diego Salas</p>
+                <p id="splitSubtitleText" class="text-xs text-slate-400 mt-0.5">Sin pagos divididos activos en este momento</p>
               </div>
-              <span id="splitStatusBadge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 tabular-nums shrink-0"> En curso · 20:00</span>
+              <span id="splitStatusBadge" class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 tabular-nums shrink-0">Sin activos</span>
             </div>
 
             <div class="space-y-2.5 pt-1">
               <div class="flex items-baseline justify-between">
-                <span id="splitProgressText" class="text-sm font-extrabold text-white">Cupos pagados: 4 de 6</span>
-                <span id="splitAmountText" class="text-xs font-mono font-bold text-indigo-300 tabular-nums">S/ 60.00 / S/ 90.00</span>
+                <span id="splitProgressText" class="text-sm font-extrabold text-white">Sin pagos divididos activos en este momento</span>
+                <span id="splitAmountText" class="text-xs font-mono font-bold text-indigo-300 tabular-nums">S/ 0.00 / S/ 0.00</span>
               </div>
               <div class="w-full h-2.5 bg-[#0B0F17] rounded-full overflow-hidden border border-white/[0.07]">
-                <div id="splitProgressBar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 66.6%"></div>
+                <div id="splitProgressBar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
               </div>
             </div>
 
@@ -410,7 +428,9 @@
                 <span>Jugador</span>
                 <span>Método y monto</span>
               </div>
-              <div id="splitPayersList" class="space-y-2 max-h-40 overflow-y-auto pr-1"></div>
+              <div id="splitPayersList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                <div class="text-xs text-slate-400 py-3 text-center">Sin pagos divididos activos en este momento.</div>
+              </div>
             </div>
 
             <button id="btnSimulateSplit" onclick="simulateSplitPaymentFromAdmin()" class="hidden cursor-pointer w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center justify-center gap-2">
@@ -433,7 +453,9 @@
                 Activo
               </span>
             </div>
-            <div id="eventsFeed" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1"></div>
+            <div id="eventsFeed" class="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+              <div class="text-xs text-slate-400 py-4 text-center">Sin actividad registrada en este turno.</div>
+            </div>
           </div>
 
         </div>
@@ -447,8 +469,8 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
 
         <!-- Panel principal de validación RUC y Licencia Municipal -->
-        <div class="lg:col-span-7 bg-[#0e1628] border border-slate-800/90 rounded-2xl p-6 sm:p-7 space-y-6">
-          <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-800/80">
+        <div class="lg:col-span-7 bg-[#111827] border border-white/[0.07] rounded-2xl p-6 sm:p-7 space-y-6">
+          <div class="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-white/[0.07]">
             <div class="space-y-1">
               <h2 class="text-xl font-extrabold text-white">Verificación Documental del Complejo</h2>
               <p class="text-xs sm:text-sm text-slate-400">
@@ -466,19 +488,19 @@
               1. Comprobación de RUC (Algoritmo Módulo 11 SUNAT)
             </label>
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <input id="rucCheckInput" type="text" maxlength="11" value="20601458722" placeholder="Ingresa RUC de 11 dígitos"
+              <input id="rucCheckInput" type="text" maxlength="11" value="" placeholder="Ingresa RUC de 11 dígitos"
                 class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono text-white tabular-nums focus:border-emerald-500 focus:outline-none" />
               <button type="button" onclick="checkRucValidity()" class="cursor-pointer px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-300 border border-slate-700 whitespace-nowrap transition">
                 Validar RUC ahora
               </button>
             </div>
-            <div id="rucCheckOutput" class="text-xs font-mono text-emerald-400 border-l-4 border-emerald-400 pl-3.5 py-1">
-              ✓ RUC 20601458722 válido (PERSONA_JURIDICA · dígito verificador OK)
+            <div id="rucCheckOutput" class="text-xs font-mono text-slate-400 border-l-4 border-slate-700 pl-3.5 py-1">
+              Ingresa un RUC de 11 dígitos para validar su dígito verificador SUNAT.
             </div>
           </div>
 
           <!-- Paso 2: Subida de Ficha RUC o Licencia Municipal -->
-          <div class="pt-5 border-t border-slate-800/80 space-y-3">
+          <div class="pt-5 border-t border-white/[0.07] space-y-3">
             <label for="docFileInput" class="text-xs font-bold text-slate-200 block">
               2. Respaldo Documental (Ficha RUC SUNAT o Licencia de Funcionamiento PDF / Imagen)
             </label>
@@ -496,24 +518,24 @@
         </div>
 
         <!-- Resumen de estado legal y garantías antifraude -->
-        <div class="lg:col-span-5 bg-[#0e1628] border border-slate-800/90 rounded-2xl p-6 sm:p-7 space-y-5">
+        <div class="lg:col-span-5 bg-[#111827] border border-white/[0.07] rounded-2xl p-6 sm:p-7 space-y-5">
           <h3 class="text-base font-extrabold text-white">Ficha Legal de la Sede Activa</h3>
-          <dl class="space-y-3.5 text-xs border-t border-slate-800/80 pt-4">
+          <dl class="space-y-3.5 text-xs border-t border-white/[0.07] pt-4">
             <div class="flex items-center justify-between gap-4">
               <dt class="text-slate-400">Nombre comercial</dt>
-              <dd id="settingsComplexName" class="font-bold text-white text-right">Complejo Deportivo El Misti</dd>
+              <dd id="settingsComplexName" class="font-bold text-white text-right">Sin complejo seleccionado</dd>
             </div>
             <div class="flex items-center justify-between gap-4">
               <dt class="text-slate-400">RUC registrado</dt>
-              <dd id="settingsRuc" class="font-mono font-semibold text-emerald-300 tabular-nums">20601458722</dd>
+              <dd id="settingsRuc" class="font-mono font-semibold text-emerald-300 tabular-nums">—</dd>
             </div>
             <div class="flex items-center justify-between gap-4">
               <dt class="text-slate-400">Administrador titular</dt>
-              <dd id="settingsOwner" class="font-semibold text-slate-200">Carlos Huamán</dd>
+              <dd id="settingsOwner" class="font-semibold text-slate-200">—</dd>
             </div>
             <div class="flex items-center justify-between gap-4">
               <dt class="text-slate-400">Estado de verificación</dt>
-              <dd id="settingsStatusText" class="font-bold text-emerald-400">VERIFIED (Visible en Mapa AQP)</dd>
+              <dd id="settingsStatusText" class="font-bold text-slate-400">Sin verificar</dd>
             </div>
           </dl>
 
@@ -573,7 +595,7 @@
 
         <div>
           <label for="modalCustomerName" class="text-xs font-semibold text-slate-300 block mb-1.5">Cliente / Grupo Deportivo</label>
-          <input id="modalCustomerName" type="text" required value="Sr. Paredes (Pago en ventanilla)"
+          <input id="modalCustomerName" type="text" required value="" placeholder="Nombre del cliente o grupo deportivo"
             class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none" />
         </div>
 
@@ -653,7 +675,7 @@
         <div>
           <label for="loginOwnerPhone" class="text-xs font-semibold text-slate-300 block mb-1.5">Celular registrado (+51)</label>
           <div class="flex gap-2">
-            <input id="loginOwnerPhone" type="tel" required value="+51959111222" placeholder="+51959111222"
+            <input id="loginOwnerPhone" type="tel" required value="" placeholder="+51 9XX XXX XXX"
               class="flex-1 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
             <button type="button" onclick="requestOwnerOtpCode()" class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-bold whitespace-nowrap">
               Enviar OTP
@@ -670,7 +692,7 @@
           </div>
           <div>
             <label for="loginOwnerName" class="text-xs font-semibold text-slate-300 block mb-1.5">Nombre del Titular</label>
-            <input id="loginOwnerName" type="text" placeholder="Carlos Huamán"
+            <input id="loginOwnerName" type="text" placeholder="Nombre del propietario"
               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
           </div>
         </div>
@@ -780,6 +802,75 @@
     </div>
   </div>
 
+  <!-- Modal: Registrar Nuevo Complejo Deportivo (POST /api/complexes) -->
+  <div id="createComplexModal" role="dialog" aria-modal="true" aria-labelledby="createComplexModalTitle" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
+    <div class="bg-[#111827] border border-white/[0.08] rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 id="createComplexModalTitle" class="text-lg font-extrabold text-white">Registrar Complejo Deportivo</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ingresa el RUC (11 dígitos SUNAT), distrito y dirección de tu sede en Arequipa.</p>
+        </div>
+        <button type="button" onclick="closeCreateComplexModal()" aria-label="Cerrar modal de complejo" class="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <form onsubmit="submitCreateComplexForm(event)" class="space-y-4">
+        <div>
+          <label for="complexFormName" class="text-xs font-semibold text-slate-300 block mb-1.5">Nombre Comercial de la Sede</label>
+          <input id="complexFormName" type="text" required minlength="3" maxlength="120" placeholder="Ej. Complejo Deportivo Los Volcanes"
+            class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="complexFormRuc" class="text-xs font-semibold text-slate-300 block mb-1.5">RUC SUNAT (11 dígitos)</label>
+            <input id="complexFormRuc" type="text" required pattern="\d{11}" maxlength="11" placeholder="20XXXXXXXXX"
+              class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs font-mono text-white focus:border-emerald-400 focus:outline-none" />
+          </div>
+          <div>
+            <label for="complexFormDistrict" class="text-xs font-semibold text-slate-300 block mb-1.5">Distrito en Arequipa</label>
+            <select id="complexFormDistrict" class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white">
+              <option value="CAYMA">Cayma</option>
+              <option value="YANAHUARA">Yanahuara</option>
+              <option value="JLBYR">J.L. Bustamante y Rivero</option>
+              <option value="CERRO_COLORADO">Cerro Colorado</option>
+              <option value="SACHACA">Sachaca</option>
+              <option value="AREQUIPA">Arequipa (Cercado)</option>
+              <option value="MIRAFLORES">Miraflores</option>
+              <option value="ALTO_SELVA_ALEGRE">Alto Selva Alegre</option>
+              <option value="PAUCARPATA">Paucarpata</option>
+              <option value="HUNTER">Jacobo Hunter</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="complexFormBusinessName" class="text-xs font-semibold text-slate-300 block mb-1.5">Razón Social SUNAT (opcional)</label>
+          <input id="complexFormBusinessName" type="text" maxlength="160" placeholder="Ej. INVERSIONES DEPORTIVAS S.A.C."
+            class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+        </div>
+
+        <div>
+          <label for="complexFormAddress" class="text-xs font-semibold text-slate-300 block mb-1.5">Dirección Exacta</label>
+          <input id="complexFormAddress" type="text" required minlength="5" maxlength="200" placeholder="Ej. Av. Ejército 1020, Cayma"
+            class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" onclick="closeCreateComplexModal()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300">
+            Cancelar
+          </button>
+          <button type="submit" class="cursor-pointer px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition">
+            Registrar Complejo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast de notificaciones en tiempo real -->
   <div id="toastContainer" aria-live="polite" class="fixed bottom-5 right-5 z-50 space-y-2 max-w-sm"></div>
 
@@ -806,6 +897,12 @@
       const authLabel = document.getElementById('btnOwnerAuthLabel');
       if (authLabel) {
         authLabel.textContent = ownerJwtToken ? 'Sesión Activa' : 'Iniciar Sesión';
+      }
+      if (serverDemoMode) {
+        const phoneInput = document.getElementById('loginOwnerPhone');
+        if (phoneInput && !phoneInput.value) phoneInput.value = '+51959111222';
+        const customerInput = document.getElementById('modalCustomerName');
+        if (customerInput && !customerInput.value) customerInput.value = 'Sr. Paredes (Pago en ventanilla)';
       }
     }
 
@@ -1097,13 +1194,16 @@
     }
 
     function syncComplexSelector(ownerComplexes) {
-      if (!Array.isArray(ownerComplexes) || !ownerComplexes.length) return;
       const sel = document.getElementById('complexSelector');
       if (!sel) return;
+      if (!Array.isArray(ownerComplexes) || !ownerComplexes.length) {
+        sel.innerHTML = `<option value="" class="bg-[#111827]">Sin complejos registrados</option>`;
+        return;
+      }
       sel.innerHTML = ownerComplexes
         .map((c) => {
           const statusSuffix = c.verificationStatus === 'VERIFIED' ? '' : ` · ${c.verificationStatus}`;
-          return `<option value="${escapeHtml(c.id)}" class="bg-slate-900">${escapeHtml(c.name)}${escapeHtml(statusSuffix)}</option>`;
+          return `<option value="${escapeHtml(c.id)}" class="bg-[#111827]">${escapeHtml(c.name)}${escapeHtml(statusSuffix)}</option>`;
         })
         .join('');
       if (ownerComplexes.some((c) => c.id === currentComplexId)) {
@@ -1115,15 +1215,122 @@
       }
     }
 
+    function renderNoComplexesEmptyState(ownerUser) {
+      dashboardData = null;
+      syncComplexSelector([]);
+      document.getElementById('complexName').textContent = 'Sin complejo seleccionado';
+      document.getElementById('complexMeta').textContent =
+        'Tu cuenta de propietario está activa. Registra tu primer complejo deportivo en Arequipa para crear canchas y recibir reservas.';
+      const vBadge = document.getElementById('verificationBadge');
+      vBadge.className =
+        'cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30';
+      vBadge.textContent = 'Cuenta Propietario Activa';
+
+      if (ownerUser) {
+        document.getElementById('ownerName').textContent = ownerUser.fullName || 'Propietario';
+        document.getElementById('ownerPhone').textContent = `${ownerUser.phoneMasked || ''} (Protegido)`;
+        const initials = (ownerUser.fullName || 'PR')
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((w) => w[0].toUpperCase())
+          .join('');
+        const av = document.getElementById('ownerAvatarInitials');
+        if (av) av.textContent = initials || 'PR';
+      }
+
+      document.getElementById('kpiConfirmed').textContent = '0';
+      document.getElementById('kpiBlocked').textContent = '0';
+      document.getElementById('kpiSplits').textContent = '0';
+      document.getElementById('kpiOccupancy').textContent = '0%';
+      document.getElementById('kpiRevenue').textContent = 'S/ 0';
+
+      document.getElementById('courtsContainer').innerHTML = `
+        <div class="py-12 text-center space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+            <svg aria-hidden="true" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/>
+            </svg>
+          </div>
+          <div class="space-y-1 max-w-md mx-auto">
+            <h3 class="text-base font-extrabold text-white">Aún no tienes complejos deportivos registrados</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Registra tu sede con su RUC de 11 dígitos, distrito y dirección para configurar tus canchas de Fútbol 5, 6, 7 u 8.
+            </p>
+          </div>
+          <button type="button" onclick="openCreateComplexModal()" class="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition shadow-lg">
+            + Registrar mi primer complejo deportivo
+          </button>
+        </div>`;
+
+      renderEmptySplitMonitor();
+      renderEventsFeed([]);
+    }
+
+    function openCreateComplexModal() {
+      const m = document.getElementById('createComplexModal');
+      if (!m) return;
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeCreateComplexModal() {
+      const m = document.getElementById('createComplexModal');
+      if (!m) return;
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    async function submitCreateComplexForm(e) {
+      e.preventDefault();
+      await ensureOwnerSession();
+      if (!ownerJwtToken) {
+        closeCreateComplexModal();
+        openOwnerLoginModal();
+        return;
+      }
+      const payload = {
+        name: document.getElementById('complexFormName').value.trim(),
+        ruc: document.getElementById('complexFormRuc').value.trim(),
+        districtCode: document.getElementById('complexFormDistrict').value,
+        businessName: document.getElementById('complexFormBusinessName').value.trim() || undefined,
+        address: document.getElementById('complexFormAddress').value.trim(),
+      };
+      try {
+        const res = await fetch(`${API_BASE}/api/complexes`, {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast('No se pudo registrar el complejo', data.message || 'Verifica el RUC SUNAT y los datos ingresados.', 'rose');
+          return;
+        }
+        closeCreateComplexModal();
+        if (data.id) {
+          currentComplexId = data.id;
+          localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
+        }
+        showToast('Complejo registrado', `${payload.name} creado. Ahora puedes agregar tu primera cancha.`, 'emerald');
+        await loadDashboard();
+      } catch {
+        showToast('Error de red', 'No se pudo registrar el complejo deportivo.', 'rose');
+      }
+    }
+
     async function fetchFirstAvailableOwnerComplex() {
       if (!ownerJwtToken) return null;
       try {
         const res = await fetch(`${API_BASE}/api/owner/complexes`, { headers: authHeaders() });
         if (!res.ok) return null;
         const list = await res.json();
-        if (Array.isArray(list) && list.length > 0) {
-          syncComplexSelector(list);
-          return list[0].id;
+        if (Array.isArray(list)) {
+          if (list.length > 0) {
+            syncComplexSelector(list);
+            return list[0].id;
+          }
+          return 'EMPTY_OWNER_COMPLEXES';
         }
       } catch {}
       return null;
@@ -1187,6 +1394,15 @@
         }
         if (res.status === 404 || res.status === 403) {
           const fallbackOwnerComplexId = await fetchFirstAvailableOwnerComplex();
+          if (fallbackOwnerComplexId === 'EMPTY_OWNER_COMPLEXES') {
+            let meUser = null;
+            try {
+              const meRes = await fetch(`${API_BASE}/api/auth/me`, { headers: authHeaders() });
+              if (meRes.ok) meUser = await meRes.json();
+            } catch {}
+            renderNoComplexesEmptyState(meUser);
+            return;
+          }
           if (fallbackOwnerComplexId && fallbackOwnerComplexId !== currentComplexId) {
             currentComplexId = fallbackOwnerComplexId;
             localStorage.setItem('pichangabook_owner_complex_id', currentComplexId);
@@ -1197,8 +1413,14 @@
         if (!res.ok) {
           const errBody = await res.json().catch(() => ({}));
           if (!serverDemoMode) {
-            showToast('Acceso o carga fallida', errBody.message || `Error HTTP ${res.status}`, 'rose');
-            if (res.status === 401 || res.status === 403) openOwnerLoginModal();
+            if (res.status === 401 || res.status === 403) {
+              ownerJwtToken = null;
+              localStorage.removeItem('pichangabook_owner_jwt');
+              syncDemoButtonsVisibility();
+              openOwnerLoginModal();
+            } else {
+              showToast('Acceso o carga fallida', errBody.message || `Error HTTP ${res.status}`, 'rose');
+            }
             return;
           }
           throw new Error('Dashboard fetch failed');
@@ -1212,8 +1434,13 @@
         dashboardData = getFallbackDashboardData();
       }
       currentDate = dashboardData.date;
-      if (Array.isArray(dashboardData.ownerComplexes) && dashboardData.ownerComplexes.length > 0) {
-        syncComplexSelector(dashboardData.ownerComplexes);
+      if (Array.isArray(dashboardData.ownerComplexes)) {
+        if (dashboardData.ownerComplexes.length > 0) {
+          syncComplexSelector(dashboardData.ownerComplexes);
+        } else if (!serverDemoMode) {
+          renderNoComplexesEmptyState( null );
+          return;
+        }
       }
       renderDashboard();
       await loadSplitMonitor();
@@ -1227,6 +1454,15 @@
       document.getElementById('currentDateBadge').textContent = `HOY · ${date}`;
       document.getElementById('ownerName').textContent = complex.ownerName;
       document.getElementById('ownerPhone').textContent = `${complex.ownerPhoneMasked} (Protegido)`;
+      const av = document.getElementById('ownerAvatarInitials');
+      if (av && complex.ownerName) {
+        av.textContent = complex.ownerName
+          .split(' ')
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((w) => w[0].toUpperCase())
+          .join('');
+      }
       document.getElementById('rucCheckInput').value = complex.ruc;
       document.getElementById('complexMeta').innerHTML =
         `RUC <span class="font-mono text-slate-200 tabular-nums">${escapeHtml(complex.ruc)}</span> · ${escapeHtml(complex.businessName || '')} · ${escapeHtml(complex.address)}, ${escapeHtml(complex.districtName)}`;
@@ -1264,7 +1500,17 @@
 
       // Parrilla horaria por cancha (con escape HTML estricto anti-XSS y alto contraste diurno)
       const container = document.getElementById('courtsContainer');
-      container.innerHTML = courts
+      if (!Array.isArray(courts) || !courts.length) {
+        container.innerHTML = `
+          <div class="py-10 text-center space-y-3">
+            <h3 class="text-sm font-bold text-white">Este complejo aún no tiene canchas configuradas</h3>
+            <p class="text-xs text-slate-400">Agrega tu primera cancha definiendo formato (F5, F6, F7 u F8) y tarifas por hora.</p>
+            <button type="button" onclick="openCourtModal()" class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+              + Crear primera cancha
+            </button>
+          </div>`;
+      } else {
+        container.innerHTML = courts
         .map((court, idx) => {
           const safeCourtId = escapeHtml(court.id);
           const safeCourtName = escapeHtml(court.name);
@@ -1378,6 +1624,7 @@
             </div>`;
         })
         .join('');
+      }
 
       // Poblar opciones del modal de forma segura
       const courtSel = document.getElementById('modalCourtId');
@@ -1430,14 +1677,51 @@
         .join('');
     }
 
+    function renderEmptySplitMonitor() {
+      const subEl = document.getElementById('splitSubtitleText');
+      if (subEl) subEl.textContent = 'Sin pagos divididos activos en este momento';
+      document.getElementById('splitProgressText').textContent = 'Sin pagos divididos activos en este momento';
+      document.getElementById('splitAmountText').textContent = 'S/ 0.00 / S/ 0.00';
+      document.getElementById('splitProgressBar').style.width = '0%';
+      document.getElementById('splitStatusBadge').textContent = 'Sin activos';
+      document.getElementById('splitPayersList').innerHTML =
+        `<div class="text-xs text-slate-400 py-3 text-center">Sin pagos divididos activos en este momento.</div>`;
+    }
+
     async function loadSplitMonitor() {
+      let tokenToLoad = null;
+      if (dashboardData && Array.isArray(dashboardData.courts)) {
+        for (const court of dashboardData.courts) {
+          for (const slot of court.slots || []) {
+            if (slot.status === 'HELD' && slot.split?.shareToken) {
+              tokenToLoad = slot.split.shareToken;
+              break;
+            }
+          }
+          if (tokenToLoad) break;
+        }
+      }
+      if (!tokenToLoad) {
+        if (!serverDemoMode) {
+          renderEmptySplitMonitor();
+          return;
+        }
+        tokenToLoad = DEFAULT_SPLIT_TOKEN;
+      }
+
       try {
-        const res = await fetch(`${API_BASE}/api/split-payments/${DEFAULT_SPLIT_TOKEN}`);
+        const res = await fetch(`${API_BASE}/api/split-payments/${tokenToLoad}`);
         if (!res.ok) throw new Error('Split fetch error');
         const sp = await res.json();
         renderSplitMonitor(sp);
       } catch {
+        if (!serverDemoMode) {
+          renderEmptySplitMonitor();
+          return;
+        }
         renderSplitMonitor({
+          courtName: 'Cancha 1 · Fútbol 6',
+          organizerName: 'Diego Salas',
           paidSlots: 4,
           totalSlots: 6,
           amountPerSlotCents: 1500,
@@ -1463,6 +1747,10 @@
 
     function renderSplitMonitor(sp) {
       const pct = Math.min(100, Math.round((sp.paidSlots / sp.totalSlots) * 100));
+      const subEl = document.getElementById('splitSubtitleText');
+      if (subEl) {
+        subEl.textContent = `${sp.courtName || 'Cancha activa'} · Organiza: ${sp.organizerName || 'Organizador'}`;
+      }
       document.getElementById('splitProgressText').textContent = `Cupos pagados: ${sp.paidSlots} de ${sp.totalSlots}`;
       document.getElementById('splitAmountText').textContent = `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
       document.getElementById('splitProgressBar').style.width = `${pct}%`;

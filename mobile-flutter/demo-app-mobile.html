@@ -98,23 +98,23 @@
   <aside class="hidden xl:flex flex-col justify-between w-80 bg-[#111827] border border-white/[0.07] rounded-3xl p-6 space-y-6 shadow-2xl shadow-black/40">
     <div class="space-y-3">
       <div class="flex items-center justify-between">
-        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Vista Móvil Interactiva</span>
-        <span class="text-xs text-slate-400 tabular-nums">Arequipa · 18 Sedes</span>
+        <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">App Web Jugadores</span>
+        <span id="sideComplexCountLabel" class="text-xs text-slate-400 tabular-nums">Arequipa, Perú</span>
       </div>
-      <h1 class="text-xl font-extrabold text-white tracking-tight">PichangaBook App</h1>
+      <h1 class="text-xl font-extrabold text-white tracking-tight">PichangaBook</h1>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Experiencia móvil para jugadores y organizadores sincronizada en tiempo real con el panel de recepción.
+        Reservas de canchas sintéticas en tiempo real, pagos divididos por equipo y bolsa de suplentes verificados con contacto protegido.
       </p>
     </div>
 
     <div class="space-y-3 pt-2 border-t border-white/[0.07] text-xs">
-      <div class="font-bold text-slate-200">Recorrido principal:</div>
-      <ol class="list-decimal list-inside space-y-2 text-slate-300 leading-relaxed">
-        <li>Explora 18 sedes reales por distrito en <strong>Mapa AQP</strong>.</li>
-        <li>Revisa estados de alto contraste en <strong>Reservar</strong>.</li>
-        <li>Gestiona tu vacante y pagos divididos en <strong>Mis Partidos</strong>.</li>
-        <li>Sube o mira clips reales (15-30s) y usa <strong>Convocar suplente</strong>.</li>
-      </ol>
+      <div class="font-bold text-slate-200">Módulos disponibles:</div>
+      <ul class="space-y-2 text-slate-300 leading-relaxed">
+        <li>• <strong>Mapa AQP:</strong> Búsqueda de sedes con RUC verificado por distrito.</li>
+        <li>• <strong>Reservar:</strong> Disponibilidad horaria en vivo sincronizada con recepción.</li>
+        <li>• <strong>Mis Partidos:</strong> Gestión de reservas y recaudación de cuotas grupales.</li>
+        <li>• <strong>Suplentes:</strong> Clips de 15-30s y convocatorias mediante canal Relay.</li>
+      </ul>
     </div>
 
     <div class="space-y-2.5 pt-2 border-t border-white/[0.07]">
@@ -122,7 +122,7 @@
         <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
         </svg>
-        Abrir Panel Web del Dueño
+        Panel de Propietarios
       </a>
       <button type="button" onclick="openOtpModal()" class="cursor-pointer flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-bold text-emerald-400 border border-emerald-500/20 transition">
         <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> En vivo
         </span>
         <button type="button" onclick="openOtpModal()" id="userChipBtn" class="cursor-pointer text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#111827] hover:bg-[#1E293B] text-slate-200 border border-white/[0.07] transition">
-          Diego S.
+          Iniciar sesión
         </button>
       </div>
     </header>
@@ -173,15 +173,15 @@
         </div>
 
         <!-- Acceso rápido a Split Activo desde el Inicio -->
-        <div id="homeDemoSplitBanner" onclick="switchTab('split')" class="cursor-pointer rounded-2xl p-3.5 bg-[#101c33] hover:bg-[#14223d] border border-sky-500/35 border-l-4 border-l-sky-400 flex items-center justify-between gap-3 transition">
+        <div id="homeDemoSplitBanner" onclick="switchTab('split')" class="hidden cursor-pointer rounded-2xl p-3.5 bg-[#111827] hover:bg-[#1E293B] border border-indigo-500/30 border-l-4 border-l-indigo-400 items-center justify-between gap-3 transition">
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="text-xs font-extrabold text-white">Tu partido de hoy · 20:00</span>
-              <span id="homeSplitPill" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-200 tabular-nums">4/6 pagados</span>
+              <span id="homeSplitTitle" class="text-xs font-extrabold text-white">Partido con pago dividido activo</span>
+              <span id="homeSplitPill" class="text-[11px] font-bold px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-200 tabular-nums">En curso</span>
             </div>
-            <p class="text-xs text-slate-300 truncate mt-0.5">Cancha 1 · El Misti · Ver pagos divididos</p>
+            <p id="homeSplitSubtitle" class="text-xs text-slate-300 truncate mt-0.5">Ver cuotas y estado del partido</p>
           </div>
-          <svg aria-hidden="true" class="w-4 h-4 text-sky-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <svg aria-hidden="true" class="w-4 h-4 text-indigo-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
           </svg>
         </div>
@@ -206,12 +206,12 @@
           <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent"></div>
           <div class="absolute bottom-3 left-3.5 right-3.5 flex items-end justify-between gap-2">
             <div>
-              <h2 id="detailName" class="text-base font-extrabold text-white">Complejo Deportivo El Misti</h2>
-              <p id="detailAddress" class="text-xs text-slate-300 mt-0.5">Av. Ejército 1020, Cayma · RUC Verificado</p>
+              <h2 id="detailName" class="text-base font-extrabold text-white">Selecciona un complejo</h2>
+              <p id="detailAddress" class="text-xs text-slate-300 mt-0.5">Elige una sede verificada en el Mapa de Arequipa</p>
             </div>
             <div class="text-right bg-slate-950/85 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0 tabular-nums">
-              <span id="detailRating" class="text-xs font-extrabold text-amber-400">★ 4.7</span>
-              <span id="detailReviewsCount" class="block text-[10px] text-slate-400">3 reseñas</span>
+              <span id="detailRating" class="text-xs font-extrabold text-amber-400">★ —</span>
+              <span id="detailReviewsCount" class="block text-[10px] text-slate-400">Sin reseñas</span>
             </div>
           </div>
         </div>
@@ -266,81 +266,99 @@
             <h2 class="text-base font-extrabold text-white">Mis Partidos</h2>
             <p class="text-xs text-slate-400">Reservas activas y pagos divididos con tu equipo</p>
           </div>
-          <span id="mSplitBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-sky-500/20 text-sky-200 border border-sky-500/30">En curso</span>
+          <span id="mSplitBadge" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">Sin activos</span>
         </div>
 
-        <!-- Tarjeta Destacada: Split Payment Activo (Sin cajas dentro de cajas) -->
-        <div class="bg-[#10192d] border border-sky-500/35 rounded-2xl p-4 space-y-4">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <h3 id="mSplitCourt" class="text-base font-extrabold text-white">Cancha 1 · Fútbol 6 (El Misti)</h3>
-              <p id="mSplitMeta" class="text-xs text-slate-300 mt-0.5">Hoy · 20:00 hrs · Organiza: Diego Salas</p>
-            </div>
+        <!-- Estado vacío limpio cuando no hay pago dividido activo (producción / no-demo) -->
+        <div id="mSplitEmptyState" class="bg-[#111827] border border-white/[0.07] rounded-2xl p-6 text-center space-y-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400">
+            <svg aria-hidden="true" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
           </div>
-
-          <!-- Contador visual en vivo: "Cupos pagados: 4 de 6" -->
-          <div class="space-y-2 pt-1">
-            <div class="flex items-baseline justify-between">
-              <span id="mSplitLabel" class="text-sm font-extrabold text-white">Cupos pagados: 4 de 6</span>
-              <span id="mSplitMoney" class="text-xs mono font-bold text-emerald-300 tabular-nums">S/ 60.00 / S/ 90.00</span>
-            </div>
-
-            <!-- Barra segmentada de 6 bloques -->
-            <div id="mSplitSegments" class="grid grid-cols-6 gap-1.5 pt-0.5"></div>
-
-            <p id="mSplitHint" class="text-xs text-slate-300 pt-0.5">
-              Faltan <strong>2 jugadores</strong> por abonar su cuota de <strong>S/ 15.00</strong> para confirmar la cancha.
+          <div class="space-y-1">
+            <h3 class="text-sm font-bold text-white">Sin pagos divididos activos</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              No tienes partidos o pagos divididos activos. Reserva una cancha en el mapa o abre un enlace de invitación.
             </p>
           </div>
-
-          <!-- Botones de invitación rápida -->
-          <div class="grid grid-cols-2 gap-2.5">
-            <a id="mWhatsappBtn" href="#" target="_blank"
-              class="cursor-pointer flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
-              <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-              </svg>
-              <span>Enviar por WhatsApp</span>
-            </a>
-            <button type="button" onclick="copySplitLink()" class="cursor-pointer flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition">
-              <svg aria-hidden="true" class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-              </svg>
-              <span>Copiar enlace</span>
-            </button>
-          </div>
+          <button type="button" onclick="switchTab('map')" class="cursor-pointer inline-flex items-center justify-center px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+            Explorar canchas en el Mapa
+          </button>
         </div>
 
-        <!-- Formulario limpio para abonar un cupo en vivo (Yape / Plin / Tarjeta) -->
-        <div class="bg-[#10192d] border border-slate-800/90 rounded-2xl p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-white">Pagar mi cuota</h3>
-            <span class="text-xs font-mono font-bold text-emerald-300 tabular-nums">S/ 15.00</span>
+        <div id="mSplitActiveContent" class="hidden space-y-5">
+          <!-- Tarjeta Destacada: Split Payment Activo -->
+          <div class="bg-[#111827] border border-indigo-500/30 rounded-2xl p-4 space-y-4">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 id="mSplitCourt" class="text-base font-extrabold text-white">—</h3>
+                <p id="mSplitMeta" class="text-xs text-slate-300 mt-0.5">—</p>
+              </div>
+            </div>
+
+            <!-- Contador visual en vivo -->
+            <div class="space-y-2 pt-1">
+              <div class="flex items-baseline justify-between">
+                <span id="mSplitLabel" class="text-sm font-extrabold text-white">Cupos pagados: 0 de 0</span>
+                <span id="mSplitMoney" class="text-xs mono font-bold text-emerald-300 tabular-nums">S/ 0.00 / S/ 0.00</span>
+              </div>
+
+              <!-- Barra segmentada de bloques -->
+              <div id="mSplitSegments" class="grid grid-cols-6 gap-1.5 pt-0.5"></div>
+
+              <p id="mSplitHint" class="text-xs text-slate-300 pt-0.5"></p>
+            </div>
+
+            <!-- Botones de invitación rápida -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <a id="mWhatsappBtn" href="#" target="_blank"
+                class="cursor-pointer flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition">
+                <svg aria-hidden="true" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                </svg>
+                <span>Enviar por WhatsApp</span>
+              </a>
+              <button type="button" onclick="copySplitLink()" class="cursor-pointer flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#1E293B] hover:bg-slate-700 text-slate-200 font-bold text-xs border border-white/[0.07] transition">
+                <svg aria-hidden="true" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                <span>Copiar enlace</span>
+              </button>
+            </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-2 text-xs">
-            <button type="button" onclick="selectPayMethod('YAPE')" id="payBtnYAPE" class="cursor-pointer py-2.5 rounded-xl font-bold bg-emerald-500 text-slate-950 border border-emerald-400 transition">Yape</button>
-            <button type="button" onclick="selectPayMethod('PLIN')" id="payBtnPLIN" class="cursor-pointer py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700 transition">Plin</button>
-            <button type="button" onclick="selectPayMethod('CARD')" id="payBtnCARD" class="cursor-pointer py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700 transition">Tarjeta</button>
+          <!-- Formulario limpio para abonar un cupo en vivo (Yape / Plin / Tarjeta) -->
+          <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-white">Pagar mi cuota</h3>
+              <span id="mSplitSlotPriceLabel" class="text-xs font-mono font-bold text-emerald-300 tabular-nums">S/ 15.00</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-xs">
+              <button type="button" onclick="selectPayMethod('YAPE')" id="payBtnYAPE" class="cursor-pointer py-2.5 rounded-xl font-bold bg-emerald-500 text-slate-950 border border-emerald-400 transition">Yape</button>
+              <button type="button" onclick="selectPayMethod('PLIN')" id="payBtnPLIN" class="cursor-pointer py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700 transition">Plin</button>
+              <button type="button" onclick="selectPayMethod('CARD')" id="payBtnCARD" class="cursor-pointer py-2.5 rounded-xl font-bold bg-slate-800 text-slate-300 border border-slate-700 transition">Tarjeta</button>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <label for="payerNameInput" class="sr-only">Nombre del jugador</label>
+              <input id="payerNameInput" type="text" value="" placeholder="Tu nombre o teléfono"
+                class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+              <button type="button" onclick="payOneSlotFromMobile()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-xs whitespace-nowrap transition">
+                Abonar cuota
+              </button>
+            </div>
           </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <label for="payerNameInput" class="sr-only">Nombre del jugador</label>
-            <input id="payerNameInput" type="text" value="Rodrigo S. (Jugador 5)" placeholder="Tu nombre para la lista"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
-            <button type="button" onclick="payOneSlotFromMobile()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold text-xs whitespace-nowrap transition">
-              Abonar S/ 15
-            </button>
+          <!-- Lista limpia de pagos de jugadores -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+              <h3 class="text-sm font-extrabold text-white">Jugadores confirmados</h3>
+              <span class="text-xs text-slate-400">Pago verificado</span>
+            </div>
+            <div id="mSplitSharesList" class="space-y-2"></div>
           </div>
-        </div>
-
-        <!-- Lista limpia de pagos de jugadores (Sin IDs técnicos como chr_demo_*) -->
-        <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-extrabold text-white">Jugadores confirmados</h3>
-            <span class="text-xs text-slate-400">Pago verificado</span>
-          </div>
-          <div id="mSplitSharesList" class="space-y-2"></div>
         </div>
       </section>
 
@@ -443,10 +461,10 @@
 
     <!-- Modal interno: Chat / VoIP con Enmascaramiento Telefónico Antifraude -->
     <div id="relayModal" role="dialog" aria-modal="true" aria-labelledby="relaySubName" class="absolute inset-0 z-40 hidden items-end justify-center bg-slate-950/85 backdrop-blur-sm">
-      <div class="bg-[#10192d] border-t border-slate-700 rounded-t-3xl w-full p-5 space-y-3.5">
+      <div class="bg-[#111827] border-t border-white/[0.08] rounded-t-3xl w-full p-5 space-y-3.5">
         <div class="flex items-start justify-between gap-2">
           <div>
-            <h3 id="relaySubName" class="text-sm font-extrabold text-white">Renzo Valdivia (Arquero)</h3>
+            <h3 id="relaySubName" class="text-sm font-extrabold text-white">Chat Seguro con Suplente</h3>
             <p id="relayProxyInfo" class="text-[11px] font-mono text-emerald-300 mt-0.5">Número protegido · Chat seguro activo</p>
           </div>
           <button type="button" onclick="closeRelayModal()" aria-label="Cerrar chat" class="cursor-pointer text-slate-400 hover:text-white p-1">
@@ -456,11 +474,11 @@
           </button>
         </div>
 
-        <div id="relayMessagesBox" class="bg-slate-950 border border-slate-800 rounded-xl p-3 h-44 overflow-y-auto space-y-2 text-xs"></div>
+        <div id="relayMessagesBox" class="bg-[#0B0F17] border border-white/[0.08] rounded-xl p-3 h-44 overflow-y-auto space-y-2 text-xs"></div>
 
         <form onsubmit="sendRelayChat(event)" class="flex items-center gap-2">
           <input id="relayInput" type="text" placeholder="Escribe un mensaje al suplente..."
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
+            class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-emerald-400 focus:outline-none" />
           <button type="submit" class="cursor-pointer px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">Enviar</button>
         </form>
       </div>
@@ -468,7 +486,7 @@
 
     <!-- Modal interno: Registro Diferenciado + Autenticación OTP SMS -->
     <div id="otpModal" role="dialog" aria-modal="true" aria-labelledby="otpModalTitle" class="absolute inset-0 z-50 hidden items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4">
-      <div class="bg-[#10192d] border border-slate-700 rounded-3xl w-full p-5 space-y-4">
+      <div class="bg-[#111827] border border-white/[0.08] rounded-3xl w-full p-5 space-y-4">
         <div class="flex items-start justify-between gap-2">
           <div>
             <h3 id="otpModalTitle" class="text-sm font-extrabold text-white">Verificación por SMS (OTP)</h3>
@@ -487,11 +505,11 @@
             <button type="button" onclick="setOtpRole('PLAYER')" id="roleBtnPlayer" class="cursor-pointer py-2 rounded-xl font-bold bg-slate-800 text-slate-300">Suplente</button>
             <button type="button" onclick="setOtpRole('OWNER')" id="roleBtnOwner" class="cursor-pointer py-2 rounded-xl font-bold bg-slate-800 text-slate-300">Dueño</button>
           </div>
-          <input id="otpName" type="text" value="Rodrigo Sierra" placeholder="Nombre completo"
-            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-white" />
+          <input id="otpName" type="text" value="" placeholder="Tu nombre completo"
+            class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs text-white" />
           <div class="flex items-center gap-2">
-            <input id="otpPhone" type="text" value="+51958222333" placeholder="+51 9XX XXX XXX"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs mono text-white tabular-nums" />
+            <input id="otpPhone" type="text" value="" placeholder="+51 9XX XXX XXX"
+              class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs mono text-white tabular-nums" />
             <button type="button" onclick="requestSmsOtp()" class="cursor-pointer px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-xs whitespace-nowrap border border-slate-700">
               Enviar SMS
             </button>
@@ -499,7 +517,7 @@
           <div id="otpDevBanner" class="hidden text-[11px] mono bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 rounded-xl px-3 py-2"></div>
           <div class="flex items-center gap-2">
             <input id="otpCode" type="text" maxlength="6" placeholder="Código de 6 dígitos"
-              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs mono text-white tabular-nums" />
+              class="w-full bg-[#0B0F17] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-xs mono text-white tabular-nums" />
             <button type="button" onclick="verifySmsOtp()" class="cursor-pointer px-4 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs whitespace-nowrap">
               Validar OTP
             </button>
@@ -982,7 +1000,7 @@
     }
 
     let mobileJwtToken = localStorage.getItem('pichangabook_mobile_jwt') || null;
-    let mobileServerDemoMode = false;
+    let mobileServerDemoMode = window.location.protocol === 'file:';
 
     function syncMobileDemoVisibility() {
       const homeBanner = document.getElementById('homeDemoSplitBanner');
@@ -990,6 +1008,14 @@
         const showBanner = mobileServerDemoMode || activeSplitToken !== 'pk4de6demo';
         homeBanner.classList.toggle('hidden', !showBanner);
         homeBanner.classList.toggle('flex', showBanner);
+      }
+      if (mobileServerDemoMode) {
+        const payerInput = document.getElementById('payerNameInput');
+        if (payerInput && !payerInput.value) payerInput.value = 'Rodrigo S. (Jugador 5)';
+        const otpName = document.getElementById('otpName');
+        if (otpName && !otpName.value) otpName.value = 'Rodrigo Sierra';
+        const otpPhone = document.getElementById('otpPhone');
+        if (otpPhone && !otpPhone.value) otpPhone.value = '+51958222333';
       }
     }
 
@@ -1002,8 +1028,29 @@
         }
       } catch {}
       syncMobileDemoVisibility();
-      if (mobileJwtToken) return mobileJwtToken;
-      if (!mobileServerDemoMode) return null;
+
+      if (mobileJwtToken) {
+        try {
+          const meRes = await fetch(`${API_BASE}/api/auth/me`, {
+            headers: { Authorization: `Bearer ${mobileJwtToken}` },
+          });
+          if (meRes.ok) {
+            const me = await meRes.json();
+            const chip = document.getElementById('userChipBtn');
+            if (chip && me?.fullName) chip.textContent = me.fullName.split(' ')[0];
+            return mobileJwtToken;
+          }
+          mobileJwtToken = null;
+          localStorage.removeItem('pichangabook_mobile_jwt');
+        } catch {}
+      }
+
+      const chip = document.getElementById('userChipBtn');
+      if (!mobileServerDemoMode) {
+        if (chip) chip.textContent = 'Iniciar sesión';
+        return null;
+      }
+
       try {
         const res = await fetch(`${API_BASE}/api/auth/demo-session`, {
           method: 'POST',
@@ -1014,8 +1061,13 @@
           const data = await res.json();
           mobileJwtToken = data.accessToken;
           localStorage.setItem('pichangabook_mobile_jwt', mobileJwtToken);
+          if (chip && data.user?.fullName) {
+            chip.textContent = data.user.fullName.split(' ')[0];
+          }
         }
-      } catch {}
+      } catch {
+        if (chip && mobileServerDemoMode) chip.textContent = 'Diego S.';
+      }
       return mobileJwtToken;
     }
 
@@ -1090,7 +1142,14 @@
         if (!res.ok) throw new Error('Complexes error');
         complexes = await res.json();
       } catch {
-        complexes = code === 'ALL' ? FALLBACK_COMPLEXES : FALLBACK_COMPLEXES.filter((c) => c.districtCode === code);
+        complexes = mobileServerDemoMode
+          ? (code === 'ALL' ? FALLBACK_COMPLEXES : FALLBACK_COMPLEXES.filter((c) => c.districtCode === code))
+          : [];
+      }
+
+      const sideCount = document.getElementById('sideComplexCountLabel');
+      if (sideCount) {
+        sideCount.textContent = complexes.length > 0 ? `Arequipa · ${complexes.length} Sedes` : 'Arequipa, Perú';
       }
 
       if (!currentComplex && complexes.length) {
@@ -1118,8 +1177,18 @@
         }
       }
 
-      // Renderizar tarjetas de sedes (sin saturación de cajas anidadas)
+      // Renderizar tarjetas de sedes o estado vacío limpio
       const list = document.getElementById('complexList');
+      if (!complexes.length) {
+        list.innerHTML = `
+          <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-5 text-center space-y-1.5">
+            <h3 class="text-xs font-bold text-white">Sin complejos verificados en esta zona</h3>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Aún no hay complejos deportivos verificados registrados en este distrito.
+            </p>
+          </div>`;
+        return;
+      }
       list.innerHTML = complexes
         .map((c, idx) => {
           const rawPhoto = c.photos?.[0] || `/media/court-${(idx % 4) + 1}.jpg`;
@@ -1376,11 +1445,36 @@
     // -------------------------------------------------------------------------
     async function loadMobileSplit() {
       let sp = null;
+      const emptyEl = document.getElementById('mSplitEmptyState');
+      const activeEl = document.getElementById('mSplitActiveContent');
+      const homeBanner = document.getElementById('homeDemoSplitBanner');
+
+      if (!mobileServerDemoMode && activeSplitToken === 'pk4de6demo') {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        if (activeEl) activeEl.classList.add('hidden');
+        if (homeBanner) {
+          homeBanner.classList.add('hidden');
+          homeBanner.classList.remove('flex');
+        }
+        document.getElementById('mSplitBadge').textContent = 'Sin activos';
+        return;
+      }
+
       try {
         const res = await fetch(`${API_BASE}/api/split-payments/${activeSplitToken}`);
         if (!res.ok) throw new Error('Split error');
         sp = await res.json();
       } catch {
+        if (!mobileServerDemoMode) {
+          if (emptyEl) emptyEl.classList.remove('hidden');
+          if (activeEl) activeEl.classList.add('hidden');
+          if (homeBanner) {
+            homeBanner.classList.add('hidden');
+            homeBanner.classList.remove('flex');
+          }
+          document.getElementById('mSplitBadge').textContent = 'Sin activos';
+          return;
+        }
         sp = {
           shareToken: activeSplitToken,
           courtName: 'Cancha 1 · Fútbol 6',
@@ -1404,6 +1498,9 @@
         };
       }
 
+      if (emptyEl) emptyEl.classList.add('hidden');
+      if (activeEl) activeEl.classList.remove('hidden');
+
       document.getElementById('mSplitBadge').textContent =
         sp.remainingSlots === 0 ? 'Confirmado 6/6' : `Split ${sp.paidSlots}/${sp.totalSlots}`;
       document.getElementById('mSplitCourt').textContent = `${sp.courtName} (${sp.complexName})`;
@@ -1412,9 +1509,19 @@
       document.getElementById('mSplitLabel').textContent = `Cupos pagados: ${sp.paidSlots} de ${sp.totalSlots}`;
       document.getElementById('mSplitMoney').textContent =
         `S/ ${((sp.paidSlots * sp.amountPerSlotCents) / 100).toFixed(2)} / S/ ${(sp.totalCents / 100).toFixed(2)}`;
+      const slotPriceEl = document.getElementById('mSplitSlotPriceLabel');
+      if (slotPriceEl) slotPriceEl.textContent = `S/ ${(sp.amountPerSlotCents / 100).toFixed(2)}`;
 
       const homePill = document.getElementById('homeSplitPill');
       if (homePill) homePill.textContent = `${sp.paidSlots}/${sp.totalSlots} pagados`;
+      const homeTitle = document.getElementById('homeSplitTitle');
+      if (homeTitle) homeTitle.textContent = `Tu partido · ${sp.hourLabel}`;
+      const homeSub = document.getElementById('homeSplitSubtitle');
+      if (homeSub) homeSub.textContent = `${sp.courtName} · ${sp.complexName} · Ver pagos divididos`;
+      if (homeBanner) {
+        homeBanner.classList.remove('hidden');
+        homeBanner.classList.add('flex');
+      }
 
       const segs = [];
       for (let i = 1; i <= sp.totalSlots; i++) {
@@ -1522,37 +1629,50 @@
         if (!res.ok) throw new Error('Substitutes error');
         subs = await res.json();
       } catch {
-        const seedSubs = [
-          {
-            id: '00000000-0000-4000-9000-000000000501',
-            fullName: 'Renzo Valdivia',
-            position: 'ARQUERO',
-            districtName: 'Cayma',
-            phoneMasked: '+51 9•• ••• 101',
-            punctualityScore: 98.5,
-            matchesPlayed: 64,
-            clipDurationS: 22,
-            clipUrl: '/media/clips/arquero.mp4',
-            clipPosterUrl: '/media/player-arquero.jpg',
-            isVerified: true,
-            bio: 'Arquero de reflejos rápidos y salida limpia. Ex Sub-20 FBC Melgar.',
-          },
-          {
-            id: '00000000-0000-4000-9000-000000000502',
-            fullName: 'Mateo Paredes',
-            position: 'DEFENSA',
-            districtName: 'Yanahuara',
-            phoneMasked: '+51 9•• ••• 204',
-            punctualityScore: 96.0,
-            matchesPlayed: 41,
-            clipDurationS: 19,
-            clipUrl: '/media/clips/defensa.mp4',
-            clipPosterUrl: '/media/player-defensa.jpg',
-            isVerified: true,
-            bio: 'Zaguero central firme en marca personal y juego aéreo.',
-          },
-        ];
-        subs = position === 'ALL' ? seedSubs : seedSubs.filter((s) => s.position === position);
+        if (mobileServerDemoMode) {
+          const seedSubs = [
+            {
+              id: '00000000-0000-4000-9000-000000000501',
+              fullName: 'Renzo Valdivia',
+              position: 'ARQUERO',
+              districtName: 'Cayma',
+              phoneMasked: '+51 9•• ••• 101',
+              punctualityScore: 98.5,
+              matchesPlayed: 64,
+              clipDurationS: 22,
+              clipUrl: '/media/clips/arquero.mp4',
+              clipPosterUrl: '/media/player-arquero.jpg',
+              isVerified: true,
+              bio: 'Arquero de reflejos rápidos y salida limpia. Ex Sub-20 FBC Melgar.',
+            },
+            {
+              id: '00000000-0000-4000-9000-000000000502',
+              fullName: 'Mateo Paredes',
+              position: 'DEFENSA',
+              districtName: 'Yanahuara',
+              phoneMasked: '+51 9•• ••• 204',
+              punctualityScore: 96.0,
+              matchesPlayed: 41,
+              clipDurationS: 19,
+              clipUrl: '/media/clips/defensa.mp4',
+              clipPosterUrl: '/media/player-defensa.jpg',
+              isVerified: true,
+              bio: 'Zaguero central firme en marca personal y juego aéreo.',
+            },
+          ];
+          subs = position === 'ALL' ? seedSubs : seedSubs.filter((s) => s.position === position);
+        }
+      }
+
+      if (!subs.length) {
+        document.getElementById('substitutesList').innerHTML = `
+          <div class="bg-[#111827] border border-white/[0.07] rounded-2xl p-6 text-center space-y-2">
+            <h3 class="text-xs font-bold text-white">Sin suplentes disponibles en este filtro</h3>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              Aún no hay jugadores registrados en esta posición. Publica tu perfil con tu clip de 15-30s.
+            </p>
+          </div>`;
+        return;
       }
 
       document.getElementById('substitutesList').innerHTML = subs
@@ -2039,6 +2159,7 @@
     } catch {}
 
     ensureMobileSession().then(() => initMapAndDistricts()).then(async () => {
+      await loadMobileSplit();
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
       if (tab && ['map', 'courts', 'split', 'matches', 'subs'].includes(tab)) {
@@ -2056,7 +2177,6 @@
         await inviteSubstitute('00000000-0000-4000-9000-000000000501');
       }
     });
-    loadMobileSplit();
   </script>
 </body>
 </html>
